@@ -52,23 +52,26 @@ export default function HomeClient({ initialVideos }: HomeClientProps) {
                         alt={heroVideo.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="bg-primary/90 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-                                <Flame size={10} /> Trending
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-black/40 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 backdrop-blur-sm bg-gradient-to-t from-[#0a0a0a]/90 to-transparent border-t border-white/5">
+                        <div className="flex items-center gap-3 mb-4">
+                            <span className="bg-primary hover:bg-primary-hover shadow-[0_0_15px_rgba(145,71,255,0.5)] transition-colors text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5 cursor-default">
+                                <Flame size={12} className="animate-pulse" /> Trending Now
                             </span>
                         </div>
-                        <h2 className="text-xl md:text-3xl font-black text-white leading-tight mb-2 drop-shadow-lg max-w-2xl">
+                        <h2 className="text-3xl md:text-5xl font-black text-white leading-tight mb-4 drop-shadow-2xl max-w-3xl tracking-tight">
                             {heroVideo.title}
                         </h2>
-                        <div className="flex items-center gap-3 text-white/70 text-sm">
-                            <img src={heroVideo.profiles?.avatar_url || 'https://i.pravatar.cc/150'} alt="" className="w-6 h-6 rounded-full" />
-                            <span className="font-medium text-white/90">{heroVideo.profiles?.username || 'Unknown'}</span>
-                            <span>·</span>
-                            <span>{formatViews(heroVideo.view_count || 0)} views</span>
-                            <span>·</span>
-                            <span>{timeAgo(heroVideo.created_at)}</span>
+                        <div className="flex items-center gap-4 text-white/80 text-sm font-medium">
+                            <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
+                                <img src={heroVideo.profiles?.avatar_url || 'https://i.pravatar.cc/150'} alt="" className="w-5 h-5 rounded-full" />
+                                <span className="text-white font-bold">{heroVideo.profiles?.username || 'Unknown'}</span>
+                            </div>
+                            <div className="flex items-center gap-4 border-l border-white/20 pl-4">
+                                <span className="flex items-center gap-1.5"><Sparkles size={14} className="text-primary" /> {formatViews(heroVideo.view_count || 0)} views</span>
+                                <span className="w-1 h-1 rounded-full bg-white/40" />
+                                <span>{timeAgo(heroVideo.created_at)}</span>
+                            </div>
                         </div>
                     </div>
                 </Link>
@@ -76,16 +79,16 @@ export default function HomeClient({ initialVideos }: HomeClientProps) {
 
             {/* Category Chips */}
             <nav
-                className="flex gap-2 overflow-x-auto no-scrollbar pb-3 -mx-1 px-1 sticky top-[var(--spacing-header)] bg-background/95 backdrop-blur-md z-10 pt-2 border-b border-white/5"
+                className="flex gap-3 overflow-x-auto no-scrollbar pb-4 -mx-1 px-1 sticky top-[var(--spacing-header)] bg-[#0a0a0a]/90 backdrop-blur-xl z-20 pt-4 border-b border-white/5 shadow-2xl shadow-black/50"
                 aria-label="Video categories"
             >
                 {categories.map(({ name, icon: Icon }) => (
                     <button
                         key={name}
                         onClick={() => setActiveCategory(name)}
-                        className={`chip whitespace-nowrap flex items-center gap-1.5 transition-all duration-300 ${name === activeCategory
-                            ? 'chip-active shadow-[0_0_15px_rgba(145,71,255,0.4)] ring-1 ring-primary/50'
-                            : 'hover:bg-surface-hover hover:ring-1 hover:ring-white/10'
+                        className={`chip whitespace-nowrap flex items-center gap-2 transition-all duration-300 px-5 py-2 rounded-full text-sm font-bold ${name === activeCategory
+                            ? 'bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.15)] scale-105'
+                            : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/5 hover:border-white/10'
                             }`}
                     >
                         {Icon && <Icon size={14} />}

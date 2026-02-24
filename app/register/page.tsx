@@ -23,35 +23,24 @@ export default function RegisterPage() {
         setError(null);
 
         try {
-            // 1. Sign up user
+            // 1. Sign up user via Supabase Auth
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
-                    data: { username },
+                    data: { username }, // Backend DB Trigger handles inserting this into `profiles`
                 },
             });
 
             if (authError) throw authError;
 
-            // 2. Check for email confirmation requirement
+            // 2. Check for email confirmation requirement or proceed
             if (authData.user && !authData.session) {
                 // Email confirmation required
                 setSuccessEmail(email);
                 setSuccessMode(true);
             } else if (authData.user) {
-                // 3. Create Profile (if session exists immediately)
-                const { error: profileError } = await supabase.from('profiles').insert([
-                    {
-                        id: authData.user.id,
-                        username,
-                        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
-                    },
-                ]);
-                if (profileError) {
-                    console.error('Profile creation failed', profileError);
-                    // Non-blocking error, user is still authed
-                }
+                // Trigger created profile automatically, just redirect
                 router.push('/');
             }
         } catch (err: any) {

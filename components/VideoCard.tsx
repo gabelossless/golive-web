@@ -34,14 +34,14 @@ export default function VideoCard({
     const formattedTime = timestamp.includes('ago') ? timestamp : timeAgo(timestamp);
 
     return (
-        <div className="group cursor-pointer animate-in fade-in slide-in-from-bottom-3 duration-500">
+        <div className="group cursor-pointer animate-in fade-in slide-in-from-bottom-3 duration-700">
             {/* Thumbnail */}
-            <Link href={`/watch/${id}`} className="block relative rounded-xl overflow-hidden bg-surface group-hover:shadow-[0_8px_30px_rgba(145,71,255,0.25)] group-hover:-translate-y-1 transition-all duration-500 ring-1 ring-white/5 group-hover:ring-primary/50" style={{ aspectRatio: '16/9' }}>
+            <Link href={`/watch/${id}`} className="block relative rounded-2xl overflow-hidden bg-surface group-hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)] group-hover:-translate-y-1.5 transition-all duration-500 ring-1 ring-white/5 group-hover:ring-white/20" style={{ aspectRatio: '16/9' }}>
                 <img
                     src={thumbnail}
                     alt={title}
                     loading="lazy"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-[cubic-bezier(0.25,1,0.5,1)]"
                 />
                 {/* Duration / LIVE badge */}
                 <div className="absolute bottom-2 right-2">
@@ -76,7 +76,7 @@ export default function VideoCard({
 
                 <div className="flex-1 min-w-0 relative pr-6">
                     <Link href={`/watch/${id}`}>
-                        <h3 className="text-sm font-semibold text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors duration-200">
+                        <h3 className="text-base font-bold text-white line-clamp-2 leading-snug group-hover:text-primary transition-colors duration-200">
                             {title}
                         </h3>
                     </Link>
@@ -95,7 +95,7 @@ export default function VideoCard({
                     </p>
 
                     {/* More Options */}
-                    <button className="absolute -right-1 top-0 p-1 opacity-0 group-hover:opacity-100 text-muted hover:text-foreground transition-all rounded-full hover:bg-surface">
+                    <button aria-label="More options" className="absolute -right-1 top-0 p-1 opacity-0 group-hover:opacity-100 text-muted hover:text-foreground transition-all rounded-full hover:bg-surface">
                         <MoreVertical size={16} />
                     </button>
                 </div>
