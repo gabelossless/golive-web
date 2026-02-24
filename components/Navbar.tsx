@@ -54,7 +54,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                     </div>
 
                     {/* Voice Search Button */}
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full glass border border-white/5 hover:border-primary/50 hover:bg-surface-hover transition-all active:scale-95 text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.2)] hover:shadow-[0_0_15px_rgba(145,71,255,0.3)] group">
+                    <button aria-label="Voice search" className="w-10 h-10 flex items-center justify-center rounded-full glass border border-white/5 hover:border-primary/50 hover:bg-surface-hover transition-all active:scale-95 text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.2)] hover:shadow-[0_0_15px_rgba(145,71,255,0.3)] group">
                         <Mic size={18} className="group-hover:text-primary transition-colors" />
                     </button>
                 </div>
@@ -108,14 +108,13 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                             <div className="flex items-center gap-2 ml-2">
                                 <Link
                                     href="/login"
-                                    className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border border-border/50 hover:bg-surface-hover font-bold text-sm transition-all"
+                                    className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border border-border/50 hover:bg-surface-hover font-bold text-xs transition-all active:scale-95"
                                 >
-                                    <UserIcon size={18} />
                                     Log In
                                 </Link>
                                 <Link
                                     href="/register"
-                                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary hover:bg-primary-hover text-white font-bold text-sm shadow-lg shadow-primary/20 transition-all active:scale-95"
+                                    className="flex items-center gap-2 px-5 py-2 rounded-full bg-primary hover:bg-primary-hover text-white font-bold text-xs shadow-lg shadow-primary/10 transition-all active:scale-95"
                                 >
                                     Sign Up
                                 </Link>
