@@ -43,33 +43,39 @@ export default function HomeClient({ initialVideos }: HomeClientProps) {
     }, [videos]);
 
     return (
-        <div className="space-y-6">
-            {/* Hero Banner - Only show when we have videos */}
+        <div className="space-y-12">
+            {/* Cinematic Hero Showcase */}
             {heroVideo && (
-                <Link href={`/watch/${heroVideo.id}`} className="block group relative rounded-2xl overflow-hidden bg-surface mb-2" style={{ aspectRatio: '21/7' }}>
+                <Link href={`/watch/${heroVideo.id}`} className="block group relative rounded-sm overflow-hidden bg-surface mb-6 border border-white/5" style={{ aspectRatio: '21/8' }}>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent z-10" />
                     <img
-                        src={heroVideo.thumbnail_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2670&auto=format&fit=crop'}
+                        src={heroVideo.thumbnail_url || `https://source.unsplash.com/random/1600x900?gaming&sig=${heroVideo.id}`}
                         alt={heroVideo.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                        className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000 ease-in-out"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-black/40 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 backdrop-blur-sm bg-gradient-to-t from-[#0a0a0a]/90 to-transparent border-t border-white/5">
-                        <div className="flex items-center gap-3 mb-4">
-                            <span className="bg-primary hover:bg-primary-hover shadow-[0_0_15px_rgba(145,71,255,0.5)] transition-colors text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5 cursor-default">
-                                <Flame size={12} className="animate-pulse" /> Trending Now
+                    <div className="absolute bottom-0 left-0 right-0 p-12 md:p-16 z-20">
+                        <div className="flex items-center gap-4 mb-6">
+                            <span className="bg-primary text-white text-[10px] font-black px-4 py-1.5 rounded-sm uppercase tracking-[0.2em] flex items-center gap-2">
+                                <Flame size={12} strokeWidth={3} /> FEATURED PREMIERE
                             </span>
                         </div>
-                        <h2 className="text-3xl md:text-5xl font-black text-white leading-tight mb-4 drop-shadow-2xl max-w-3xl tracking-tight">
+                        <h2 className="text-4xl md:text-7xl font-black text-white leading-[0.9] mb-6 max-w-4xl tracking-tighter uppercase italic">
                             {heroVideo.title}
                         </h2>
-                        <div className="flex items-center gap-4 text-white/80 text-sm font-medium">
-                            <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
-                                <img src={heroVideo.profiles?.avatar_url || 'https://i.pravatar.cc/150'} alt="" className="w-5 h-5 rounded-full" />
-                                <span className="text-white font-bold">{heroVideo.profiles?.username || 'Unknown'}</span>
+                        <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-sm bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden">
+                                    <img
+                                        src={heroVideo.profiles?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${heroVideo.profiles?.username || 'user'}&backgroundColor=E50914`}
+                                        alt=""
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <span className="text-white font-black text-xs tracking-widest uppercase">{heroVideo.profiles?.username || 'ANONYMOUS'}</span>
                             </div>
-                            <div className="flex items-center gap-4 border-l border-white/20 pl-4">
-                                <span className="flex items-center gap-1.5"><Sparkles size={14} className="text-primary" /> {formatViews(heroVideo.view_count || 0)} views</span>
-                                <span className="w-1 h-1 rounded-full bg-white/40" />
+                            <div className="h-4 w-px bg-white/20" />
+                            <div className="flex items-center gap-6 text-[10px] font-bold tracking-widest text-white/60 uppercase">
+                                <span>{formatViews(heroVideo.view_count || 0)} VIEWS</span>
                                 <span>{timeAgo(heroVideo.created_at)}</span>
                             </div>
                         </div>
@@ -77,67 +83,58 @@ export default function HomeClient({ initialVideos }: HomeClientProps) {
                 </Link>
             )}
 
-            {/* Category Chips */}
+            {/* Premium Category Navigation */}
             <nav
-                className="flex gap-3 overflow-x-auto no-scrollbar pb-4 -mx-1 px-1 sticky top-[var(--spacing-header)] bg-[#0a0a0a]/90 backdrop-blur-xl z-20 pt-4 border-b border-white/5 shadow-2xl shadow-black/50"
-                aria-label="Video categories"
+                className="flex gap-4 overflow-x-auto no-scrollbar pb-6 sticky top-[var(--spacing-header)] bg-[#050505]/95 backdrop-blur-3xl z-30 pt-4 border-b border-white/5"
+                aria-label="Filter videos"
             >
                 {categories.map(({ name, icon: Icon }) => (
                     <button
                         key={name}
                         onClick={() => setActiveCategory(name)}
-                        className={`chip whitespace-nowrap flex items-center gap-2 transition-all duration-300 px-5 py-2 rounded-full text-sm font-bold ${name === activeCategory
-                            ? 'bg-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.15)] scale-105'
-                            : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/5 hover:border-white/10'
+                        className={`text-[10px] font-black tracking-[0.2em] uppercase transition-all px-4 py-2 border rounded-sm ${name === activeCategory
+                            ? 'bg-white text-black border-white'
+                            : 'bg-transparent text-white/50 border-white/10 hover:border-white/30 hover:text-white'
                             }`}
                     >
-                        {Icon && <Icon size={14} />}
                         {name}
                     </button>
                 ))}
             </nav>
 
-            {/* Section Header */}
-            <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold flex items-center gap-2">
-                    {activeCategory === 'All' ? (
-                        <><Sparkles size={18} className="text-primary drop-shadow-[0_0_8px_rgba(145,71,255,0.6)]" /> Recommended</>
-                    ) : (
-                        <><Gamepad2 size={18} className="text-primary drop-shadow-[0_0_8px_rgba(145,71,255,0.6)]" /> {activeCategory}</>
-                    )}
-                </h2>
-                <Link href="/trending" className="text-xs text-primary font-bold hover:text-primary-hover hover:drop-shadow-[0_0_5px_rgba(145,71,255,0.5)] transition-all flex items-center gap-1">
-                    <TrendingUp size={14} /> See Trending
-                </Link>
-            </div>
+            {/* Video Showcase Grid */}
+            <div className="space-y-8">
+                <div className="flex items-end justify-between border-b border-white/5 pb-4">
+                    <h2 className="text-2xl font-black tracking-tighter text-white uppercase italic">
+                        {activeCategory === 'All' ? 'LATEST BREACHES' : activeCategory}
+                    </h2>
+                    <Link href="/trending" className="text-[10px] font-black tracking-widest text-primary hover:text-white transition-colors uppercase">
+                        BROWSE ALL TRENDING →
+                    </Link>
+                </div>
 
-            {/* Video Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
-                {filteredVideos.length > 0 ? (
-                    filteredVideos.map((video) => (
-                        <VideoCard
-                            key={video.id}
-                            id={video.id}
-                            title={video.title}
-                            thumbnail={video.thumbnail_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2670&auto=format&fit=crop'}
-                            author={video.profiles?.username || 'Unknown'}
-                            authorAvatar={video.profiles?.avatar_url || 'https://i.pravatar.cc/150'}
-                            views={video.view_count || 0}
-                            timestamp={video.created_at}
-                            isLive={video.is_live}
-                        />
-                    ))
-                ) : (
-                    <div className="col-span-full py-20 text-center space-y-5">
-                        <div className="w-24 h-24 mx-auto rounded-full glass border border-white/5 flex items-center justify-center shadow-[0_0_30px_rgba(145,71,255,0.15)]">
-                            <Upload size={40} className="text-primary opacity-80" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
+                    {filteredVideos.length > 0 ? (
+                        filteredVideos.map((video) => (
+                            <VideoCard
+                                key={video.id}
+                                id={video.id}
+                                title={video.title}
+                                thumbnail={video.thumbnail_url || `https://source.unsplash.com/random/800x450?gaming&sig=${video.id}`}
+                                author={video.profiles?.username || 'ANONYMOUS'}
+                                authorAvatar={video.profiles?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${video.profiles?.username || 'user'}&backgroundColor=E50914`}
+                                views={video.view_count || 0}
+                                timestamp={video.created_at}
+                                isLive={video.is_live}
+                            />
+                        ))
+                    ) : (
+                        <div className="col-span-full py-32 text-center border border-dashed border-white/10 rounded-sm">
+                            <Upload size={32} className="mx-auto text-primary/40 mb-4" />
+                            <p className="text-white/40 font-black tracking-widest text-xs uppercase italic">NO INTEL FOUND IN THIS CATEGORY</p>
                         </div>
-                        <p className="text-muted font-medium text-lg">No videos found yet.</p>
-                        <Link href="/upload" className="btn btn-premium px-8 py-3 rounded-full text-sm font-black inline-flex items-center gap-2">
-                            <Upload size={18} /> Be the first to upload!
-                        </Link>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );

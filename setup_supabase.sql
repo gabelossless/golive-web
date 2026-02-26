@@ -10,9 +10,13 @@ create table if not exists public.profiles (
   avatar_url text,
   bio text,
   website text,
+  is_verified boolean default false,
 
   constraint username_length check (char_length(username) >= 3)
 );
+
+-- Index for username lookups
+create index if not exists profiles_username_idx on public.profiles (username);
 
 -- Enable RLS on profiles
 alter table public.profiles enable row level security;
@@ -42,10 +46,15 @@ create table if not exists public.videos (
   video_url text not null,
   thumbnail_url text,
   view_count bigint default 0,
+  duration text default '0:00',
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   is_live boolean default false,
   category text default 'Gaming'
 );
+
+-- Index for trending/latest queries
+create index if not exists videos_view_count_idx on public.videos (view_count desc);
+create index if not exists videos_created_at_idx on public.videos (created_at desc);
 
 -- Enable RLS on videos
 alter table public.videos enable row level security;
