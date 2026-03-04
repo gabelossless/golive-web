@@ -29,7 +29,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                         <Menu size={22} className="text-white" />
                     </button>
                     <Link href="/" className="flex items-center gap-2 group">
-                        <span className="text-2xl font-black tracking-tighter text-white uppercase italic">
+                        <span className="text-3xl font-display font-black tracking-tighter text-white uppercase italic">
                             Go<span className="text-primary">Live</span>
                         </span>
                     </Link>

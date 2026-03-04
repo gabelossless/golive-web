@@ -93,12 +93,12 @@ export default function RegisterPage() {
                 <div className="auth-card rounded-sm p-12 border border-white/5 bg-black/40 backdrop-blur-3xl shadow-[0_40px_100px_rgba(0,0,0,0.9)]">
                     <div className="text-center mb-12">
                         <Link href="/" className="inline-block mb-10 group">
-                            <span className="text-3xl font-black tracking-tighter text-white uppercase italic">
+                            <span className="text-3xl font-display font-black tracking-tighter text-white uppercase italic">
                                 Go<span className="text-primary">Live</span>
                             </span>
                         </Link>
-                        <h1 className="text-2xl font-black tracking-[0.2em] text-white mb-2 uppercase italic">ESTABLISH_LINK</h1>
-                        <p className="text-white/40 text-[10px] font-black tracking-widest uppercase">NEW SECURE ENROLLMENT</p>
+                        <h1 className="text-4xl font-display font-black tracking-[-0.02em] text-white mb-2 uppercase italic leading-none">ESTABLISH_LINK</h1>
+                        <p className="text-white/40 text-[10px] font-black tracking-[0.3em] uppercase">NEW SECURE ENROLLMENT</p>
                     </div>
 
                     <div className="space-y-8">

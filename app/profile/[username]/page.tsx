@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { LayoutGrid, CheckCircle, Edit, Settings, Share2, Loader2, User as UserIcon } from 'lucide-react';
 import CommunityTab from '@/components/CommunityTab';
-import VideoCard from '@/components/VideoCard';
+import VideoCard, { VerifiedBadge } from '@/components/VideoCard';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { Profile, Video } from '@/types';
@@ -126,28 +126,33 @@ export default function ProfilePage() {
 
             <div className="max-w-[1700px] mx-auto px-4 md:px-6">
                 {/* Profile header */}
-                <div className="relative -mt-12 md:-mt-16 flex flex-col md:flex-row md:items-end gap-5 pb-8 border-b border-border/60">
+                <div className="relative -mt-12 md:-mt-16 flex flex-col md:flex-row md:items-end gap-5 pb-8 border-b border-white/5">
                     <div className="relative flex-shrink-0">
-                        <div className="w-24 h-24 md:w-36 md:h-36 rounded-3xl bg-surface border-4 border-background overflow-hidden shadow-2xl relative group">
-                            <img
-                                src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`}
-                                alt={profile.username}
-                                className="w-full h-full object-cover"
-                            />
-                            {isOwner && (
-                                <button onClick={() => router.push('/settings')} className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none outline-none">
-                                    <Edit size={24} className="text-white" />
-                                </button>
-                            )}
+                        {/* Premium Avatar Border */}
+                        <div className={`w-28 h-28 md:w-40 md:h-40 rounded-full relative group transition-all duration-300 ${profile.is_verified
+                            ? 'p-[3px] bg-gradient-to-tr from-blue-500 via-primary to-purple-500 shadow-[0_0_30px_rgba(229,9,20,0.2)]'
+                            : 'p-[2px] bg-surface'
+                            }`}>
+                            <div className="w-full h-full rounded-full border-[3px] border-background overflow-hidden relative bg-surface">
+                                <img
+                                    src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`}
+                                    alt={profile.username}
+                                    className="w-full h-full object-cover"
+                                />
+                                {isOwner && (
+                                    <button aria-label="Edit Profile" title="Edit Profile" onClick={() => router.push('/settings')} className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none outline-none">
+                                        <Edit size={24} className="text-white" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
 
                     <div className="flex-1 space-y-3">
                         <div className="flex items-center gap-3">
-                            <h1 className="text-2xl md:text-4xl font-black tracking-tighter flex items-center gap-2">
+                            <h1 className="text-3xl md:text-5xl font-display font-black tracking-[-0.04em] flex items-center gap-3 uppercase italic">
                                 {profile.full_name || profile.username}
-                                {/* Todo: Add verification check */}
-                                {false && <CheckCircle size={22} className="text-primary" />}
+                                {profile.is_verified && <VerifiedBadge className="w-7 h-7 text-[#1D9BF0]" />}
                             </h1>
                             {isOwner && (
                                 <span className="bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-primary/20">YOU</span>
@@ -170,7 +175,7 @@ export default function ProfilePage() {
                                 <button onClick={() => router.push('/settings')} className="btn btn-primary px-6 py-2.5 font-black text-sm rounded-full shadow-lg shadow-primary/25 hover:scale-105 transition-all">
                                     EDIT PROFILE
                                 </button>
-                                <button onClick={() => router.push('/settings')} className="bg-surface hover:bg-surface-hover border border-border/50 rounded-full p-3 transition-all">
+                                <button aria-label="Settings" title="Settings" onClick={() => router.push('/settings')} className="bg-surface hover:bg-surface-hover border border-border/50 rounded-full p-3 transition-all">
                                     <Settings size={20} className="text-foreground" />
                                 </button>
                             </>
@@ -179,7 +184,7 @@ export default function ProfilePage() {
                                 <button className="btn btn-primary px-10 py-2.5 font-black text-sm rounded-full shadow-lg shadow-primary/25">
                                     SUBSCRIBE
                                 </button>
-                                <button className="bg-surface hover:bg-surface-hover border border-border/50 rounded-full p-3 transition-all">
+                                <button aria-label="Share Profile" title="Share Profile" className="bg-surface hover:bg-surface-hover border border-border/50 rounded-full p-3 transition-all">
                                     <Share2 size={20} className="text-foreground" />
                                 </button>
                             </>

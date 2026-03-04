@@ -5,6 +5,7 @@ export interface Profile {
     full_name?: string;
     bio?: string;
     created_at?: string;
+    is_verified?: boolean;
 }
 
 export interface Video {

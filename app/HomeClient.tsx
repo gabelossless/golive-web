@@ -59,7 +59,7 @@ export default function HomeClient({ initialVideos }: HomeClientProps) {
                                 <Flame size={12} strokeWidth={3} /> FEATURED PREMIERE
                             </span>
                         </div>
-                        <h2 className="text-4xl md:text-7xl font-black text-white leading-[0.9] mb-6 max-w-4xl tracking-tighter uppercase italic">
+                        <h2 className="text-4xl md:text-7xl font-display font-black text-white leading-[0.85] mb-6 max-w-4xl tracking-[-0.04em] uppercase italic">
                             {heroVideo.title}
                         </h2>
                         <div className="flex items-center gap-6">
@@ -105,7 +105,7 @@ export default function HomeClient({ initialVideos }: HomeClientProps) {
             {/* Video Showcase Grid */}
             <div className="space-y-8">
                 <div className="flex items-end justify-between border-b border-white/5 pb-4">
-                    <h2 className="text-2xl font-black tracking-tighter text-white uppercase italic">
+                    <h2 className="text-3xl font-display font-black tracking-tighter text-white uppercase italic">
                         {activeCategory === 'All' ? 'LATEST BREACHES' : activeCategory}
                     </h2>
                     <Link href="/trending" className="text-[10px] font-black tracking-widest text-primary hover:text-white transition-colors uppercase">

@@ -48,37 +48,50 @@ export default function UploadPage() {
         setError(null);
 
         try {
-            // 1. Upload Video
-            setUploadStep('Uploading video...');
-            const videoPath = `${user.id}/${Date.now()}_${videoFile.name}`;
-            const { error: videoError } = await supabase.storage
-                .from('videos')
-                .upload(videoPath, videoFile);
+            // Helper function to get presigned URL and upload to R2
+            const uploadToR2 = async (file: File, folder: string) => {
+                // 1. Get Presigned URL
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filename: file.name,
+                        contentType: file.type,
+                        folder
+                    }),
+                });
 
-            if (videoError) throw videoError;
+                if (!response.ok) throw new Error('Failed to secure upload link');
+                const { url, path } = await response.json();
+
+                // 2. Upload file directly to R2
+                const uploadResponse = await fetch(url, {
+                    method: 'PUT',
+                    body: file,
+                    headers: { 'Content-Type': file.type },
+                });
+
+                if (!uploadResponse.ok) throw new Error('Failed to upload file to storage');
+
+                // Return the final public URL
+                return `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${path}`;
+            };
+
+            // 1. Upload Video
+            setUploadStep('Uploading video to edge network...');
+            const videoUrl = await uploadToR2(videoFile, `videos/${user.id}`);
             setUploadProgress(50);
 
             // 2. Upload Thumbnail (Optional)
             setUploadStep('Uploading thumbnail...');
             let thumbnailUrl = null;
             if (thumbnailFile) {
-                const thumbPath = `${user.id}/${Date.now()}_${thumbnailFile.name}`;
-                const { error: thumbError } = await supabase.storage
-                    .from('thumbnails')
-                    .upload(thumbPath, thumbnailFile);
-
-                if (thumbError) throw thumbError;
-
-                const { data: { publicUrl } } = supabase.storage.from('thumbnails').getPublicUrl(thumbPath);
-                thumbnailUrl = publicUrl;
+                thumbnailUrl = await uploadToR2(thumbnailFile, `thumbnails/${user.id}`);
             }
             setUploadProgress(75);
 
-            // 3. Get Video Public URL
-            const { data: { publicUrl: videoUrl } } = supabase.storage.from('videos').getPublicUrl(videoPath);
-
-            // 4. Create DB Record
-            setUploadStep('Publishing...');
+            // 3. Create DB Record (Still using Supabase for DB)
+            setUploadStep('Publishing intel...');
             const { error: dbError } = await supabase.from('videos').insert({
                 user_id: user.id,
                 title,
@@ -149,7 +162,7 @@ export default function UploadPage() {
     return (
         <div className="max-w-4xl mx-auto py-6 px-4">
             <div className="flex items-center gap-4 mb-8">
-                <button onClick={() => router.back()} className="p-2 rounded-full hover:bg-surface transition-colors">
+                <button aria-label="Go Back" title="Go Back" onClick={() => router.back()} className="p-2 rounded-full hover:bg-surface transition-colors">
                     <ArrowLeft size={20} />
                 </button>
                 <div>
@@ -162,7 +175,7 @@ export default function UploadPage() {
                 <div className="bg-destructive/10 text-destructive p-4 rounded-xl mb-6 flex items-center gap-3 text-sm font-medium">
                     <AlertCircle size={18} />
                     {error}
-                    <button onClick={() => setError(null)} className="ml-auto"><X size={16} /></button>
+                    <button aria-label="Dismiss Error" title="Dismiss Error" onClick={() => setError(null)} className="ml-auto"><X size={16} /></button>
                 </div>
             )}
 
