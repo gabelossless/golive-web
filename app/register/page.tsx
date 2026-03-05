@@ -3,215 +3,158 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, User, Sparkles, Eye, EyeOff, ArrowRight, Loader2, CheckCircle2, Check } from 'lucide-react';
+import { Eye, EyeOff, Loader2, CheckCircle2, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function RegisterPage() {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [showPw, setShowPw] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [successMode, setSuccessMode] = useState(false);
+    const [success, setSuccess] = useState(false);
     const [successEmail, setSuccessEmail] = useState('');
     const router = useRouter();
 
-    const passwordStrength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : 3;
-    const strengthColors = ['', 'bg-red-400', 'bg-yellow-400', 'bg-emerald-400'];
-    const strengthLabels = ['', 'Too short', 'Good', 'Strong'];
+    const pwStrength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : 3;
+    const pwColors = ['', '#ef4444', '#f59e0b', '#10b981'];
+    const pwLabels = ['', 'Too short', 'Good', 'Strong'];
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
+        setLoading(true);
         setError(null);
-
         try {
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email,
-                password,
+            const { data, error: err } = await supabase.auth.signUp({
+                email, password,
                 options: { data: { username } },
             });
-
-            if (authError) throw authError;
-
-            if (authData.user && !authData.session) {
-                setSuccessEmail(email);
-                setSuccessMode(true);
-            } else if (authData.user) {
-                router.push('/');
-            }
+            if (err) throw err;
+            if (data.user && !data.session) { setSuccessEmail(email); setSuccess(true); }
+            else if (data.user) { router.push('/'); }
         } catch (err: any) {
             setError(err.message);
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
-    if (successMode) {
+    if (success) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-                <div className="fixed inset-0 pointer-events-none">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-emerald-600/8 blur-[120px] rounded-full" />
-                </div>
-                <div className="relative w-full max-w-md">
-                    <div className="glass-card rounded-3xl p-10 text-center shadow-2xl shadow-black/50">
-                        <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-5">
-                            <CheckCircle2 size={32} className="text-emerald-400" />
-                        </div>
-                        <h2 className="text-display text-2xl font-bold mb-2">Check your email</h2>
-                        <p className="text-muted text-sm mb-2">
-                            We sent a confirmation link to:
-                        </p>
-                        <p className="text-violet-400 font-semibold mb-6">{successEmail}</p>
-                        <p className="text-muted text-xs mb-6">Click the link in the email to activate your account. Check your spam folder if you don't see it.</p>
-                        <Link href="/login" className="btn btn-primary w-full justify-center">
-                            Back to Sign In
-                        </Link>
-                    </div>
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-background)', padding: 16 }}>
+                <div className="auth-card" style={{ textAlign: 'center' }}>
+                    <CheckCircle2 size={48} color="#10b981" style={{ margin: '0 auto 16px' }} />
+                    <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Check your email</h2>
+                    <p style={{ color: 'var(--color-muted)', marginBottom: 6 }}>We sent a confirmation to:</p>
+                    <p style={{ color: '#9147ff', fontWeight: 600, marginBottom: 20 }}>{successEmail}</p>
+                    <Link href="/login" className="btn btn-primary" style={{ width: '100%', height: 44, borderRadius: 8, justifyContent: 'center', display: 'flex', alignItems: 'center' }}>
+                        Back to sign in
+                    </Link>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-violet-600/10 blur-[120px] rounded-full" />
-                <div className="absolute bottom-0 left-1/4 w-[400px] h-[300px] bg-cyan-600/8 blur-[100px] rounded-full" />
-            </div>
-
-            <div className="relative w-full max-w-md">
-                <div className="glass-card rounded-3xl p-8 md:p-10 shadow-2xl shadow-black/50">
-                    {/* Logo */}
-                    <div className="flex flex-col items-center mb-8">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center shadow-lg shadow-violet-500/30 mb-4">
-                            <Sparkles size={26} className="text-white" strokeWidth={2} />
-                        </div>
-                        <h1 className="text-display text-2xl font-bold text-foreground mb-1">Join GoLive</h1>
-                        <p className="text-muted text-sm">Start creating and streaming today</p>
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-background)', padding: 16 }}>
+            <div className="auth-card">
+                {/* Logo */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 28 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 12, background: '#9147ff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                        <Sparkles size={22} color="white" strokeWidth={2} />
                     </div>
-
-                    {/* Perks */}
-                    <div className="grid grid-cols-3 gap-2 mb-6">
-                        {['Free to join', '720p uploads', 'Live streams'].map((perk) => (
-                            <div key={perk} className="flex items-center gap-1.5 text-[11px] text-muted-2 bg-surface-2 rounded-lg p-2">
-                                <Check size={11} className="text-emerald-400 flex-shrink-0" strokeWidth={3} />
-                                <span>{perk}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Error */}
-                    {error && (
-                        <div className="mb-5 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium">
-                            {error}
-                        </div>
-                    )}
-
-                    <form onSubmit={handleRegister} className="space-y-4">
-                        {/* Username */}
-                        <div className="space-y-1.5">
-                            <label htmlFor="username" className="text-sm font-medium text-muted-2">Username</label>
-                            <div className="relative">
-                                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
-                                <input
-                                    id="username"
-                                    type="text"
-                                    placeholder="yourcoolhandle"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                                    required
-                                    minLength={3}
-                                    className="input pl-11"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Email */}
-                        <div className="space-y-1.5">
-                            <label htmlFor="email" className="text-sm font-medium text-muted-2">Email</label>
-                            <div className="relative">
-                                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
-                                <input
-                                    id="email"
-                                    type="email"
-                                    placeholder="you@example.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                    className="input pl-11"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Password */}
-                        <div className="space-y-1.5">
-                            <label htmlFor="password" className="text-sm font-medium text-muted-2">Password</label>
-                            <div className="relative">
-                                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
-                                <input
-                                    id="password"
-                                    type={showPassword ? 'text' : 'password'}
-                                    placeholder="Min. 8 characters"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                    minLength={6}
-                                    className="input pl-11 pr-12"
-                                />
-                                <button
-                                    type="button"
-                                    aria-label="Toggle password"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors"
-                                >
-                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                </button>
-                            </div>
-                            {/* Strength meter */}
-                            {password.length > 0 && (
-                                <div className="space-y-1.5">
-                                    <div className="flex gap-1">
-                                        {[1, 2, 3].map((i) => (
-                                            <div key={i} className={`flex-1 h-1 rounded-full transition-all ${i <= passwordStrength ? strengthColors[passwordStrength] : 'bg-border'}`} />
-                                        ))}
-                                    </div>
-                                    <p className="text-[11px] text-muted">{strengthLabels[passwordStrength]}</p>
-                                </div>
-                            )}
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={isLoading || !email || !password || !username}
-                            className="btn btn-primary w-full btn-lg mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isLoading ? (
-                                <><Loader2 size={18} className="animate-spin" /> Creating account...</>
-                            ) : (
-                                <>Create Account <ArrowRight size={18} /></>
-                            )}
-                        </button>
-                    </form>
-
-                    <div className="flex items-center gap-4 my-6">
-                        <div className="flex-1 border-t border-border" />
-                        <span className="text-xs text-muted font-medium">Already have an account?</span>
-                        <div className="flex-1 border-t border-border" />
-                    </div>
-
-                    <Link href="/login" className="btn btn-secondary w-full justify-center">
-                        Sign In Instead
-                    </Link>
+                    <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Create your account</h1>
+                    <p style={{ fontSize: 14, color: 'var(--color-muted)' }}>Free to join. Start creating today.</p>
                 </div>
 
-                <p className="text-center text-xs text-muted mt-6">
-                    By creating an account, you agree to our{' '}
-                    <span className="text-violet-400 cursor-pointer hover:underline">Terms</span>
-                    {' & '}
-                    <span className="text-violet-400 cursor-pointer hover:underline">Privacy Policy</span>
-                </p>
+                {error && <div className="alert-error" style={{ marginBottom: 16 }}>{error}</div>}
+
+                <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: 6, fontSize: 14, fontWeight: 500 }}>Username</label>
+                        <input
+                            id="username"
+                            type="text"
+                            placeholder="Choose a username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                            required
+                            minLength={3}
+                            className="form-input"
+                        />
+                        <p style={{ fontSize: 12, color: 'var(--color-muted)', marginTop: 4 }}>Letters, numbers, and underscores only</p>
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: 6, fontSize: 14, fontWeight: 500 }}>Email</label>
+                        <input
+                            id="email"
+                            type="email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="form-input"
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: 6, fontSize: 14, fontWeight: 500 }}>Password</label>
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                id="password"
+                                type={showPw ? 'text' : 'password'}
+                                placeholder="At least 6 characters"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                minLength={6}
+                                className="form-input"
+                                style={{ paddingRight: 44 }}
+                            />
+                            <button type="button" aria-label="Toggle password" onClick={() => setShowPw(!showPw)}
+                                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                                {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
+                        {password.length > 0 && (
+                            <div style={{ marginTop: 8 }}>
+                                <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                                    {[1, 2, 3].map((i) => (
+                                        <div key={i} style={{
+                                            flex: 1, height: 3, borderRadius: 2,
+                                            background: i <= pwStrength ? pwColors[pwStrength] : 'var(--color-surface-2)',
+                                            transition: 'background 0.2s',
+                                        }} />
+                                    ))}
+                                </div>
+                                <p style={{ fontSize: 12, color: pwColors[pwStrength] }}>{pwLabels[pwStrength]}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading || !email || !password || !username}
+                        className="btn btn-primary"
+                        style={{ width: '100%', height: 44, fontSize: 15, fontWeight: 600, borderRadius: 8, marginTop: 4, opacity: (loading || !email || !password || !username) ? 0.6 : 1, cursor: (loading || !email || !password || !username) ? 'not-allowed' : 'pointer' }}
+                    >
+                        {loading ? <><Loader2 size={18} className="animate-spin" style={{ display: 'inline', marginRight: 6 }} />Creating account...</> : 'Create account'}
+                    </button>
+
+                    <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--color-muted)', marginTop: 4 }}>
+                        By creating an account, you agree to our{' '}
+                        <span style={{ color: '#9147ff', cursor: 'pointer' }}>Terms of Service</span>
+                    </p>
+                </form>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
+                    <div className="divider" style={{ flex: 1 }} />
+                    <span style={{ fontSize: 13, color: 'var(--color-muted)' }}>Already have an account?</span>
+                    <div className="divider" style={{ flex: 1 }} />
+                </div>
+                <Link href="/login" className="btn btn-outline" style={{ width: '100%', height: 44, fontSize: 15, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    Sign in instead
+                </Link>
             </div>
         </div>
     );

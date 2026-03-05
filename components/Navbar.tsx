@@ -2,181 +2,218 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Search, Bell, Plus, X, Menu, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Search, Bell, Plus, Menu, Mic, X, Upload, Video, LogOut, Settings, User as UserIcon, Sparkles } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
-import Notifications from './Notifications';
 
 interface NavbarProps {
     onMenuClick?: () => void;
 }
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
-    const { user, profile, isLoading } = useAuth();
-    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-    const [searchOpen, setSearchOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
+    const { user, profile, signOut, isLoading } = useAuth();
+    const [query, setQuery] = useState('');
+    const [mobileSearch, setMobileSearch] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [createMenuOpen, setCreateMenuOpen] = useState(false);
     const router = useRouter();
-    const pathname = usePathname();
     const searchRef = useRef<HTMLInputElement>(null);
+    const userMenuRef = useRef<HTMLDivElement>(null);
+    const createMenuRef = useRef<HTMLDivElement>(null);
+
+    // Close menus on outside click
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setUserMenuOpen(false);
+            if (createMenuRef.current && !createMenuRef.current.contains(e.target as Node)) setCreateMenuOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
 
     useEffect(() => {
-        if (searchOpen && searchRef.current) {
-            searchRef.current.focus();
-        }
-    }, [searchOpen]);
+        if (mobileSearch) searchRef.current?.focus();
+    }, [mobileSearch]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        if (searchQuery.trim()) {
-            router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-            setSearchOpen(false);
-            setSearchQuery('');
+        if (query.trim()) {
+            router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+            setMobileSearch(false);
         }
     };
 
+    /* ────────────── Mobile search overlay ────────────── */
+    if (mobileSearch) {
+        return (
+            <div className="yt-navbar px-3 gap-2">
+                <button onClick={() => setMobileSearch(false)} className="icon-btn" aria-label="Cancel search">
+                    <X size={20} />
+                </button>
+                <form onSubmit={handleSearch} className="yt-search flex-1">
+                    <input
+                        ref={searchRef}
+                        type="text"
+                        placeholder="Search"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        className="yt-search-input"
+                    />
+                    <button type="submit" className="yt-search-btn" aria-label="Submit search">
+                        <Search size={18} />
+                    </button>
+                </form>
+            </div>
+        );
+    }
+
     return (
-        <>
-            <nav className="glass fixed top-0 left-0 right-0 z-50" style={{ height: 'var(--spacing-header)' }}>
-                <div className="flex items-center justify-between h-full px-4 md:px-6 gap-4">
-
-                    {/* Left: Logo + Menu */}
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                        <button
-                            onClick={onMenuClick}
-                            className="btn btn-ghost btn-icon hidden md:flex"
-                            aria-label="Toggle Menu"
-                        >
-                            <Menu size={20} />
-                        </button>
-                        <Link href="/" className="flex items-center gap-2 group">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center shadow-lg shadow-violet-500/30 flex-shrink-0">
-                                <Sparkles size={16} className="text-white" strokeWidth={2.5} />
-                            </div>
-                            <span className="text-display text-xl text-white font-bold tracking-tight hidden sm:block">
-                                Go<span className="gradient-text">Live</span>
-                            </span>
-                        </Link>
+        <nav className="yt-navbar">
+            {/* Left — Logo */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+                <button onClick={onMenuClick} className="icon-btn" aria-label="Menu">
+                    <Menu size={20} />
+                </button>
+                <Link href="/" className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-[#212121] transition-colors">
+                    <div className="w-7 h-7 rounded-lg bg-[#9147ff] flex items-center justify-center flex-shrink-0">
+                        <Sparkles size={15} className="text-white" strokeWidth={2.5} />
                     </div>
+                    <span className="font-bold text-[18px] text-white tracking-tight hidden sm:block">GoLive</span>
+                </Link>
+            </div>
 
-                    {/* Center: Search - Desktop */}
-                    <form onSubmit={handleSearch} className="flex-1 max-w-lg hidden md:block">
-                        <div className="search-container flex items-center h-10 px-4 gap-3">
-                            <Search size={15} className="text-muted flex-shrink-0" />
-                            <input
-                                ref={searchRef}
-                                type="text"
-                                placeholder="Search videos, creators..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 bg-transparent text-sm text-foreground placeholder-muted focus:outline-none"
-                            />
-                        </div>
-                    </form>
+            {/* Center — Search (desktop) */}
+            <div className="flex-1 flex justify-center px-4 hidden md:flex">
+                <form onSubmit={handleSearch} className="yt-search">
+                    <input
+                        type="text"
+                        placeholder="Search"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        className="yt-search-input"
+                    />
+                    <button type="submit" className="yt-search-btn" aria-label="Search">
+                        <Search size={18} />
+                    </button>
+                </form>
+            </div>
 
-                    {/* Right: Actions */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        {/* Mobile search toggle */}
-                        <button
-                            onClick={() => setSearchOpen(true)}
-                            className="btn btn-ghost btn-icon md:hidden"
-                            aria-label="Search"
-                        >
-                            <Search size={20} />
-                        </button>
+            {/* Right — Actions */}
+            <div className="flex items-center gap-1 ml-auto" style={{ flexShrink: 0 }}>
+                {/* Mobile search */}
+                <button onClick={() => setMobileSearch(true)} className="icon-btn md:hidden" aria-label="Search">
+                    <Search size={20} />
+                </button>
 
-                        {!isLoading && (
-                            user ? (
-                                <>
-                                    <Link
-                                        href="/upload"
-                                        className="btn btn-primary btn-sm hidden sm:flex gap-1.5 shadow-lg shadow-violet-500/25"
+                {!isLoading && (
+                    user ? (
+                        <>
+                            {/* Create */}
+                            <div className="relative" ref={createMenuRef}>
+                                <button
+                                    onClick={() => setCreateMenuOpen(!createMenuOpen)}
+                                    className="icon-btn"
+                                    aria-label="Create"
+                                >
+                                    <Plus size={20} />
+                                </button>
+                                {createMenuOpen && (
+                                    <div
+                                        className="absolute right-0 top-12 py-1 rounded-xl shadow-xl z-50 min-w-[160px]"
+                                        style={{ background: '#282828', border: '1px solid rgba(255,255,255,0.12)' }}
                                     >
-                                        <Plus size={15} strokeWidth={2.5} />
-                                        Create
-                                    </Link>
-
-                                    <div className="relative">
-                                        <button
-                                            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                                            className="btn btn-ghost btn-icon relative"
-                                            aria-label="Notifications"
+                                        <Link
+                                            href="/upload"
+                                            onClick={() => setCreateMenuOpen(false)}
+                                            className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-[#3f3f3f] transition-colors"
                                         >
-                                            <Bell size={20} />
-                                            <span className="absolute top-2 right-2 w-2 h-2 bg-violet-500 rounded-full border-2 border-background" />
-                                        </button>
-                                        <Notifications isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
+                                            <Upload size={16} /> Upload video
+                                        </Link>
+                                        <Link
+                                            href="/studio/golive"
+                                            onClick={() => setCreateMenuOpen(false)}
+                                            className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-[#3f3f3f] transition-colors"
+                                        >
+                                            <Video size={16} /> Go live
+                                        </Link>
                                     </div>
-
-                                    <Link
-                                        href={`/profile/${profile?.username || 'me'}`}
-                                        className="relative group ml-1"
-                                    >
-                                        <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-border group-hover:ring-violet-500/60 transition-all">
-                                            <img
-                                                src={profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}&backgroundColor=7c3aed&textColor=ffffff`}
-                                                alt="Profile"
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-background rounded-full" />
-                                    </Link>
-                                </>
-                            ) : (
-                                <div className="flex items-center gap-2">
-                                    <Link href="/login" className="btn btn-ghost btn-sm hidden sm:flex">
-                                        Sign In
-                                    </Link>
-                                    <Link href="/register" className="btn btn-primary btn-sm shadow-lg shadow-violet-500/25">
-                                        Get Started
-                                    </Link>
-                                </div>
-                            )
-                        )}
-                    </div>
-                </div>
-            </nav>
-
-            {/* Mobile Search Overlay */}
-            {searchOpen && (
-                <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-xl md:hidden flex flex-col">
-                    <div className="flex items-center gap-3 p-4 border-b border-border">
-                        <form onSubmit={handleSearch} className="flex-1">
-                            <div className="search-container flex items-center h-12 px-4 gap-3">
-                                <Search size={18} className="text-muted flex-shrink-0" />
-                                <input
-                                    ref={searchRef}
-                                    type="text"
-                                    placeholder="Search videos, creators..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="flex-1 bg-transparent text-base text-foreground placeholder-muted focus:outline-none"
-                                    autoFocus
-                                />
+                                )}
                             </div>
-                        </form>
-                        <button
-                            onClick={() => setSearchOpen(false)}
-                            className="btn btn-ghost btn-icon"
-                            aria-label="Close Search"
-                        >
-                            <X size={20} />
-                        </button>
-                    </div>
-                    <div className="p-4">
-                        <p className="text-sm text-muted font-medium mb-3">Popular Searches</p>
-                        {['Gaming', 'Music', 'Tech', 'Trending'].map((tag) => (
-                            <button
-                                key={tag}
-                                onClick={() => { setSearchQuery(tag); router.push(`/search?q=${tag}`); setSearchOpen(false); }}
-                                className="category-pill mr-2 mb-2"
-                            >
-                                {tag}
+
+                            {/* Notifications */}
+                            <button className="icon-btn relative" aria-label="Notifications">
+                                <Bell size={20} />
+                                <span
+                                    className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
+                                    style={{ background: '#9147ff' }}
+                                />
                             </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </>
+
+                            {/* Avatar / User menu */}
+                            <div className="relative ml-1" ref={userMenuRef}>
+                                <button
+                                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                                    className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-transparent hover:ring-[#9147ff] transition-all"
+                                    aria-label="Account"
+                                >
+                                    <img
+                                        src={profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}&backgroundColor=9147ff&textColor=ffffff`}
+                                        alt="Avatar"
+                                        className="w-full h-full object-cover"
+                                    />
+                                </button>
+                                {userMenuOpen && (
+                                    <div
+                                        className="absolute right-0 top-11 py-2 rounded-xl shadow-xl z-50 min-w-[220px]"
+                                        style={{ background: '#282828', border: '1px solid rgba(255,255,255,0.12)' }}
+                                    >
+                                        {/* Account info */}
+                                        <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.1)] flex items-center gap-3">
+                                            <img
+                                                src={profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}&backgroundColor=9147ff&textColor=ffffff`}
+                                                alt=""
+                                                className="w-10 h-10 rounded-full object-cover"
+                                            />
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium truncate">{profile?.username || 'User'}</p>
+                                                <p className="text-xs text-[#aaa] truncate">{user.email}</p>
+                                            </div>
+                                        </div>
+                                        <Link href={`/profile/${profile?.username}`} onClick={() => setUserMenuOpen(false)}
+                                            className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-[#3f3f3f]">
+                                            <UserIcon size={16} /> Your channel
+                                        </Link>
+                                        <Link href="/studio" onClick={() => setUserMenuOpen(false)}
+                                            className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-[#3f3f3f]">
+                                            <Video size={16} /> GoLive Studio
+                                        </Link>
+                                        <Link href="/settings" onClick={() => setUserMenuOpen(false)}
+                                            className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-[#3f3f3f]">
+                                            <Settings size={16} /> Settings
+                                        </Link>
+                                        <div className="border-t border-[rgba(255,255,255,0.1)] my-1" />
+                                        <button
+                                            onClick={() => { signOut(); setUserMenuOpen(false); }}
+                                            className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-[#3f3f3f] w-full text-left"
+                                        >
+                                            <LogOut size={16} /> Sign out
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex items-center gap-2 ml-2">
+                            <Link href="/login" className="btn btn-outline text-sm hidden sm:flex">
+                                Sign in
+                            </Link>
+                            <Link href="/register" className="btn btn-primary text-sm">
+                                Get started
+                            </Link>
+                        </div>
+                    )
+                )}
+            </div>
+        </nav>
     );
 }

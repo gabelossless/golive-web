@@ -4,152 +4,171 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Home, TrendingUp, Users, PlaySquare, Clock, ThumbsUp, Radio, ChevronRight, LayoutDashboard, Compass, Flame, Video, Radio as LiveIcon } from 'lucide-react';
+import {
+    Home, Flame, Compass, PlaySquare, Clock, ThumbsUp,
+    LayoutDashboard, History, Radio, ChevronRight, Users,
+    Tv, Music, Gamepad2, BookOpen, ChevronDown
+} from 'lucide-react';
 
-interface SidebarProps {
-    isCollapsed: boolean;
-}
+interface SidebarProps { isCollapsed: boolean; }
 
-interface LiveChannelUI {
-    id: string;
-    name: string;
-    game: string;
-    avatar: string;
-    viewers: string;
-    live: boolean;
+interface LiveChannel {
+    id: string; name: string; game: string; avatar: string; viewers: string;
 }
 
 const mainNav = [
     { icon: Home, label: 'Home', href: '/' },
-    { icon: Video, label: 'Shorts', href: '/shorts' },
     { icon: Flame, label: 'Trending', href: '/trending' },
-    { icon: Compass, label: 'Following', href: '/subscriptions' },
+    { icon: Compass, label: 'Subscriptions', href: '/subscriptions' },
 ];
 
 const libraryNav = [
     { icon: LayoutDashboard, label: 'Studio', href: '/studio' },
-    { icon: PlaySquare, label: 'History', href: '/history' },
-    { icon: ThumbsUp, label: 'Liked', href: '/liked' },
+    { icon: History, label: 'History', href: '/history' },
+    { icon: PlaySquare, label: 'Your videos', href: '/history' },
+    { icon: ThumbsUp, label: 'Liked videos', href: '/liked' },
+];
+
+const exploreNav = [
+    { icon: Gamepad2, label: 'Gaming', href: '/trending?cat=Gaming' },
+    { icon: Music, label: 'Music', href: '/trending?cat=Music' },
+    { icon: Tv, label: 'Live', href: '/trending?cat=Live' },
+    { icon: BookOpen, label: 'Learning', href: '/trending?cat=Learning' },
 ];
 
 export default function Sidebar({ isCollapsed }: SidebarProps) {
     const pathname = usePathname();
-    const [liveChannels, setLiveChannels] = useState<LiveChannelUI[]>([]);
+    const [liveChannels, setLiveChannels] = useState<LiveChannel[]>([]);
+    const [showAllChannels, setShowAllChannels] = useState(false);
 
     useEffect(() => {
-        fetchLiveChannels();
-        const channel = supabase
-            .channel('public:videos:live')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'videos' }, fetchLiveChannels)
-            .subscribe();
-        return () => { supabase.removeChannel(channel); };
+        fetchLive();
     }, []);
 
-    const fetchLiveChannels = async () => {
+    const fetchLive = async () => {
         const { data } = await supabase
             .from('videos')
-            .select('id, title, category, profiles(username, avatar_url)')
+            .select('id, category, profiles(username, avatar_url)')
             .eq('is_live', true)
-            .limit(5);
-
+            .limit(8);
         if (data) {
             setLiveChannels(data.map((v: any) => ({
                 id: v.id,
-                name: v.profiles?.username || 'Unknown',
-                game: v.category || 'Live',
-                avatar: v.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${v.profiles?.username}`,
-                viewers: '12K',
-                live: true,
+                name: (Array.isArray(v.profiles) ? v.profiles[0] : v.profiles)?.username || 'Unknown',
+                game: v.category || 'Just Chatting',
+                avatar: (Array.isArray(v.profiles) ? v.profiles[0] : v.profiles)?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${v.id}`,
+                viewers: `${Math.floor(Math.random() * 9000 + 100).toLocaleString()}`,
             })));
         }
     };
 
-    const NavItem = ({ item, collapsed }: { item: any; collapsed: boolean }) => {
-        const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+    const isActive = (href: string) =>
+        href === '/' ? pathname === '/' : pathname.startsWith(href);
+
+    /* ── Mini (icon-only) mode ── */
+    if (isCollapsed) {
         return (
-            <Link
-                href={item.href}
-                title={collapsed ? item.label : undefined}
-                className={`nav-link ${isActive ? 'active' : ''} ${collapsed ? 'justify-center px-0' : ''}`}
-            >
-                <item.icon
-                    size={collapsed ? 22 : 20}
-                    strokeWidth={isActive ? 2.5 : 1.8}
-                    fill={isActive ? 'currentColor' : 'none'}
-                />
-                {!collapsed && <span>{item.label}</span>}
-            </Link>
-        );
-    };
-
-    return (
-        <aside
-            className={`fixed left-0 bottom-0 z-40 border-r border-border overflow-y-auto scrollbar-hide hidden lg:flex flex-col transition-all duration-300 ease-in-out bg-[#0a0a0f]/80 backdrop-blur-xl ${isCollapsed ? 'w-[72px]' : 'w-[240px]'}`}
-            style={{ top: 'var(--spacing-header)' }}
-        >
-            <div className="flex flex-col py-4 flex-1 gap-1">
-
-                {/* Main Nav */}
-                <div className="px-3">
-                    {!isCollapsed && <p className="px-3 py-2 text-[11px] font-semibold text-muted uppercase tracking-wider">Menu</p>}
-                    {mainNav.map((item) => <NavItem key={item.label} item={item} collapsed={isCollapsed} />)}
-                </div>
-
-                <div className={`border-t border-border/40 my-3 ${isCollapsed ? 'mx-3' : 'mx-4'}`} />
-
-                {/* Library */}
-                <div className="px-3">
-                    {!isCollapsed && <p className="px-3 py-2 text-[11px] font-semibold text-muted uppercase tracking-wider">Library</p>}
-                    {libraryNav.map((item) => <NavItem key={item.label} item={item} collapsed={isCollapsed} />)}
-                </div>
-
-                <div className={`border-t border-border/40 my-3 ${isCollapsed ? 'mx-3' : 'mx-4'}`} />
-
-                {/* Live Channels */}
-                <div className="px-3 flex-1">
-                    {!isCollapsed ? (
-                        <>
-                            <div className="flex items-center justify-between px-3 py-2 mb-1">
-                                <p className="text-[11px] font-semibold text-muted uppercase tracking-wider">Live Now</p>
-                                <span className="flex items-center gap-1 text-[10px] text-live font-bold">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-live animate-pulse" />
-                                    Live
-                                </span>
+            <aside className="yt-sidebar mini hidden-mobile">
+                <div className="py-2 px-1.5 space-y-1">
+                    {mainNav.map(({ icon: Icon, label, href }) => (
+                        <Link key={href} href={href} aria-label={label}>
+                            <div className={`sidebar-item-mini ${isActive(href) ? 'active' : ''}`}>
+                                <Icon size={22} strokeWidth={isActive(href) ? 2.5 : 1.8} />
+                                <span>{label === 'Subscriptions' ? 'Subs' : label}</span>
                             </div>
-                            {liveChannels.length === 0 ? (
-                                <p className="text-[12px] text-muted px-3 py-2 opacity-60">No live streams</p>
-                            ) : (
-                                <div className="space-y-0.5">
-                                    {liveChannels.map((ch) => (
-                                        <Link key={ch.id} href={`/live/${ch.id}`}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-colors group"
-                                        >
-                                            <div className="relative flex-shrink-0">
-                                                <img src={ch.avatar} alt={ch.name}
-                                                    className="w-8 h-8 rounded-full object-cover ring-1 ring-border group-hover:ring-live/50 transition-all" />
-                                                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-live rounded-full border-2 border-background animate-pulse" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-[13px] font-medium text-foreground truncate group-hover:text-violet-300 transition-colors">{ch.name}</p>
-                                                <p className="text-[11px] text-muted truncate">{ch.game}</p>
-                                            </div>
-                                            <span className="text-[11px] text-muted-2 font-medium">{ch.viewers}</span>
-                                        </Link>
-                                    ))}
-                                </div>
-                            )}
-                        </>
-                    ) : (
-                        <div className="flex flex-col gap-2 items-center mt-2">
-                            {liveChannels.map((ch) => (
-                                <Link key={ch.id} href={`/live/${ch.id}`} title={ch.name} className="relative">
-                                    <img src={ch.avatar} alt={ch.name} className="w-9 h-9 rounded-full object-cover ring-1 ring-border hover:ring-live/60 transition-all" />
-                                    <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-live rounded-full border-2 border-background animate-pulse" />
-                                </Link>
-                            ))}
-                        </div>
-                    )}
+                        </Link>
+                    ))}
+                    <div className="sidebar-divider mx-2" />
+                    {libraryNav.slice(0, 3).map(({ icon: Icon, label, href }) => (
+                        <Link key={href} href={href} aria-label={label}>
+                            <div className={`sidebar-item-mini ${isActive(href) ? 'active' : ''}`}>
+                                <Icon size={22} strokeWidth={1.8} />
+                                <span style={{ fontSize: 9 }}>{label.split(' ')[0]}</span>
+                            </div>
+                        </Link>
+                    ))}
                 </div>
+            </aside>
+        );
+    }
+
+    /* ── Expanded mode ── */
+    return (
+        <aside className="yt-sidebar expanded hidden-mobile">
+            <div className="py-3 px-3 space-y-0.5">
+
+                {mainNav.map(({ icon: Icon, label, href }) => (
+                    <Link key={href} href={href}>
+                        <div className={`sidebar-item ${isActive(href) ? 'active' : ''}`}>
+                            <Icon size={20} strokeWidth={isActive(href) ? 2.5 : 1.8} className="sidebar-icon" style={{ flexShrink: 0 }} />
+                            {label}
+                        </div>
+                    </Link>
+                ))}
+
+                <div className="sidebar-divider" />
+
+                <div className="sidebar-section-label">You</div>
+                {libraryNav.map(({ icon: Icon, label, href }) => (
+                    <Link key={label} href={href}>
+                        <div className={`sidebar-item ${isActive(href) ? 'active' : ''}`}>
+                            <Icon size={20} strokeWidth={1.8} className="sidebar-icon" style={{ flexShrink: 0 }} />
+                            {label}
+                        </div>
+                    </Link>
+                ))}
+
+                <div className="sidebar-divider" />
+
+                {/* Live Channels (Twitch-style) */}
+                {liveChannels.length > 0 && (
+                    <>
+                        <div className="sidebar-section-label flex items-center justify-between">
+                            <span>Live Channels</span>
+                        </div>
+                        {liveChannels.slice(0, showAllChannels ? 8 : 5).map((ch) => (
+                            <Link key={ch.id} href={`/live/${ch.id}`}>
+                                <div className="sidebar-item group">
+                                    <div className="relative flex-shrink-0">
+                                        <img src={ch.avatar} alt={ch.name} className="w-8 h-8 rounded-full object-cover" />
+                                        <span className="live-indicator absolute -bottom-0.5 -right-0.5 border-2" style={{ borderColor: '#0f0f0f' }} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate">{ch.name}</p>
+                                        <p className="text-xs text-[#aaa] truncate">{ch.game}</p>
+                                    </div>
+                                    <span className="text-xs text-[#aaa] flex-shrink-0">{ch.viewers}</span>
+                                </div>
+                            </Link>
+                        ))}
+                        {liveChannels.length > 5 && (
+                            <button
+                                onClick={() => setShowAllChannels(!showAllChannels)}
+                                className="sidebar-item text-sm text-[#aaa] hover:text-white w-full"
+                            >
+                                <ChevronDown size={18} className={`transition-transform ${showAllChannels ? 'rotate-180' : ''}`} />
+                                Show {showAllChannels ? 'less' : 'more'}
+                            </button>
+                        )}
+                        <div className="sidebar-divider" />
+                    </>
+                )}
+
+                <div className="sidebar-section-label">Explore</div>
+                {exploreNav.map(({ icon: Icon, label, href }) => (
+                    <Link key={href} href={href}>
+                        <div className="sidebar-item">
+                            <Icon size={20} strokeWidth={1.8} className="sidebar-icon" style={{ flexShrink: 0 }} />
+                            {label}
+                        </div>
+                    </Link>
+                ))}
+
+                <div className="sidebar-divider" />
+                <p className="text-xs px-4 py-3 leading-relaxed" style={{ color: '#717171' }}>
+                    © 2025 GoLive Inc.
+                </p>
+
             </div>
         </aside>
     );

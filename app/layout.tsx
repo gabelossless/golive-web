@@ -1,29 +1,23 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 import Layout from "@/components/Layout";
 import AuthProvider from "@/components/AuthProvider";
 
-const inter = Inter({
+const roboto = Roboto({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-roboto",
   display: "swap",
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space-grotesk",
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "GoLive — Stream. Create. Connect.",
-  description: "The next generation video platform for creators and viewers. Upload, stream, and discover content.",
-  keywords: ["streaming", "video", "live", "creators", "GoLive"],
+  title: "GoLive — Watch, Stream & Connect",
+  description: "The platform for streaming video and live content. Upload, go live, and connect with your community.",
+  keywords: ["streaming", "video", "live", "creators", "twitch", "youtube", "GoLive"],
   openGraph: {
-    title: "GoLive — Stream. Create. Connect.",
-    description: "The next generation video platform for creators.",
+    title: "GoLive — Watch, Stream & Connect",
+    description: "The platform for streaming video and live content.",
     type: "website",
   },
 };
@@ -31,7 +25,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${spaceGrotesk.variable} antialiased`}>
+      <body className={roboto.variable}>
         <AuthProvider>
           <Layout>{children}</Layout>
         </AuthProvider>
