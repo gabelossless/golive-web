@@ -47,9 +47,16 @@ export async function POST(request: Request) {
         });
 
     } catch (error: any) {
-        console.error('Presigned URL Error:', error);
+        console.error('R2 Presigned URL Error Detail:', {
+            message: error.message,
+            code: error.code,
+            bucket: R2_BUCKET_NAME,
+            region: 'auto',
+            accountId: R2_ACCOUNT_ID ? 'set' : 'missing',
+            keyId: R2_ACCESS_KEY_ID ? 'set' : 'missing',
+        });
         return NextResponse.json(
-            { error: 'Could not generate upload URL' },
+            { error: `Upload server error: ${error.message}` },
             { status: 500 }
         );
     }
