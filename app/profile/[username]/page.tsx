@@ -66,7 +66,7 @@ export default function ProfilePage() {
                             views: (v.view_count || 0) + ' views',
                             timestamp: new Date(v.created_at).toLocaleDateString(),
                             duration: '10:00', // Placeholder as DB doesn't have duration yet
-                            isVerified: false,
+                            isVerified: profileData.is_verified,
                         }));
                         setVideos(mappedVideos as any);
                     }

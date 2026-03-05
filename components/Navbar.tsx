@@ -1,110 +1,182 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Bell, Menu, Plus, Mic, Video } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Search, Bell, Plus, X, Menu, Sparkles } from 'lucide-react';
+import { useAuth } from '@/components/AuthProvider';
 import Notifications from './Notifications';
 
 interface NavbarProps {
     onMenuClick?: () => void;
 }
 
-import { useAuth } from '@/components/AuthProvider';
-import { User as UserIcon } from 'lucide-react';
-
 export default function Navbar({ onMenuClick }: NavbarProps) {
     const { user, profile, isLoading } = useAuth();
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [searchOpen, setSearchOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (searchOpen && searchRef.current) {
+            searchRef.current.focus();
+        }
+    }, [searchOpen]);
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+            setSearchOpen(false);
+            setSearchQuery('');
+        }
+    };
 
     return (
-        <nav className="glass fixed top-0 left-0 right-0 z-50 border-b border-white/5 transition-all duration-300" style={{ height: 'var(--spacing-header)' }}>
-            <div className="flex items-center justify-between h-full px-6">
-                {/* Left: Brand Identity */}
-                <div className="flex items-center gap-6">
-                    <button
-                        onClick={onMenuClick}
-                        className="p-2 rounded-sm hover:bg-white/5 transition-colors active:scale-95"
-                        aria-label="Toggle Menu"
-                    >
-                        <Menu size={22} className="text-white" />
-                    </button>
-                    <Link href="/" className="flex items-center gap-2 group">
-                        <span className="text-3xl font-display font-black tracking-tighter text-white uppercase italic">
-                            Go<span className="text-primary">Live</span>
-                        </span>
-                    </Link>
-                </div>
+        <>
+            <nav className="glass fixed top-0 left-0 right-0 z-50" style={{ height: 'var(--spacing-header)' }}>
+                <div className="flex items-center justify-between h-full px-4 md:px-6 gap-4">
 
-                {/* Center: Cinematic Search */}
-                <div className="flex-1 max-w-xl mx-8 hidden md:block">
-                    <div className="search-container flex items-center rounded-sm overflow-hidden h-10 px-4">
-                        <Search size={16} className="text-muted mr-3" />
-                        <input
-                            type="text"
-                            placeholder="SEARCH EVERYTHING..."
-                            className="flex-1 bg-transparent text-[11px] font-bold tracking-widest text-white placeholder-muted/50 focus:outline-none uppercase"
-                        />
+                    {/* Left: Logo + Menu */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                        <button
+                            onClick={onMenuClick}
+                            className="btn btn-ghost btn-icon hidden md:flex"
+                            aria-label="Toggle Menu"
+                        >
+                            <Menu size={20} />
+                        </button>
+                        <Link href="/" className="flex items-center gap-2 group">
+                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center shadow-lg shadow-violet-500/30 flex-shrink-0">
+                                <Sparkles size={16} className="text-white" strokeWidth={2.5} />
+                            </div>
+                            <span className="text-display text-xl text-white font-bold tracking-tight hidden sm:block">
+                                Go<span className="gradient-text">Live</span>
+                            </span>
+                        </Link>
+                    </div>
+
+                    {/* Center: Search - Desktop */}
+                    <form onSubmit={handleSearch} className="flex-1 max-w-lg hidden md:block">
+                        <div className="search-container flex items-center h-10 px-4 gap-3">
+                            <Search size={15} className="text-muted flex-shrink-0" />
+                            <input
+                                ref={searchRef}
+                                type="text"
+                                placeholder="Search videos, creators..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="flex-1 bg-transparent text-sm text-foreground placeholder-muted focus:outline-none"
+                            />
+                        </div>
+                    </form>
+
+                    {/* Right: Actions */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        {/* Mobile search toggle */}
+                        <button
+                            onClick={() => setSearchOpen(true)}
+                            className="btn btn-ghost btn-icon md:hidden"
+                            aria-label="Search"
+                        >
+                            <Search size={20} />
+                        </button>
+
+                        {!isLoading && (
+                            user ? (
+                                <>
+                                    <Link
+                                        href="/upload"
+                                        className="btn btn-primary btn-sm hidden sm:flex gap-1.5 shadow-lg shadow-violet-500/25"
+                                    >
+                                        <Plus size={15} strokeWidth={2.5} />
+                                        Create
+                                    </Link>
+
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                                            className="btn btn-ghost btn-icon relative"
+                                            aria-label="Notifications"
+                                        >
+                                            <Bell size={20} />
+                                            <span className="absolute top-2 right-2 w-2 h-2 bg-violet-500 rounded-full border-2 border-background" />
+                                        </button>
+                                        <Notifications isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
+                                    </div>
+
+                                    <Link
+                                        href={`/profile/${profile?.username || 'me'}`}
+                                        className="relative group ml-1"
+                                    >
+                                        <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-border group-hover:ring-violet-500/60 transition-all">
+                                            <img
+                                                src={profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}&backgroundColor=7c3aed&textColor=ffffff`}
+                                                alt="Profile"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-background rounded-full" />
+                                    </Link>
+                                </>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <Link href="/login" className="btn btn-ghost btn-sm hidden sm:flex">
+                                        Sign In
+                                    </Link>
+                                    <Link href="/register" className="btn btn-primary btn-sm shadow-lg shadow-violet-500/25">
+                                        Get Started
+                                    </Link>
+                                </div>
+                            )
+                        )}
                     </div>
                 </div>
+            </nav>
 
-                {/* Right: Actions */}
-                <div className="flex items-center gap-4">
-                    {!isLoading && (
-                        user ? (
-                            <>
-                                <Link
-                                    href="/upload"
-                                    className="hidden sm:flex items-center gap-2 px-4 h-10 border border-white/10 hover:border-white/30 text-[10px] font-black tracking-widest uppercase transition-all"
-                                >
-                                    <Plus size={14} strokeWidth={3} />
-                                    UPLOAD
-                                </Link>
-
-                                <div className="relative">
-                                    <button
-                                        onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                                        className={`p-2 rounded-sm hover:bg-white/5 transition-colors relative ${isNotificationsOpen ? 'text-primary' : 'text-white'}`}
-                                        aria-label="Notifications"
-                                    >
-                                        <Bell size={22} />
-                                        <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-primary rounded-full" />
-                                    </button>
-                                    <Notifications isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
-                                </div>
-
-                                <Link
-                                    href={`/profile/${profile?.username || 'user'}`}
-                                    className="relative group ml-2"
-                                >
-                                    <div className="w-10 h-10 rounded-sm overflow-hidden border border-white/10 group-hover:border-primary/50 transition-all p-0.5">
-                                        <img
-                                            src={profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.id}&backgroundColor=E50914`}
-                                            alt="Profile"
-                                            className="w-full h-full object-cover rounded-sm"
-                                        />
-                                    </div>
-                                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
-                                </Link>
-                            </>
-                        ) : (
-                            <div className="flex items-center gap-3">
-                                <Link
-                                    href="/login"
-                                    className="hidden sm:block text-[11px] font-black tracking-widest uppercase text-white hover:text-primary transition-colors"
-                                >
-                                    LOG IN
-                                </Link>
-                                <Link
-                                    href="/register"
-                                    className="btn btn-primary"
-                                >
-                                    GET STARTED
-                                </Link>
+            {/* Mobile Search Overlay */}
+            {searchOpen && (
+                <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-xl md:hidden flex flex-col">
+                    <div className="flex items-center gap-3 p-4 border-b border-border">
+                        <form onSubmit={handleSearch} className="flex-1">
+                            <div className="search-container flex items-center h-12 px-4 gap-3">
+                                <Search size={18} className="text-muted flex-shrink-0" />
+                                <input
+                                    ref={searchRef}
+                                    type="text"
+                                    placeholder="Search videos, creators..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="flex-1 bg-transparent text-base text-foreground placeholder-muted focus:outline-none"
+                                    autoFocus
+                                />
                             </div>
-                        )
-                    )}
+                        </form>
+                        <button
+                            onClick={() => setSearchOpen(false)}
+                            className="btn btn-ghost btn-icon"
+                            aria-label="Close Search"
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
+                    <div className="p-4">
+                        <p className="text-sm text-muted font-medium mb-3">Popular Searches</p>
+                        {['Gaming', 'Music', 'Tech', 'Trending'].map((tag) => (
+                            <button
+                                key={tag}
+                                onClick={() => { setSearchQuery(tag); router.push(`/search?q=${tag}`); setSearchOpen(false); }}
+                                className="category-pill mr-2 mb-2"
+                            >
+                                {tag}
+                            </button>
+                        ))}
+                    </div>
                 </div>
-            </div>
-        </nav>
+            )}
+        </>
     );
 }

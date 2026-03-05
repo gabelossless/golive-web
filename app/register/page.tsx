@@ -3,19 +3,23 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, User, AlertCircle, Loader2, Globe, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, User, Sparkles, Eye, EyeOff, ArrowRight, Loader2, CheckCircle2, Check } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function RegisterPage() {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [successMode, setSuccessMode] = useState(false);
     const [successEmail, setSuccessEmail] = useState('');
     const router = useRouter();
+
+    const passwordStrength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : 3;
+    const strengthColors = ['', 'bg-red-400', 'bg-yellow-400', 'bg-emerald-400'];
+    const strengthLabels = ['', 'Too short', 'Good', 'Strong'];
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -23,24 +27,18 @@ export default function RegisterPage() {
         setError(null);
 
         try {
-            // 1. Sign up user via Supabase Auth
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email,
                 password,
-                options: {
-                    data: { username }, // Backend DB Trigger handles inserting this into `profiles`
-                },
+                options: { data: { username } },
             });
 
             if (authError) throw authError;
 
-            // 2. Check for email confirmation requirement or proceed
             if (authData.user && !authData.session) {
-                // Email confirmation required
                 setSuccessEmail(email);
                 setSuccessMode(true);
             } else if (authData.user) {
-                // Trigger created profile automatically, just redirect
                 router.push('/');
             }
         } catch (err: any) {
@@ -50,142 +48,171 @@ export default function RegisterPage() {
         }
     };
 
-    const handleGoogleRegister = async () => {
-        setIsGoogleLoading(true);
-        setError(null);
-        try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
-                },
-            });
-            if (error) throw error;
-        } catch (err: any) {
-            setError(err.message);
-            setIsGoogleLoading(false);
-        }
-    };
-
     if (successMode) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-6 bg-[#0e0e10]">
-                <div className="w-full max-w-[440px] auth-card rounded-2xl p-10 sm:p-12 text-center animate-in fade-in zoom-in-95 duration-700">
-                    <div className="w-16 h-16 bg-green-500/10 rounded-[18px] flex items-center justify-center mx-auto mb-6">
-                        <Mail size={32} className="text-green-500" />
+            <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+                <div className="fixed inset-0 pointer-events-none">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-emerald-600/8 blur-[120px] rounded-full" />
+                </div>
+                <div className="relative w-full max-w-md">
+                    <div className="glass-card rounded-3xl p-10 text-center shadow-2xl shadow-black/50">
+                        <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center mx-auto mb-5">
+                            <CheckCircle2 size={32} className="text-emerald-400" />
+                        </div>
+                        <h2 className="text-display text-2xl font-bold mb-2">Check your email</h2>
+                        <p className="text-muted text-sm mb-2">
+                            We sent a confirmation link to:
+                        </p>
+                        <p className="text-violet-400 font-semibold mb-6">{successEmail}</p>
+                        <p className="text-muted text-xs mb-6">Click the link in the email to activate your account. Check your spam folder if you don't see it.</p>
+                        <Link href="/login" className="btn btn-primary w-full justify-center">
+                            Back to Sign In
+                        </Link>
                     </div>
-                    <h1 className="text-2xl font-bold mb-3 text-white tracking-tight">Check your inbox</h1>
-                    <p className="text-muted/80 text-sm mb-8 leading-relaxed">
-                        We've sent a magic link to <span className="text-white font-semibold">{successEmail}</span>.
-                        Please check your inbox to finish.
-                    </p>
-                    <Link href="/login" className="w-full btn btn-primary h-12 rounded-full font-bold text-sm flex items-center justify-center shadow-[0_4px_15px_rgba(145,71,255,0.2)] transition-all active:scale-[0.98]">
-                        Return to Log In
-                    </Link>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-[#050505] selection:bg-primary/30">
-            <div className="w-full max-w-[420px] animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out z-10">
-                <div className="auth-card rounded-sm p-12 border border-white/5 bg-black/40 backdrop-blur-3xl shadow-[0_40px_100px_rgba(0,0,0,0.9)]">
-                    <div className="text-center mb-12">
-                        <Link href="/" className="inline-block mb-10 group">
-                            <span className="text-3xl font-display font-black tracking-tighter text-white uppercase italic">
-                                Go<span className="text-primary">Live</span>
-                            </span>
-                        </Link>
-                        <h1 className="text-4xl font-display font-black tracking-[-0.02em] text-white mb-2 uppercase italic leading-none">ESTABLISH_LINK</h1>
-                        <p className="text-white/40 text-[10px] font-black tracking-[0.3em] uppercase">NEW SECURE ENROLLMENT</p>
+        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-violet-600/10 blur-[120px] rounded-full" />
+                <div className="absolute bottom-0 left-1/4 w-[400px] h-[300px] bg-cyan-600/8 blur-[100px] rounded-full" />
+            </div>
+
+            <div className="relative w-full max-w-md">
+                <div className="glass-card rounded-3xl p-8 md:p-10 shadow-2xl shadow-black/50">
+                    {/* Logo */}
+                    <div className="flex flex-col items-center mb-8">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center shadow-lg shadow-violet-500/30 mb-4">
+                            <Sparkles size={26} className="text-white" strokeWidth={2} />
+                        </div>
+                        <h1 className="text-display text-2xl font-bold text-foreground mb-1">Join GoLive</h1>
+                        <p className="text-muted text-sm">Start creating and streaming today</p>
                     </div>
 
-                    <div className="space-y-8">
-                        <form onSubmit={handleRegister} className="space-y-6">
-                            {error && (
-                                <div className="bg-primary/5 border border-primary/20 text-primary text-[10px] font-black p-4 rounded-sm flex items-start gap-4 animate-in fade-in slide-in-from-top-2 tracking-widest uppercase">
-                                    <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
-                                    <span>{error}</span>
-                                </div>
-                            )}
-
-                            <div className="space-y-4">
-                                <div className="auth-input-container !rounded-sm">
-                                    <input
-                                        id="username"
-                                        type="text"
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        className="auth-input !px-4 !py-4 text-xs font-bold tracking-widest uppercase"
-                                        placeholder=" "
-                                        required
-                                        minLength={3}
-                                        maxLength={20}
-                                    />
-                                    <label htmlFor="username" className="auth-label !text-[9px] !font-black !tracking-[0.2em] !uppercase !left-4">CODENAME</label>
-                                </div>
-
-                                <div className="auth-input-container !rounded-sm">
-                                    <input
-                                        id="email"
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="auth-input !px-4 !py-4 text-xs font-bold tracking-widest uppercase"
-                                        placeholder=" "
-                                        required
-                                    />
-                                    <label htmlFor="email" className="auth-label !text-[9px] !font-black !tracking-[0.2em] !uppercase !left-4">EMAIL_INTEL</label>
-                                </div>
-
-                                <div className="auth-input-container !rounded-sm">
-                                    <input
-                                        id="password"
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="auth-input !px-4 !py-4 text-xs font-bold tracking-widest uppercase"
-                                        placeholder=" "
-                                        required
-                                        minLength={8}
-                                    />
-                                    <label htmlFor="password" className="auth-label !text-[9px] !font-black !tracking-[0.2em] !uppercase !left-4">PASS_KEY</label>
-                                </div>
+                    {/* Perks */}
+                    <div className="grid grid-cols-3 gap-2 mb-6">
+                        {['Free to join', '720p uploads', 'Live streams'].map((perk) => (
+                            <div key={perk} className="flex items-center gap-1.5 text-[11px] text-muted-2 bg-surface-2 rounded-lg p-2">
+                                <Check size={11} className="text-emerald-400 flex-shrink-0" strokeWidth={3} />
+                                <span>{perk}</span>
                             </div>
+                        ))}
+                    </div>
 
-                            <button
-                                type="submit"
-                                disabled={isLoading || isGoogleLoading}
-                                className="w-full btn btn-primary !h-14 !rounded-sm !text-xs !font-black !tracking-[0.2em] shadow-2xl shadow-primary/20 disabled:opacity-30 transition-all active:scale-[0.98]"
-                            >
-                                {isLoading ? 'INITIALIZING...' : 'CREATE_IDENTITY'}
-                            </button>
-                        </form>
+                    {/* Error */}
+                    {error && (
+                        <div className="mb-5 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium">
+                            {error}
+                        </div>
+                    )}
 
-                        <div className="relative flex items-center py-2">
-                            <div className="flex-grow border-t border-white/5"></div>
-                            <span className="flex-shrink-0 mx-4 text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">SECURE_SSO</span>
-                            <div className="flex-grow border-t border-white/5"></div>
+                    <form onSubmit={handleRegister} className="space-y-4">
+                        {/* Username */}
+                        <div className="space-y-1.5">
+                            <label htmlFor="username" className="text-sm font-medium text-muted-2">Username</label>
+                            <div className="relative">
+                                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+                                <input
+                                    id="username"
+                                    type="text"
+                                    placeholder="yourcoolhandle"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                                    required
+                                    minLength={3}
+                                    className="input pl-11"
+                                />
+                            </div>
                         </div>
 
-                        {/* Google SSO */}
+                        {/* Email */}
+                        <div className="space-y-1.5">
+                            <label htmlFor="email" className="text-sm font-medium text-muted-2">Email</label>
+                            <div className="relative">
+                                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+                                <input
+                                    id="email"
+                                    type="email"
+                                    placeholder="you@example.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    className="input pl-11"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Password */}
+                        <div className="space-y-1.5">
+                            <label htmlFor="password" className="text-sm font-medium text-muted-2">Password</label>
+                            <div className="relative">
+                                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+                                <input
+                                    id="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="Min. 8 characters"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    minLength={6}
+                                    className="input pl-11 pr-12"
+                                />
+                                <button
+                                    type="button"
+                                    aria-label="Toggle password"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors"
+                                >
+                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </button>
+                            </div>
+                            {/* Strength meter */}
+                            {password.length > 0 && (
+                                <div className="space-y-1.5">
+                                    <div className="flex gap-1">
+                                        {[1, 2, 3].map((i) => (
+                                            <div key={i} className={`flex-1 h-1 rounded-full transition-all ${i <= passwordStrength ? strengthColors[passwordStrength] : 'bg-border'}`} />
+                                        ))}
+                                    </div>
+                                    <p className="text-[11px] text-muted">{strengthLabels[passwordStrength]}</p>
+                                </div>
+                            )}
+                        </div>
+
                         <button
-                            onClick={handleGoogleRegister}
-                            disabled={isGoogleLoading || isLoading}
-                            className="w-full google-btn-premium !rounded-sm !h-14 !bg-white !text-black !text-[10px] !font-black !tracking-[0.2em] hover:!bg-white/90 active:scale-[0.98]"
+                            type="submit"
+                            disabled={isLoading || !email || !password || !username}
+                            className="btn btn-primary w-full btn-lg mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {isGoogleLoading ? 'SYNCING...' : 'ENROLL_VIA_GOOGLE'}
+                            {isLoading ? (
+                                <><Loader2 size={18} className="animate-spin" /> Creating account...</>
+                            ) : (
+                                <>Create Account <ArrowRight size={18} /></>
+                            )}
                         </button>
+                    </form>
+
+                    <div className="flex items-center gap-4 my-6">
+                        <div className="flex-1 border-t border-border" />
+                        <span className="text-xs text-muted font-medium">Already have an account?</span>
+                        <div className="flex-1 border-t border-border" />
                     </div>
 
-                    <p className="mt-12 text-center text-[10px] font-black tracking-widest uppercase text-white/40">
-                        ALREADY ENROLLED?{' '}
-                        <Link href="/login" className="text-primary hover:text-white transition-colors">AUTHORIZE_ACCESS</Link>
-                    </p>
+                    <Link href="/login" className="btn btn-secondary w-full justify-center">
+                        Sign In Instead
+                    </Link>
                 </div>
+
+                <p className="text-center text-xs text-muted mt-6">
+                    By creating an account, you agree to our{' '}
+                    <span className="text-violet-400 cursor-pointer hover:underline">Terms</span>
+                    {' & '}
+                    <span className="text-violet-400 cursor-pointer hover:underline">Privacy Policy</span>
+                </p>
             </div>
         </div>
     );
 }
-

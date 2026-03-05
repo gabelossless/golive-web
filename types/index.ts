@@ -6,6 +6,7 @@ export interface Profile {
     bio?: string;
     created_at?: string;
     is_verified?: boolean;
+    is_premium?: boolean;
 }
 
 export interface Video {

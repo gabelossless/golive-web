@@ -2,9 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import VideoCard from '@/components/VideoCard';
-import { supabase } from '@/lib/supabase';
 import { formatViews, timeAgo } from '@/lib/utils';
-import { Flame, Sparkles, TrendingUp, Upload, Gamepad2 } from 'lucide-react';
+import { Flame, Sparkles, Play, Upload, ChevronRight, TrendingUp, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { Video } from '@/types';
 
@@ -13,130 +12,155 @@ interface HomeClientProps {
 }
 
 const categories = [
-    { name: 'All', icon: Sparkles },
-    { name: 'FPS', icon: null },
-    { name: 'RPG', icon: null },
-    { name: 'Speedruns', icon: null },
-    { name: 'Indie', icon: null },
-    { name: 'Strategy', icon: null },
-    { name: 'MOBA', icon: null },
-    { name: 'Horror', icon: null },
-    { name: 'Simulator', icon: null },
-    { name: 'IRL', icon: null },
+    'All', 'FPS', 'RPG', 'Speedruns', 'Indie', 'Strategy', 'MOBA', 'Horror', 'Simulator', 'IRL',
 ];
 
 export default function HomeClient({ initialVideos }: HomeClientProps) {
     const [activeCategory, setActiveCategory] = useState('All');
-    const [videos, setVideos] = useState<Video[]>(initialVideos);
+    const [videos] = useState<Video[]>(initialVideos);
 
-    // Client-side filtering
     const filteredVideos = useMemo(() => {
         if (activeCategory === 'All') return videos;
         return videos.filter(v => v.category === activeCategory);
     }, [activeCategory, videos]);
 
-    // Top trending video (highest views)
     const heroVideo = useMemo(() => {
         if (videos.length === 0) return null;
-        // Sort by view_count (number) directly
         return [...videos].sort((a, b) => (b.view_count || 0) - (a.view_count || 0))[0];
     }, [videos]);
 
     return (
-        <div className="space-y-12">
-            {/* Cinematic Hero Showcase */}
-            {heroVideo && (
-                <Link href={`/watch/${heroVideo.id}`} className="block group relative rounded-sm overflow-hidden bg-surface mb-6 border border-white/5" style={{ aspectRatio: '21/8' }}>
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent z-10" />
+        <div className="space-y-8 page-enter">
+
+            {/* ─── Hero Banner ─── */}
+            {heroVideo ? (
+                <Link
+                    href={`/watch/${heroVideo.id}`}
+                    className="block group relative rounded-3xl overflow-hidden bg-surface"
+                    style={{ aspectRatio: '21/8', minHeight: '220px' }}
+                >
+                    {/* Background image */}
                     <img
-                        src={heroVideo.thumbnail_url || `https://source.unsplash.com/random/1600x900?gaming&sig=${heroVideo.id}`}
+                        src={heroVideo.thumbnail_url || `https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600&q=80`}
                         alt={heroVideo.title}
-                        className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000 ease-in-out"
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-all duration-1000 ease-out"
                     />
-                    <div className="absolute bottom-0 left-0 right-0 p-12 md:p-16 z-20">
-                        <div className="flex items-center gap-4 mb-6">
-                            <span className="bg-primary text-white text-[10px] font-black px-4 py-1.5 rounded-sm uppercase tracking-[0.2em] flex items-center gap-2">
-                                <Flame size={12} strokeWidth={3} /> FEATURED PREMIERE
+                    {/* Gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+
+                    {/* Content */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="flex items-center gap-1.5 bg-violet-500/20 border border-violet-500/40 text-violet-300 text-[11px] font-semibold px-3 py-1 rounded-full backdrop-blur-sm">
+                                <Flame size={11} />
+                                Featured
                             </span>
                         </div>
-                        <h2 className="text-4xl md:text-7xl font-display font-black text-white leading-[0.85] mb-6 max-w-4xl tracking-[-0.04em] uppercase italic">
+                        <h2 className="text-display text-2xl md:text-5xl text-white font-bold leading-tight mb-4 max-w-3xl">
                             {heroVideo.title}
                         </h2>
-                        <div className="flex items-center gap-6">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-sm bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden">
-                                    <img
-                                        src={heroVideo.profiles?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${heroVideo.profiles?.username || 'user'}&backgroundColor=E50914`}
-                                        alt=""
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                                <span className="text-white font-black text-xs tracking-widest uppercase">{heroVideo.profiles?.username || 'ANONYMOUS'}</span>
+                        <div className="flex items-center gap-4 flex-wrap">
+                            <div className="flex items-center gap-2">
+                                <img
+                                    src={heroVideo.profiles?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${heroVideo.profiles?.username}&backgroundColor=7c3aed&textColor=ffffff`}
+                                    alt=""
+                                    className="w-7 h-7 rounded-full object-cover ring-2 ring-white/20"
+                                />
+                                <span className="text-white/90 text-sm font-medium">{heroVideo.profiles?.username || 'Anonymous'}</span>
                             </div>
-                            <div className="h-4 w-px bg-white/20" />
-                            <div className="flex items-center gap-6 text-[10px] font-bold tracking-widest text-white/60 uppercase">
-                                <span>{formatViews(heroVideo.view_count || 0)} VIEWS</span>
-                                <span>{timeAgo(heroVideo.created_at)}</span>
-                            </div>
+                            <span className="text-white/40 text-sm">{formatViews(heroVideo.view_count || 0)} views</span>
+                            <span className="text-white/40 text-sm">{timeAgo(heroVideo.created_at)}</span>
+                        </div>
+                    </div>
+
+                    {/* Play button center */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-2xl">
+                            <Play size={28} className="text-white ml-1.5" fill="white" />
                         </div>
                     </div>
                 </Link>
+            ) : (
+                /* Empty hero CTA */
+                <div className="glass-card rounded-3xl overflow-hidden relative" style={{ minHeight: '220px' }}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-violet-900/30 via-background to-cyan-900/20" />
+                    <div className="relative z-10 flex flex-col items-center justify-center h-full py-16 text-center px-6">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-cyan-500/20 border border-violet-500/20 flex items-center justify-center mb-4">
+                            <Sparkles size={28} className="text-violet-400" />
+                        </div>
+                        <h2 className="text-display text-2xl md:text-3xl font-bold text-white mb-2">Be the First Creator</h2>
+                        <p className="text-muted text-sm mb-6 max-w-xs">Upload your first video and take center stage.</p>
+                        <Link href="/upload" className="btn btn-primary">
+                            <Upload size={16} /> Upload Now
+                        </Link>
+                    </div>
+                </div>
             )}
 
-            {/* Premium Category Navigation */}
+            {/* ─── Category Pills ─── */}
             <nav
-                className="flex gap-4 overflow-x-auto no-scrollbar pb-6 sticky top-[var(--spacing-header)] bg-[#050505]/95 backdrop-blur-3xl z-30 pt-4 border-b border-white/5"
-                aria-label="Filter videos"
+                className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 sticky top-[var(--spacing-header)] bg-background/90 backdrop-blur-xl z-30 pt-3 -mx-4 px-4 md:-mx-6 md:px-6"
+                aria-label="Filter by category"
             >
-                {categories.map(({ name, icon: Icon }) => (
+                {categories.map((name) => (
                     <button
                         key={name}
                         onClick={() => setActiveCategory(name)}
-                        className={`text-[10px] font-black tracking-[0.2em] uppercase transition-all px-4 py-2 border rounded-sm ${name === activeCategory
-                            ? 'bg-white text-black border-white'
-                            : 'bg-transparent text-white/50 border-white/10 hover:border-white/30 hover:text-white'
-                            }`}
+                        className={`category-pill flex-shrink-0 ${name === activeCategory ? 'active' : ''}`}
                     >
                         {name}
                     </button>
                 ))}
             </nav>
 
-            {/* Video Showcase Grid */}
-            <div className="space-y-8">
-                <div className="flex items-end justify-between border-b border-white/5 pb-4">
-                    <h2 className="text-3xl font-display font-black tracking-tighter text-white uppercase italic">
-                        {activeCategory === 'All' ? 'LATEST BREACHES' : activeCategory}
+            {/* ─── Videos Grid ─── */}
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-display text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+                        {activeCategory === 'All' ? (
+                            <><TrendingUp size={22} className="text-violet-400" /> Latest Videos</>
+                        ) : (
+                            <><Zap size={22} className="text-violet-400" /> {activeCategory}</>
+                        )}
                     </h2>
-                    <Link href="/trending" className="text-[10px] font-black tracking-widest text-primary hover:text-white transition-colors uppercase">
-                        BROWSE ALL TRENDING →
+                    <Link
+                        href="/trending"
+                        className="flex items-center gap-1 text-sm text-muted hover:text-violet-400 transition-colors font-medium"
+                    >
+                        See all <ChevronRight size={16} />
                     </Link>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
-                    {filteredVideos.length > 0 ? (
-                        filteredVideos.map((video) => (
+                {filteredVideos.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-8">
+                        {filteredVideos.map((video) => (
                             <VideoCard
                                 key={video.id}
                                 id={video.id}
                                 title={video.title}
-                                thumbnail={video.thumbnail_url || `https://source.unsplash.com/random/800x450?gaming&sig=${video.id}`}
-                                author={video.profiles?.username || 'ANONYMOUS'}
-                                authorAvatar={video.profiles?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${video.profiles?.username || 'user'}&backgroundColor=E50914`}
+                                thumbnail={video.thumbnail_url || `https://images.unsplash.com/photo-1614028674026-a65e31bfd27c?w=800&q=80`}
+                                author={video.profiles?.username || 'Anonymous'}
+                                authorAvatar={video.profiles?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${video.profiles?.username}&backgroundColor=7c3aed&textColor=ffffff`}
                                 views={video.view_count || 0}
                                 timestamp={video.created_at}
                                 isLive={video.is_live}
                             />
-                        ))
-                    ) : (
-                        <div className="col-span-full py-32 text-center border border-dashed border-white/10 rounded-sm">
-                            <Upload size={32} className="mx-auto text-primary/40 mb-4" />
-                            <p className="text-white/40 font-black tracking-widest text-xs uppercase italic">NO INTEL FOUND IN THIS CATEGORY</p>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="py-24 text-center glass-card rounded-3xl border-dashed !border-white/8">
+                        <div className="w-16 h-16 rounded-2xl bg-surface-2 flex items-center justify-center mx-auto mb-4">
+                            <Upload size={24} className="text-muted" />
                         </div>
-                    )}
-                </div>
+                        <p className="text-foreground font-semibold mb-1">No videos in this category</p>
+                        <p className="text-muted text-sm mb-6">Be the first to post here</p>
+                        <Link href="/upload" className="btn btn-primary btn-sm">
+                            Upload Video
+                        </Link>
+                    </div>
+                )}
             </div>
         </div>
     );
 }
-

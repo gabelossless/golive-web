@@ -1,40 +1,37 @@
 import type { Metadata } from "next";
-import { Outfit, Bebas_Neue } from "next/font/google";
+import { Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
 import Layout from "@/components/Layout";
 import AuthProvider from "@/components/AuthProvider";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
-const bebasNeue = Bebas_Neue({
-  weight: "400",
-  variable: "--font-bebas-neue",
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "GoLive | Gaming Content for Everyone",
-  description: "The ultimate gaming video platform. Watch the best gaming moments, live streams, and shorts.",
+  title: "GoLive — Stream. Create. Connect.",
+  description: "The next generation video platform for creators and viewers. Upload, stream, and discover content.",
+  keywords: ["streaming", "video", "live", "creators", "GoLive"],
   openGraph: {
-    title: "GoLive",
-    description: "Watch the best gaming moments.",
-    siteName: "GoLive",
-    locale: 'en_US',
-    type: 'website',
+    title: "GoLive — Stream. Create. Connect.",
+    description: "The next generation video platform for creators.",
+    type: "website",
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${outfit.variable} ${bebasNeue.variable} antialiased`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.variable} ${spaceGrotesk.variable} antialiased`}>
         <AuthProvider>
           <Layout>{children}</Layout>
         </AuthProvider>
