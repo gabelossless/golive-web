@@ -71,10 +71,11 @@ export default function UploadPage() {
                     headers: { 'Content-Type': file.type },
                 });
 
-                if (!uploadResponse.ok) throw new Error('Failed to upload file to storage');
+                if (!uploadResponse.ok) throw new Error(`Storage upload failed: ${uploadResponse.statusText}`);
 
                 // Return the final public URL
-                return `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${path}`;
+                const baseUrl = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '').replace(/\/$/, '');
+                return `${baseUrl}/${path}`;
             };
 
             // 1. Upload Video

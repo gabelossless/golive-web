@@ -61,8 +61,8 @@ export default function ProfilePage() {
                             id: v.id,
                             title: v.title,
                             thumbnail: v.thumbnail_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2670&auto=format&fit=crop',
-                            author: v.profiles?.username || 'Unknown',
-                            authorAvatar: v.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${v.profiles?.username}`,
+                            author: (Array.isArray(v.profiles) ? v.profiles[0] : v.profiles)?.username || 'Unknown',
+                            authorAvatar: (Array.isArray(v.profiles) ? v.profiles[0] : v.profiles)?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${(Array.isArray(v.profiles) ? v.profiles[0] : v.profiles)?.username}`,
                             views: (v.view_count || 0) + ' views',
                             timestamp: new Date(v.created_at).toLocaleDateString(),
                             duration: '10:00', // Placeholder as DB doesn't have duration yet

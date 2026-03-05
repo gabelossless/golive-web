@@ -28,8 +28,7 @@ async function getVideos(): Promise<Video[]> {
 
     const formattedVideos: Video[] = (data || []).map((v: any) => ({
       ...v,
-      profiles: v.profiles, // Supabase returns single object or array depending on query, usually object here
-      // Normalize views for growth hacking if needed
+      profiles: Array.isArray(v.profiles) ? v.profiles[0] : v.profiles,
       view_count: Math.max(v.view_count || 0, v.target_views || 0),
     }));
 
