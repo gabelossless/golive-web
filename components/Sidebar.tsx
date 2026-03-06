@@ -9,52 +9,80 @@ const menuItems = [
     { icon: Compass, label: 'Explore', path: '/trending' },
     { icon: PlaySquare, label: 'Subscriptions', path: '/subscriptions' },
 ];
-
 const libraryItems = [
     { icon: History, label: 'History', path: '/history' },
     { icon: Clock, label: 'Watch Later', path: '/watch-later' },
     { icon: ThumbsUp, label: 'Liked Videos', path: '/liked' },
 ];
-
 const exploreItems = [
-    { icon: Radio, label: 'Live', path: '/live', color: 'text-red-500' },
+    { icon: Radio, label: 'Live', path: '/live', color: '#ef4444' },
     { icon: Gamepad2, label: 'Gaming', path: '/gaming' },
     { icon: Music2, label: 'Music', path: '/music' },
     { icon: Trophy, label: 'Sports', path: '/sports' },
 ];
 
-interface SidebarProps {
-    isCollapsed: boolean;
-}
+const sidebarBase: React.CSSProperties = {
+    position: 'fixed',
+    top: '56px',
+    left: 0,
+    bottom: 0,
+    zIndex: 40,
+    background: '#0f0f0f',
+    borderRight: '1px solid rgba(255,255,255,0.06)',
+    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    paddingTop: '12px',
+    scrollbarWidth: 'none',
+};
+
+const divider: React.CSSProperties = {
+    height: '1px',
+    background: 'rgba(255,255,255,0.08)',
+    margin: '12px 16px',
+};
+
+const sectionLabel: React.CSSProperties = {
+    fontSize: '11px',
+    fontWeight: 700,
+    color: '#6b7280',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.08em',
+    padding: '0 12px 8px 12px',
+};
+
+interface SidebarProps { isCollapsed: boolean; }
 
 export default function Sidebar({ isCollapsed }: SidebarProps) {
     const pathname = usePathname();
 
     if (isCollapsed) {
         return (
-            <aside
-                className="fixed top-14 left-0 bottom-0 z-40 flex flex-col items-center py-3 gap-2 bg-[#0f0f0f] border-r border-white/5 overflow-y-auto scrollbar-hide"
-                style={{ width: '72px' }}
-            >
-                {menuItems.map(item => (
-                    <Link
-                        key={item.label}
-                        href={item.path}
-                        className={`flex flex-col items-center gap-1 px-2 py-3 rounded-xl w-full hover:bg-white/5 transition-colors ${pathname === item.path ? 'bg-white/10' : ''}`}
-                    >
-                        <item.icon size={20} className={pathname === item.path ? 'text-white' : 'text-gray-400'} />
-                        <span className="text-[10px] text-gray-400 text-center leading-tight">{item.label}</span>
-                    </Link>
-                ))}
-                <hr className="w-8 border-white/10 my-1" />
+            <aside style={{ ...sidebarBase, width: '72px', alignItems: 'center', paddingTop: '8px' }}>
+                {menuItems.map(item => {
+                    const active = pathname === item.path;
+                    return (
+                        <Link key={item.label} href={item.path} title={item.label} style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                            padding: '12px 8px', width: '100%', textDecoration: 'none',
+                            color: active ? '#fff' : '#9ca3af',
+                            background: active ? 'rgba(255,255,255,0.1)' : 'transparent',
+                            borderRadius: '12px', margin: '1px 4px',
+                        }}>
+                            <item.icon size={20} />
+                            <span style={{ fontSize: '10px', textAlign: 'center', lineHeight: 1.2 }}>{item.label}</span>
+                        </Link>
+                    );
+                })}
+                <div style={divider} />
                 {exploreItems.map(item => (
-                    <Link
-                        key={item.label}
-                        href={item.path}
-                        className="flex flex-col items-center gap-1 px-2 py-3 rounded-xl w-full hover:bg-white/5 transition-colors"
-                    >
-                        <item.icon size={20} className={`${item.color || 'text-gray-400'}`} />
-                        <span className="text-[10px] text-gray-400 text-center leading-tight">{item.label}</span>
+                    <Link key={item.label} href={item.path} title={item.label} style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                        padding: '12px 8px', width: '100%', textDecoration: 'none',
+                        color: item.color || '#9ca3af', borderRadius: '12px', margin: '1px 4px',
+                    }}>
+                        <item.icon size={20} color={item.color || '#9ca3af'} />
+                        <span style={{ fontSize: '10px', textAlign: 'center', lineHeight: 1.2, color: '#9ca3af' }}>{item.label}</span>
                     </Link>
                 ))}
             </aside>
@@ -62,50 +90,37 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
     }
 
     return (
-        <aside
-            className="fixed top-14 left-0 bottom-0 z-40 flex flex-col py-3 bg-[#0f0f0f] border-r border-white/5 overflow-y-auto scrollbar-hide"
-            style={{ width: '240px' }}
-        >
+        <aside style={{ ...sidebarBase, width: '240px' }}>
             {/* Main nav */}
-            <div className="px-3 space-y-0.5">
-                {menuItems.map(item => (
-                    <SidebarItem key={item.label} {...item} isActive={pathname === item.path} />
-                ))}
+            <div style={{ padding: '0 12px' }}>
+                {menuItems.map(item => <SidebarItem key={item.label} {...item} isActive={pathname === item.path} />)}
             </div>
 
-            <hr className="my-3 border-white/10 mx-4" />
+            <div style={divider} />
 
-            {/* Following (placeholder) */}
-            <div className="px-3">
-                <h3 className="px-3 mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-widest">Following</h3>
-                <button className="w-full flex items-center gap-4 px-3 py-2 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white transition-colors">
+            {/* Following */}
+            <div style={{ padding: '0 12px' }}>
+                <div style={sectionLabel}>Following</div>
+                <button style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '8px 12px', width: '100%', background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', borderRadius: '12px', fontSize: '14px' }}>
                     <ChevronDown size={18} />
-                    <span className="text-sm">Show channels</span>
+                    <span>Show channels</span>
                 </button>
             </div>
 
-            <hr className="my-3 border-white/10 mx-4" />
+            <div style={divider} />
 
             {/* Explore */}
-            <div className="px-3">
-                <h3 className="px-3 mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-widest">Explore</h3>
-                <div className="space-y-0.5">
-                    {exploreItems.map(item => (
-                        <SidebarItem key={item.label} {...item} isActive={false} />
-                    ))}
-                </div>
+            <div style={{ padding: '0 12px' }}>
+                <div style={sectionLabel}>Explore</div>
+                {exploreItems.map(item => <SidebarItem key={item.label} {...item} isActive={false} />)}
             </div>
 
-            <hr className="my-3 border-white/10 mx-4" />
+            <div style={divider} />
 
             {/* Library */}
-            <div className="px-3">
-                <h3 className="px-3 mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-widest">Library</h3>
-                <div className="space-y-0.5">
-                    {libraryItems.map(item => (
-                        <SidebarItem key={item.label} {...item} isActive={pathname === item.path} />
-                    ))}
-                </div>
+            <div style={{ padding: '0 12px' }}>
+                <div style={sectionLabel}>Library</div>
+                {libraryItems.map(item => <SidebarItem key={item.label} {...item} isActive={pathname === item.path} />)}
             </div>
         </aside>
     );
@@ -113,12 +128,20 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
 
 function SidebarItem({ icon: Icon, label, path, isActive, color }: any) {
     return (
-        <Link
-            href={path}
-            className={`flex items-center gap-4 px-3 py-2 rounded-xl transition-all duration-150 group ${isActive ? 'bg-white/10 font-medium' : 'hover:bg-white/5'}`}
+        <Link href={path} style={{
+            display: 'flex', alignItems: 'center', gap: '16px',
+            padding: '8px 12px', borderRadius: '12px', textDecoration: 'none',
+            color: isActive ? '#fff' : '#9ca3af',
+            background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+            fontWeight: isActive ? 600 : 400,
+            margin: '2px 0',
+            transition: 'background 0.15s',
+        }}
+            onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+            onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
         >
-            <Icon size={20} className={isActive ? 'text-white' : `text-gray-400 group-hover:text-white ${color || ''}`} />
-            <span className={`text-sm ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{label}</span>
+            <Icon size={20} color={isActive ? '#fff' : (color || '#9ca3af')} />
+            <span style={{ fontSize: '14px' }}>{label}</span>
         </Link>
     );
 }

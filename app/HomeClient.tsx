@@ -5,13 +5,10 @@ import VideoCard from '@/components/VideoCard';
 import CategoryBar from '@/components/CategoryBar';
 import { supabase } from '@/lib/supabase';
 
-const CATEGORIES = ['All', 'Gaming', 'Technology', 'Music', 'Live', 'Education', 'Entertainment', 'Just Chatting', 'Sports'];
-
 export default function HomeClient() {
     const [videos, setVideos] = useState<any[]>([]);
     const [filtered, setFiltered] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [category, setCategory] = useState('All');
 
     useEffect(() => {
         async function fetchVideos() {
@@ -35,53 +32,51 @@ export default function HomeClient() {
     }, []);
 
     const handleCategory = (cat: string) => {
-        setCategory(cat);
-        if (cat === 'All') {
-            setFiltered(videos);
-        } else {
-            setFiltered(videos.filter(v => v.category === cat || (cat === 'Live' && v.is_live)));
-        }
+        if (cat === 'All') { setFiltered(videos); return; }
+        if (cat === 'Live') { setFiltered(videos.filter(v => v.is_live)); return; }
+        setFiltered(videos.filter(v => (v.category || '').toLowerCase() === cat.toLowerCase()));
     };
 
     return (
-        <div className="flex flex-col min-h-full">
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
             <CategoryBar onSelect={handleCategory} />
 
-            <div className="p-4 md:p-6 lg:p-8">
+            <div style={{ padding: '24px' }}>
                 {loading ? (
-                    /* Skeleton grid */
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8">
+                    <div style={gridStyle}>
                         {Array.from({ length: 12 }).map((_, i) => (
-                            <div key={i} className="flex flex-col gap-3">
-                                <div className="aspect-video rounded-xl bg-white/5 animate-pulse" />
-                                <div className="flex gap-3">
-                                    <div className="w-9 h-9 rounded-full bg-white/5 animate-pulse flex-shrink-0" />
-                                    <div className="flex flex-col gap-2 flex-1">
-                                        <div className="h-3 bg-white/5 animate-pulse rounded" />
-                                        <div className="h-3 bg-white/5 animate-pulse rounded w-2/3" />
+                            <div key={i}>
+                                <div style={{ aspectRatio: '16/9', borderRadius: '12px', background: 'rgba(255,255,255,0.05)' }} />
+                                <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+                                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', flexShrink: 0 }} />
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', marginBottom: '6px' }} />
+                                        <div style={{ height: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', width: '66%' }} />
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : filtered.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8">
-                        {filtered.map((video, i) => (
-                            <div key={video.id} style={{ animationDelay: `${i * 50}ms` }}>
-                                <VideoCard video={video} />
-                            </div>
+                    <div style={gridStyle}>
+                        {filtered.map(video => (
+                            <VideoCard key={video.id} video={video} />
                         ))}
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 text-center">
-                        <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center">
-                            <span className="text-3xl">🎬</span>
-                        </div>
-                        <h2 className="text-xl font-bold text-white">No videos yet</h2>
-                        <p className="text-gray-400 text-sm">Be the first to upload a video.</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', gap: '16px', textAlign: 'center' }}>
+                        <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>🎬</div>
+                        <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#fff', margin: 0 }}>No videos yet</h2>
+                        <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>Be the first to upload.</p>
                     </div>
                 )}
             </div>
         </div>
     );
 }
+
+const gridStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+    gap: '32px 16px',
+};
