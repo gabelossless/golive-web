@@ -37,3 +37,42 @@ export function timeAgo(dateString: string): string {
     const years = Math.floor(days / 365);
     return `${years}y ago`;
 }
+
+/**
+ * Calculate deterministic algorithmic growth views for a video.
+ * Uses the video ID as a seed to ensure consistent view counts per video.
+ * Adds 100-300 views instantly, and grows organically over time simulating a live platform.
+ */
+export function calculateAlgorithmicViews(videoId: string, createdAtString?: string, actualViews: number | string = 0): number {
+    const rawActual = typeof actualViews === 'string' ? parseInt(actualViews, 10) : actualViews;
+    const actual = isNaN(rawActual) ? 0 : rawActual;
+
+    if (!videoId) return actual;
+
+    // Simple deterministic hash of the video ID string
+    let hash = 0;
+    for (let i = 0; i < videoId.length; i++) {
+        hash = ((hash << 5) - hash) + videoId.charCodeAt(i);
+        hash |= 0; // Convert to 32bit int
+    }
+
+    // Use hash to dictate base initial views (100 to 400)
+    // Use Math.abs to avoid negative hash issues
+    const baseViews = 100 + (Math.abs(hash) % 301);
+
+    let timeBonus = 0;
+    if (createdAtString) {
+        const createdAt = new Date(createdAtString).getTime();
+        const now = Date.now();
+        const hoursAlive = Math.max(0, (now - createdAt) / (1000 * 60 * 60));
+
+        // Add roughly 1-5 views per hour alive, again deterministic based on hash
+        const decayFactor = 1 + (Math.abs(hash) % 5);
+        timeBonus = Math.floor(hoursAlive * decayFactor);
+
+        // Cap the time bonus so it doesn't grow infinitely large to unbelievable numbers
+        timeBonus = Math.min(timeBonus, 5000);
+    }
+
+    return baseViews + timeBonus + actual;
+}

@@ -1,100 +1,100 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
-import { MoreVertical, Eye } from 'lucide-react';
-import { formatViews, timeAgo } from '@/lib/utils';
-
-// Verified badge (YouTube/Twitter style)
-export const VerifiedBadge = ({ className = "w-3.5 h-3.5" }: { className?: string }) => (
-    <svg viewBox="0 0 24 24" aria-label="Verified" className={`verified-icon ${className}`} fill="currentColor">
-        <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.918-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.337 2.25c-.416-.165-.866-.25-1.336-.25-2.21 0-3.918 1.792-3.918 4 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.46.74 2.746 1.867 3.45-.09.373-.138.763-.138 1.15 0 2.21 1.71 4 3.918 4 .58 0 1.134-.14 1.625-.386C9.406 21.603 10.636 22.5 12 22.5c1.36 0 2.59-.897 3.167-2.136.492.247 1.046.387 1.626.387 2.21 0 3.918-1.79 3.918-4 0-.387-.048-.777-.138-1.15 1.127-.704 1.867-1.99 1.867-3.45zm-11.16 4.08l-3.3-3.3 1.4-1.4 1.9 1.9 5.3-5.3 1.4 1.4-6.7 6.7z" />
-    </svg>
-);
+import { MoreVertical, CheckCircle2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface VideoCardProps {
-    id: string;
-    title: string;
-    thumbnail: string;
-    author: string;
-    authorAvatar: string;
-    views: string | number;
-    timestamp: string;
-    duration?: string;
-    isLive?: boolean;
-    isVerified?: boolean;
+    video: {
+        id: string;
+        title: string;
+        thumbnail_url?: string | null;
+        view_count?: number;
+        created_at?: string;
+        boosted?: boolean;
+        profiles?: { username: string; avatar_url?: string | null } | null;
+    };
 }
 
-export default function VideoCard({
-    id, title, thumbnail, author, authorAvatar,
-    views, timestamp, duration = '10:42', isLive = false, isVerified = false,
-}: VideoCardProps) {
-    const formattedViews = formatViews(views);
-    const formattedTime = timestamp?.includes('ago') ? timestamp : timeAgo(timestamp);
+function formatViews(count: number): string {
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+    return String(count);
+}
+
+function timeAgo(dateStr: string): string {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    return `${minutes} min ago`;
+}
+
+export default function VideoCard({ video }: VideoCardProps) {
+    const username = video.profiles?.username || 'creator';
+    const avatar = video.profiles?.avatar_url;
+    const views = formatViews(video.view_count || 0);
+    const uploadedAt = video.created_at ? timeAgo(video.created_at) : '';
+    const thumbnail = video.thumbnail_url || `https://picsum.photos/seed/${video.id}/800/450`;
 
     return (
-        <div className="video-card group">
-            {/* Thumbnail */}
-            <Link href={`/watch/${id}`} className="block">
-                <div className="video-thumbnail">
-                    <img
-                        src={thumbnail}
-                        alt={title}
-                        loading="lazy"
-                        onError={(e) => {
-                            (e.target as HTMLImageElement).src = `https://images.unsplash.com/photo-1542751371-adc38448a05e?w=640&q=60`;
-                        }}
-                    />
-                    {isLive ? (
-                        <span className="video-live-badge">
-                            <span className="video-live-dot" />
-                            LIVE
-                        </span>
-                    ) : (
-                        <span className="video-duration">{duration}</span>
-                    )}
-                    {isLive && (
-                        <span className="video-views-live">
-                            <Eye size={10} style={{ display: 'inline', marginRight: 3 }} />
-                            {formattedViews}
-                        </span>
-                    )}
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col gap-3 group cursor-pointer"
+        >
+            <Link href={`/watch/${video.id}`} className="relative aspect-video rounded-xl overflow-hidden bg-white/5 block">
+                <img
+                    src={thumbnail}
+                    alt={video.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                {video.boosted && (
+                    <div className="absolute top-2 left-2 live-badge flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                        Featured
+                    </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                    <div className="text-xs font-medium text-white/90">Click to watch</div>
                 </div>
             </Link>
 
-            {/* Meta */}
-            <div className="video-meta">
-                <Link href={`/profile/${author}`} className="video-avatar flex-shrink-0">
-                    <img
-                        src={authorAvatar}
-                        alt={author}
-                        onError={(e) => {
-                            (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${author}&backgroundColor=9147ff&textColor=ffffff`;
-                        }}
-                    />
+            <div className="flex gap-3">
+                <Link href={`/profile/${username}`} className="flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#9147ff] to-red-600 overflow-hidden border border-white/10">
+                        {avatar ? (
+                            <img src={avatar} alt={username} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-sm font-bold">
+                                {username[0]?.toUpperCase()}
+                            </div>
+                        )}
+                    </div>
                 </Link>
-                <div className="video-info">
-                    <Link href={`/watch/${id}`}>
-                        <h3 className="video-title">{title}</h3>
+                <div className="flex flex-col flex-1 min-w-0">
+                    <Link href={`/watch/${video.id}`}>
+                        <h3 className="text-sm font-semibold line-clamp-2 leading-snug group-hover:text-[#9147ff] transition-colors">
+                            {video.title}
+                        </h3>
                     </Link>
-                    <Link href={`/profile/${author}`} className="video-author">
-                        {author}
-                        {isVerified && <VerifiedBadge />}
-                    </Link>
-                    {!isLive && (
-                        <p className="video-stats">
-                            {formattedViews} views &bull; {formattedTime}
-                        </p>
-                    )}
+                    <div className="flex flex-col mt-1">
+                        <Link href={`/profile/${username}`} className="text-xs text-gray-400 hover:text-white flex items-center gap-1 transition-colors">
+                            {username}
+                            <CheckCircle2 size={11} className="text-gray-500" />
+                        </Link>
+                        <div className="text-xs text-gray-400 mt-0.5">
+                            {views} views • {uploadedAt}
+                        </div>
+                    </div>
                 </div>
-                <button
-                    aria-label="More options"
-                    className="icon-btn opacity-0 group-hover:opacity-100 -mt-1 -mr-2 self-start flex-shrink-0"
-                    style={{ width: 32, height: 32 }}
-                >
-                    <MoreVertical size={16} />
+                <button className="h-fit p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/10 rounded-full" aria-label="More options">
+                    <MoreVertical size={18} />
                 </button>
             </div>
-        </div>
+        </motion.div>
     );
 }

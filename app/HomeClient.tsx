@@ -1,91 +1,87 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { useEffect, useState } from 'react';
 import VideoCard from '@/components/VideoCard';
-import { formatViews, timeAgo } from '@/lib/utils';
-import { Upload } from 'lucide-react';
-import Link from 'next/link';
-import { Video } from '@/types';
+import CategoryBar from '@/components/CategoryBar';
+import { Loader2 } from 'lucide-react';
 
-interface HomeClientProps { initialVideos: Video[]; }
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-const categories = [
-    'All', 'Gaming', 'Music', 'Live', 'FPS', 'RPG', 'Indie',
-    'Tech', 'IRL', 'Sports', 'Podcasts', 'Animation',
-];
+interface Video {
+    id: string;
+    title: string;
+    thumbnail_url?: string | null;
+    view_count?: number;
+    created_at?: string;
+    boosted?: boolean;
+    profiles?: { username: string; avatar_url?: string | null } | null;
+}
 
-export default function HomeClient({ initialVideos }: HomeClientProps) {
+export default function HomeClient() {
+    const [videos, setVideos] = useState<Video[]>([]);
+    const [filtered, setFiltered] = useState<Video[]>([]);
+    const [loading, setLoading] = useState(true);
     const [activeCategory, setActiveCategory] = useState('All');
-    const [videos] = useState<Video[]>(initialVideos);
 
-    const filteredVideos = useMemo(() => {
-        if (activeCategory === 'All') return videos;
-        return videos.filter(v =>
-            v.category?.toLowerCase() === activeCategory.toLowerCase() ||
-            (activeCategory === 'Live' && v.is_live)
-        );
+    useEffect(() => {
+        async function fetchVideos() {
+            const { data, error } = await supabase
+                .from('videos')
+                .select(`
+          id, title, thumbnail_url, view_count, created_at, boosted,
+          profiles(username, avatar_url)
+        `)
+                .not('description', 'ilike', '%[PRIVATE_VIDEO_FLAG]%')
+                .order('created_at', { ascending: false });
+
+            if (!error && data) {
+                setVideos(data as unknown as Video[]);
+                setFiltered(data as unknown as Video[]);
+            }
+            setLoading(false);
+        }
+        fetchVideos();
+    }, []);
+
+    useEffect(() => {
+        if (activeCategory === 'All') {
+            setFiltered(videos);
+        } else {
+            // Filter by category word in title or just show all for now
+            setFiltered(videos);
+        }
     }, [activeCategory, videos]);
 
-    return (
-        <div>
-            {/* ── Category chip bar (YouTube-style) ── */}
-            <div className="chip-bar" style={{ marginBottom: 8 }}>
-                {categories.map((cat) => (
-                    <button
-                        key={cat}
-                        onClick={() => setActiveCategory(cat)}
-                        className={`chip ${cat === activeCategory ? 'active' : ''}`}
-                    >
-                        {cat}
-                    </button>
-                ))}
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-[60vh]">
+                <Loader2 className="animate-spin text-[#9147ff]" size={36} />
             </div>
+        );
+    }
 
-            {/* ── Video grid ── */}
-            {filteredVideos.length > 0 ? (
-                <div className="video-grid">
-                    {filteredVideos.map((video) => {
-                        const p = Array.isArray(video.profiles) ? video.profiles[0] : video.profiles;
-                        return (
-                            <VideoCard
-                                key={video.id}
-                                id={video.id}
-                                title={video.title}
-                                thumbnail={video.thumbnail_url || `https://images.unsplash.com/photo-1614028674026-a65e31bfd27c?w=640&q=60`}
-                                author={p?.username || 'Anonymous'}
-                                authorAvatar={p?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${p?.username}&backgroundColor=9147ff&textColor=ffffff`}
-                                views={video.view_count || 0}
-                                timestamp={video.created_at}
-                                isLive={video.is_live}
-                            />
-                        );
-                    })}
-                </div>
-            ) : (
-                /* Empty state */
-                <div style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    minHeight: 400, gap: 16, textAlign: 'center',
-                }}>
-                    <div style={{
-                        width: 80, height: 80, borderRadius: '50%',
-                        background: 'var(--color-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                        <Upload size={32} color="var(--color-muted)" />
+    return (
+        <div className="flex flex-col min-h-full">
+            <CategoryBar onCategoryChange={setActiveCategory} />
+            <div className="p-4 md:p-6 lg:p-8">
+                {filtered.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center min-h-[40vh] text-center gap-4">
+                        <div className="text-6xl">🎬</div>
+                        <h2 className="text-2xl font-bold">No videos yet</h2>
+                        <p className="text-gray-400">Be the first to upload something amazing.</p>
                     </div>
-                    <div>
-                        <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
-                            {activeCategory === 'All' ? 'No videos yet' : `No ${activeCategory} videos yet`}
-                        </p>
-                        <p style={{ color: 'var(--color-muted)', fontSize: 14, marginBottom: 20 }}>
-                            Be the first to upload content
-                        </p>
-                        <Link href="/upload" className="btn btn-primary">
-                            Upload video
-                        </Link>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8">
+                        {filtered.map((video) => (
+                            <VideoCard key={video.id} video={video} />
+                        ))}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }

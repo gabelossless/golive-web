@@ -1,0 +1,5 @@
+{
+  "name": "StreamTube",
+  "description": "A hybrid video platform combining YouTube's content discovery with Twitch's live interaction and community features.",
+  "requestFramePermissions": []
+}

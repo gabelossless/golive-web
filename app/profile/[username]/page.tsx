@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { LayoutGrid, CheckCircle, Edit, Settings, Share2, Loader2, User as UserIcon } from 'lucide-react';
+import { LayoutGrid, CheckCircle, CheckCircle2, Edit, Settings, Share2, Loader2, User as UserIcon } from 'lucide-react';
 import CommunityTab from '@/components/CommunityTab';
-import VideoCard, { VerifiedBadge } from '@/components/VideoCard';
+import VideoCard from '@/components/VideoCard';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { Profile, Video } from '@/types';
@@ -151,8 +151,8 @@ export default function ProfilePage() {
                     <div className="flex-1 space-y-3">
                         <div className="flex items-center gap-3">
                             <h1 className="text-3xl md:text-5xl font-display font-black tracking-[-0.04em] flex items-center gap-3 uppercase italic">
-                                {profile.full_name || profile.username}
-                                {profile.is_verified && <VerifiedBadge className="w-7 h-7 text-[#1D9BF0]" />}
+                                {profile.username}
+                                {profile.is_verified && <CheckCircle2 className="w-6 h-6 text-[#1D9BF0]" />}
                             </h1>
                             {isOwner && (
                                 <span className="bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-primary/20">YOU</span>
@@ -223,7 +223,7 @@ export default function ProfilePage() {
                             {videos.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
                                     {videos.map((video) => (
-                                        <VideoCard key={video.id} {...video} />
+                                        <VideoCard key={video.id} video={video as any} />
                                     ))}
                                 </div>
                             ) : (

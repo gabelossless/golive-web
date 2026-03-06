@@ -71,7 +71,6 @@ export default function SettingsPage() {
             const { error } = await supabase
                 .from('profiles')
                 .update({
-                    full_name: formData.full_name,
                     bio: formData.bio,
                     // username is typically restricted in updates for consistency, but we'll allow it if table policies permit
                 })
@@ -136,7 +135,7 @@ export default function SettingsPage() {
                                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold text-white">CHANGE</div>
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-black">{formData.full_name || formData.username}</h3>
+                                    <h3 className="text-lg font-black">{formData.username}</h3>
                                     <p className="text-muted text-sm">{user?.email}</p>
                                 </div>
                             </div>
@@ -150,17 +149,7 @@ export default function SettingsPage() {
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase text-muted">Display Name</label>
-                                        <input
-                                            type="text"
-                                            value={formData.full_name}
-                                            onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                            className="w-full bg-surface border border-border rounded-lg px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50"
-                                            placeholder="Public Name"
-                                        />
-                                    </div>
+                                <div className="space-y-4">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold uppercase text-muted">Handle (Username)</label>
                                         <input

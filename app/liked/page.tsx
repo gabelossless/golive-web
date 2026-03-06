@@ -72,11 +72,18 @@ export default function LikedPage() {
 
             {/* Video List */}
             <div className="flex-1">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-x-4 gap-y-8 animate-in fade-in slide-in-from-bottom-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-x-4 gap-y-8">
                     {likedVideos.map((video) => (
-                        <VideoCard key={video.id} {...video} />
+                        <VideoCard
+                            key={video.id}
+                            video={{
+                                id: video.id,
+                                title: video.title,
+                                thumbnail_url: video.thumbnail,
+                                profiles: { username: video.author, avatar_url: video.authorAvatar },
+                            }}
+                        />
                     ))}
-                    {/* Add more mock repetitions to fill grid if needed */}
                 </div>
             </div>
         </div>

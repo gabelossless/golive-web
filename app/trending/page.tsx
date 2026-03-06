@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { formatViews, timeAgo } from '@/lib/utils';
+import { formatViews, timeAgo, calculateAlgorithmicViews } from '@/lib/utils';
 import { Flame, TrendingUp, Trophy, Loader2, Eye, Clock } from 'lucide-react';
 
 interface TrendingVideo {
@@ -54,6 +54,7 @@ export default function TrendingPage() {
                     profiles(username, avatar_url)
                 `)
                 .gte('created_at', sinceDate.toISOString())
+                .not('description', 'ilike', '%[PRIVATE_VIDEO_FLAG]%')
                 .order('view_count', { ascending: false })
                 .limit(20);
 
@@ -131,7 +132,7 @@ export default function TrendingPage() {
                 <div className="space-y-3">
                     {videos.map((video, index) => {
                         const rank = index + 1;
-                        const views = Math.max(video.view_count || 0, video.target_views || 0);
+                        const algoViews = calculateAlgorithmicViews(video.id, video.created_at, video.view_count);
 
                         return (
                             <Link
@@ -171,7 +172,7 @@ export default function TrendingPage() {
                                         <span className="text-xs text-muted font-medium">{video.profiles?.username || 'Unknown'}</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-xs text-muted">
-                                        <span className="flex items-center gap-1"><Eye size={12} /> {formatViews(views)} views</span>
+                                        <span className="flex items-center gap-1"><Eye size={12} /> {formatViews(algoViews)} views</span>
                                         <span className="flex items-center gap-1"><Clock size={12} /> {timeAgo(video.created_at)}</span>
                                     </div>
                                 </div>

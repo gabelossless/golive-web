@@ -6,7 +6,6 @@ create table if not exists public.profiles (
   id uuid references auth.users on delete cascade not null primary key,
   updated_at timestamp with time zone,
   username text unique,
-  full_name text,
   avatar_url text,
   bio text,
   website text,

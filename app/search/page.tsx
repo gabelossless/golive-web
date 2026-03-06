@@ -74,13 +74,16 @@ function SearchContent() {
                     {videos.map((video) => (
                         <VideoCard
                             key={video.id}
-                            id={video.id}
-                            title={video.title}
-                            thumbnail={video.thumbnail_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e'}
-                            author={video.profiles?.username || 'Unknown'}
-                            authorAvatar={video.profiles?.avatar_url || 'https://i.pravatar.cc/150'}
-                            views={Math.max(video.view_count || 0, video.target_views || 0)}
-                            timestamp={video.created_at}
+                            video={{
+                                id: video.id,
+                                title: video.title,
+                                thumbnail_url: video.thumbnail_url || undefined,
+                                view_count: Math.max(video.view_count || 0, video.target_views || 0),
+                                created_at: video.created_at,
+                                profiles: video.profiles
+                                    ? { username: video.profiles.username || 'Unknown', avatar_url: video.profiles.avatar_url }
+                                    : { username: 'Unknown' },
+                            }}
                         />
                     ))}
                 </div>

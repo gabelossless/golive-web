@@ -1,175 +1,133 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { Home, Compass, PlaySquare, Clock, ThumbsUp, History, Radio, Gamepad2, Music2, Trophy, Flame, ChevronDown, Upload, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import {
-    Home, Flame, Compass, PlaySquare, Clock, ThumbsUp,
-    LayoutDashboard, History, Radio, ChevronRight, Users,
-    Tv, Music, Gamepad2, BookOpen, ChevronDown
-} from 'lucide-react';
+import { useAuth } from './AuthProvider';
 
-interface SidebarProps { isCollapsed: boolean; }
-
-interface LiveChannel {
-    id: string; name: string; game: string; avatar: string; viewers: string;
+interface SidebarProps {
+    isCollapsed: boolean;
 }
 
-const mainNav = [
-    { icon: Home, label: 'Home', href: '/' },
-    { icon: Flame, label: 'Trending', href: '/trending' },
-    { icon: Compass, label: 'Subscriptions', href: '/subscriptions' },
+function cn(...classes: (string | boolean | undefined)[]) {
+    return classes.filter(Boolean).join(' ');
+}
+
+const menuItems = [
+    { icon: Home, label: 'Home', path: '/' },
+    { icon: Flame, label: 'Trending', path: '/trending' },
+    { icon: PlaySquare, label: 'Subscriptions', path: '/subscriptions' },
 ];
 
-const libraryNav = [
-    { icon: LayoutDashboard, label: 'Studio', href: '/studio' },
-    { icon: History, label: 'History', href: '/history' },
-    { icon: PlaySquare, label: 'Your videos', href: '/history' },
-    { icon: ThumbsUp, label: 'Liked videos', href: '/liked' },
+const libraryItems = [
+    { icon: History, label: 'History', path: '/history' },
+    { icon: Clock, label: 'Watch Later', path: '/liked' },
+    { icon: ThumbsUp, label: 'Liked Videos', path: '/liked' },
 ];
 
-const exploreNav = [
-    { icon: Gamepad2, label: 'Gaming', href: '/trending?cat=Gaming' },
-    { icon: Music, label: 'Music', href: '/trending?cat=Music' },
-    { icon: Tv, label: 'Live', href: '/trending?cat=Live' },
-    { icon: BookOpen, label: 'Learning', href: '/trending?cat=Learning' },
+const exploreItems = [
+    { icon: Radio, label: 'Live', path: '/studio/golive', color: 'text-red-500' },
+    { icon: Gamepad2, label: 'Gaming', path: '/trending' },
+    { icon: Music2, label: 'Music', path: '/trending' },
+    { icon: Trophy, label: 'Sports', path: '/trending' },
 ];
+
+function SidebarItem({ icon: Icon, label, path, isActive, color, collapsed }: {
+    icon: any; label: string; path: string; isActive?: boolean; color?: string; collapsed?: boolean;
+}) {
+    return (
+        <Link
+            href={path}
+            className={cn(
+                'flex items-center gap-4 rounded-xl transition-all duration-200 group',
+                collapsed ? 'flex-col gap-1 px-2 py-3 mx-1' : 'px-3 py-2',
+                isActive ? 'bg-white/10 font-medium' : 'hover:bg-white/5'
+            )}
+        >
+            <Icon size={collapsed ? 20 : 20} className={cn(isActive ? 'text-white' : 'text-gray-400 group-hover:text-white', color)} />
+            {!collapsed && (
+                <span className={cn('text-sm', isActive ? 'text-white' : 'text-gray-400 group-hover:text-white')}>
+                    {label}
+                </span>
+            )}
+            {collapsed && (
+                <span className="text-[10px] text-gray-400 group-hover:text-white">{label}</span>
+            )}
+        </Link>
+    );
+}
 
 export default function Sidebar({ isCollapsed }: SidebarProps) {
     const pathname = usePathname();
-    const [liveChannels, setLiveChannels] = useState<LiveChannel[]>([]);
-    const [showAllChannels, setShowAllChannels] = useState(false);
+    const { user } = useAuth();
 
-    useEffect(() => {
-        fetchLive();
-    }, []);
-
-    const fetchLive = async () => {
-        const { data } = await supabase
-            .from('videos')
-            .select('id, category, profiles(username, avatar_url)')
-            .eq('is_live', true)
-            .limit(8);
-        if (data) {
-            setLiveChannels(data.map((v: any) => ({
-                id: v.id,
-                name: (Array.isArray(v.profiles) ? v.profiles[0] : v.profiles)?.username || 'Unknown',
-                game: v.category || 'Just Chatting',
-                avatar: (Array.isArray(v.profiles) ? v.profiles[0] : v.profiles)?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${v.id}`,
-                viewers: `${Math.floor(Math.random() * 9000 + 100).toLocaleString()}`,
-            })));
-        }
-    };
-
-    const isActive = (href: string) =>
-        href === '/' ? pathname === '/' : pathname.startsWith(href);
-
-    /* ── Mini (icon-only) mode ── */
     if (isCollapsed) {
         return (
-            <aside className="yt-sidebar mini hidden-mobile">
-                <div className="py-2 px-1.5 space-y-1">
-                    {mainNav.map(({ icon: Icon, label, href }) => (
-                        <Link key={href} href={href} aria-label={label}>
-                            <div className={`sidebar-item-mini ${isActive(href) ? 'active' : ''}`}>
-                                <Icon size={22} strokeWidth={isActive(href) ? 2.5 : 1.8} />
-                                <span>{label === 'Subscriptions' ? 'Subs' : label}</span>
-                            </div>
-                        </Link>
-                    ))}
-                    <div className="sidebar-divider mx-2" />
-                    {libraryNav.slice(0, 3).map(({ icon: Icon, label, href }) => (
-                        <Link key={href} href={href} aria-label={label}>
-                            <div className={`sidebar-item-mini ${isActive(href) ? 'active' : ''}`}>
-                                <Icon size={22} strokeWidth={1.8} />
-                                <span style={{ fontSize: 9 }}>{label.split(' ')[0]}</span>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
+            <aside
+                className="fixed top-14 left-0 bottom-0 z-40 flex flex-col items-center py-4 gap-2 bg-[#0f0f0f] border-r border-white/5 overflow-y-auto scrollbar-hide"
+                style={{ width: 'var(--spacing-sidebar-mini)' }}
+            >
+                {menuItems.map((item) => (
+                    <SidebarItem key={item.label} {...item} isActive={pathname === item.path} collapsed />
+                ))}
+                <hr className="w-10 border-white/10 my-1" />
+                {libraryItems.map((item) => (
+                    <SidebarItem key={item.label} {...item} isActive={pathname === item.path} collapsed />
+                ))}
+                <hr className="w-10 border-white/10 my-1" />
+                {exploreItems.map((item) => (
+                    <SidebarItem key={item.label} {...item} collapsed />
+                ))}
+                {user && (
+                    <>
+                        <hr className="w-10 border-white/10 my-1" />
+                        <SidebarItem icon={Upload} label="Upload" path="/upload" collapsed />
+                        <SidebarItem icon={Settings} label="Studio" path="/studio" collapsed />
+                    </>
+                )}
             </aside>
         );
     }
 
-    /* ── Expanded mode ── */
     return (
-        <aside className="yt-sidebar expanded hidden-mobile">
-            <div className="py-3 px-3 space-y-0.5">
-
-                {mainNav.map(({ icon: Icon, label, href }) => (
-                    <Link key={href} href={href}>
-                        <div className={`sidebar-item ${isActive(href) ? 'active' : ''}`}>
-                            <Icon size={20} strokeWidth={isActive(href) ? 2.5 : 1.8} className="sidebar-icon" style={{ flexShrink: 0 }} />
-                            {label}
-                        </div>
-                    </Link>
+        <aside
+            className="fixed top-14 left-0 bottom-0 z-40 flex flex-col py-4 overflow-y-auto scrollbar-hide bg-[#0f0f0f] border-r border-white/5"
+            style={{ width: 'var(--spacing-sidebar)' }}
+        >
+            <div className="px-3 space-y-1">
+                {menuItems.map((item) => (
+                    <SidebarItem key={item.label} {...item} isActive={pathname === item.path} />
                 ))}
-
-                <div className="sidebar-divider" />
-
-                <div className="sidebar-section-label">You</div>
-                {libraryNav.map(({ icon: Icon, label, href }) => (
-                    <Link key={label} href={href}>
-                        <div className={`sidebar-item ${isActive(href) ? 'active' : ''}`}>
-                            <Icon size={20} strokeWidth={1.8} className="sidebar-icon" style={{ flexShrink: 0 }} />
-                            {label}
-                        </div>
-                    </Link>
-                ))}
-
-                <div className="sidebar-divider" />
-
-                {/* Live Channels (Twitch-style) */}
-                {liveChannels.length > 0 && (
-                    <>
-                        <div className="sidebar-section-label flex items-center justify-between">
-                            <span>Live Channels</span>
-                        </div>
-                        {liveChannels.slice(0, showAllChannels ? 8 : 5).map((ch) => (
-                            <Link key={ch.id} href={`/live/${ch.id}`}>
-                                <div className="sidebar-item group">
-                                    <div className="relative flex-shrink-0">
-                                        <img src={ch.avatar} alt={ch.name} className="w-8 h-8 rounded-full object-cover" />
-                                        <span className="live-indicator absolute -bottom-0.5 -right-0.5 border-2" style={{ borderColor: '#0f0f0f' }} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium truncate">{ch.name}</p>
-                                        <p className="text-xs text-[#aaa] truncate">{ch.game}</p>
-                                    </div>
-                                    <span className="text-xs text-[#aaa] flex-shrink-0">{ch.viewers}</span>
-                                </div>
-                            </Link>
-                        ))}
-                        {liveChannels.length > 5 && (
-                            <button
-                                onClick={() => setShowAllChannels(!showAllChannels)}
-                                className="sidebar-item text-sm text-[#aaa] hover:text-white w-full"
-                            >
-                                <ChevronDown size={18} className={`transition-transform ${showAllChannels ? 'rotate-180' : ''}`} />
-                                Show {showAllChannels ? 'less' : 'more'}
-                            </button>
-                        )}
-                        <div className="sidebar-divider" />
-                    </>
-                )}
-
-                <div className="sidebar-section-label">Explore</div>
-                {exploreNav.map(({ icon: Icon, label, href }) => (
-                    <Link key={href} href={href}>
-                        <div className="sidebar-item">
-                            <Icon size={20} strokeWidth={1.8} className="sidebar-icon" style={{ flexShrink: 0 }} />
-                            {label}
-                        </div>
-                    </Link>
-                ))}
-
-                <div className="sidebar-divider" />
-                <p className="text-xs px-4 py-3 leading-relaxed" style={{ color: '#717171' }}>
-                    © 2025 GoLive Inc.
-                </p>
-
             </div>
+
+            <hr className="my-4 border-white/10 mx-4" />
+
+            <div className="px-3 space-y-1">
+                <h3 className="px-3 mb-2 text-xs font-bold text-gray-500 uppercase tracking-widest">Library</h3>
+                {libraryItems.map((item) => (
+                    <SidebarItem key={item.label} {...item} isActive={pathname === item.path} />
+                ))}
+            </div>
+
+            <hr className="my-4 border-white/10 mx-4" />
+
+            <div className="px-3 space-y-1">
+                <h3 className="px-3 mb-2 text-xs font-bold text-gray-500 uppercase tracking-widest">Explore</h3>
+                {exploreItems.map((item) => (
+                    <SidebarItem key={item.label} {...item} />
+                ))}
+            </div>
+
+            {user && (
+                <>
+                    <hr className="my-4 border-white/10 mx-4" />
+                    <div className="px-3 space-y-1">
+                        <h3 className="px-3 mb-2 text-xs font-bold text-gray-500 uppercase tracking-widest">Creator</h3>
+                        <SidebarItem icon={Upload} label="Upload Video" path="/upload" />
+                        <SidebarItem icon={Settings} label="Creator Studio" path="/studio" />
+                    </div>
+                </>
+            )}
         </aside>
     );
 }

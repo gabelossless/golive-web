@@ -52,7 +52,6 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
                     id: currentUser.id,
                     username: username, // Potential collision risk handled by DB constraint? Ideally needs retry logic.
                     avatar_url: currentUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
-                    full_name: currentUser.user_metadata?.full_name || '',
                 };
 
                 const { data: createdProfile, error: createError } = await supabase

@@ -2,7 +2,6 @@ export interface Profile {
     id: string;
     username: string;
     avatar_url: string | null;
-    full_name?: string;
     bio?: string;
     created_at?: string;
     is_verified?: boolean;

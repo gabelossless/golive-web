@@ -26,14 +26,18 @@ export default function BottomNav() {
                     <Link key={item.label || 'create'} href={item.href} className="flex-1">
                         {item.isCreate ? (
                             <div className="flex items-center justify-center h-full">
-                                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: '#9147ff' }}>
-                                    <item.icon size={20} className="text-white" strokeWidth={2.5} />
+                                <div className="create-btn-mobile">
+                                    <item.icon size={22} className="text-white" strokeWidth={3} />
                                 </div>
                             </div>
                         ) : (
                             <div className={`bottom-nav-item ${isActive ? 'active' : ''}`}>
-                                <item.icon size={22} strokeWidth={isActive ? 2.5 : 1.8} fill={isActive ? 'currentColor' : 'none'} />
-                                <span>{item.label}</span>
+                                <item.icon
+                                    size={24}
+                                    strokeWidth={isActive ? 2.5 : 2}
+                                    className={`${isActive ? 'text-primary' : 'text-muted-2'}`}
+                                />
+                                <span className="mt-1 font-semibold">{item.label}</span>
                             </div>
                         )}
                     </Link>
