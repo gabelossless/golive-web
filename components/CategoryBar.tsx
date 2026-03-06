@@ -1,55 +1,46 @@
 'use client';
 
-import { useState } from 'react';
+import { useState } from "react";
 
-const CATEGORIES = [
-    'All', 'Gaming', 'Technology', 'Music', 'Live',
-    'Education', 'Entertainment', 'Just Chatting', 'Sports',
-];
-
-interface CategoryBarProps {
-    onSelect?: (cat: string) => void;
+function cn(...classes: (string | undefined | null | false)[]) {
+    return classes.filter(Boolean).join(" ");
 }
 
-export default function CategoryBar({ onSelect }: CategoryBarProps) {
-    const [active, setActive] = useState('All');
+const CATEGORIES = [
+    "All",
+    "Gaming",
+    "Music",
+    "Sports",
+    "Tech",
+    "React",
+    "TypeScript",
+    "Design",
+    "Web Dev",
+    "Podcasts",
+    "Live",
+    "Recent",
+];
 
-    const handleClick = (cat: string) => {
+export default function CategoryBar({ onSelect }: { onSelect?: (cat: string) => void }) {
+    const [active, setActive] = useState("All");
+
+    const handleSelect = (cat: string) => {
         setActive(cat);
-        onSelect?.(cat);
+        if (onSelect) onSelect(cat);
     };
 
     return (
-        <div style={{
-            position: 'sticky',
-            top: '56px',
-            zIndex: 40,
-            background: 'rgba(15,15,15,0.95)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            padding: '12px 16px',
-            display: 'flex',
-            gap: '12px',
-            overflowX: 'auto',
-            borderBottom: '1px solid rgba(255,255,255,0.05)',
-            scrollbarWidth: 'none',
-        }}>
-            {CATEGORIES.map(cat => (
+        <div className="sticky top-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-sm px-2 sm:px-4 py-2 sm:py-3 flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide border-b border-white/5 shrink-0">
+            {CATEGORIES.map((cat) => (
                 <button
                     key={cat}
-                    onClick={() => handleClick(cat)}
-                    style={{
-                        padding: '6px 12px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        fontWeight: 500,
-                        whiteSpace: 'nowrap',
-                        cursor: 'pointer',
-                        border: 'none',
-                        background: active === cat ? '#fff' : 'rgba(255,255,255,0.1)',
-                        color: active === cat ? '#000' : '#fff',
-                        transition: 'all 0.15s',
-                    }}
+                    onClick={() => handleSelect(cat)}
+                    className={cn(
+                        "px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap",
+                        active === cat
+                            ? "bg-[#FFB800] text-black shadow-lg shadow-[#FFB800]/20"
+                            : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
+                    )}
                 >
                     {cat}
                 </button>

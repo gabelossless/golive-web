@@ -1,108 +1,88 @@
 'use client';
 
-import { Menu, Search, Video, Bell, User, Mic, Camera } from 'lucide-react';
+import { Menu, Search, Zap, Bell, User, Mic, PlusCircle, LogIn } from "lucide-react";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { useAuth } from '@/components/AuthProvider';
 
 interface NavbarProps {
     onMenuClick: () => void;
 }
 
-const s = {
-    nav: {
-        position: 'fixed' as const,
-        top: 0, left: 0, right: 0,
-        zIndex: 50,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '8px 16px',
-        height: '56px',
-        background: 'rgba(15,15,15,0.88)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
-    },
-    iconBtn: {
-        background: 'none', border: 'none', cursor: 'pointer',
-        padding: '8px', borderRadius: '50%', color: '#fff',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        transition: 'background 0.15s',
-    },
-};
-
 export default function Navbar({ onMenuClick }: NavbarProps) {
-    const [searchQuery, setSearchQuery] = useState('');
-    const { user } = useAuth();
+    const [searchQuery, setSearchQuery] = useState("");
     const router = useRouter();
+    const { user } = useAuth();
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        if (searchQuery.trim()) router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+        if (searchQuery.trim()) {
+            router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+        }
     };
 
     return (
-        <nav style={s.nav}>
-            {/* Left */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <button onClick={onMenuClick} title="Menu" style={s.iconBtn}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+        <nav className="sticky top-0 z-50 flex items-center justify-between px-4 py-2 bg-[#0a0a0a] glass h-14 min-h-[56px] shrink-0">
+            <div className="flex items-center gap-4">
+                <button
+                    onClick={onMenuClick}
+                    className="p-2 rounded-full hover:bg-white/10 transition-colors hidden md:block"
+                    title="Menu"
+                >
                     <Menu size={24} />
                 </button>
-                <Link href="/" title="GoLive Home" style={{ display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none', color: '#fff' }}>
-                    <div style={{ position: 'relative' }}>
-                        <Video style={{ color: '#dc2626' }} size={28} fill="currentColor" />
-                        <div style={{ position: 'absolute', top: '-3px', right: '-3px', width: '7px', height: '7px', background: '#9147ff', borderRadius: '50%' }} />
+                <Link href="/" className="flex items-center gap-1 group" title="VibeStream Home">
+                    <div className="relative">
+                        <Zap className="text-[#FFB800] group-hover:scale-110 transition-transform" size={28} fill="currentColor" />
+                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full animate-pulse" />
                     </div>
-                    <span style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '-0.5px', marginLeft: '4px' }}>
-                        Go<span style={{ color: '#9147ff' }}>Live</span>
+                    <span className="text-xl font-black tracking-tighter font-display hidden sm:block">
+                        VIBE<span className="text-[#FFB800]">STREAM</span>
                     </span>
                 </Link>
             </div>
 
-            {/* Center: Search */}
-            <form onSubmit={handleSearch} style={{ flex: 1, maxWidth: '640px', margin: '0 16px', display: 'flex', alignItems: 'center' }}>
-                <div style={{ display: 'flex', flex: 1, alignItems: 'center', background: '#121212', border: '1px solid #3f3f3f', borderRadius: '20px 0 0 20px', padding: '6px 16px', gap: '8px' }}>
-                    <Search size={18} style={{ color: '#9ca3af', flexShrink: 0 }} />
+            <form
+                onSubmit={handleSearch}
+                className="flex-1 max-w-2xl mx-4 hidden md:flex items-center"
+            >
+                <div className="flex flex-1 items-center bg-[#121212] border border-white/5 rounded-l-full px-4 py-1.5 focus-within:border-[#FFB800]/50 transition-colors">
+                    <Search className="text-gray-400 mr-2" size={18} />
                     <input
                         type="text"
-                        placeholder="Search"
+                        placeholder="Search creators, videos, lives..."
                         value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-transparent outline-none text-sm placeholder:text-gray-600"
                         title="Search"
-                        style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: '#fff', fontSize: '14px' }}
                     />
                 </div>
-                <button type="submit" title="Search"
-                    style={{ background: '#222', border: '1px solid #3f3f3f', borderLeft: 'none', borderRadius: '0 20px 20px 0', padding: '6px 20px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <button className="bg-[#1a1a1a] border border-l-0 border-white/5 px-5 py-1.5 rounded-r-full hover:bg-[#222222] transition-colors" title="Search">
                     <Search size={18} />
                 </button>
-                <button type="button" title="Search with your voice"
-                    style={{ marginLeft: '12px', background: '#181818', border: 'none', borderRadius: '50%', padding: '10px', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <button type="button" className="ml-4 p-2.5 bg-[#121212] rounded-full hover:bg-white/10 transition-colors" title="Search with your voice">
                     <Mic size={18} />
                 </button>
             </form>
 
-            {/* Right */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Link href="/upload" title="Upload" style={{ ...s.iconBtn, textDecoration: 'none' }}>
-                    <Camera size={22} />
+            <div className="flex items-center gap-2 sm:gap-4">
+                <button className="p-2 rounded-full hover:bg-white/10 transition-colors md:hidden" title="Search">
+                    <Search size={22} />
+                </button>
+                <Link href="/upload" className="p-2 rounded-full hover:bg-white/10 transition-colors hidden sm:block" title="Create">
+                    <PlusCircle size={22} />
                 </Link>
-                <button title="Notifications" style={s.iconBtn}>
+                <button className="p-2 rounded-full hover:bg-white/10 transition-colors hidden sm:block" title="Notifications">
                     <Bell size={22} />
                 </button>
                 {user ? (
-                    <Link href="/studio" title="Studio"
-                        style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #9147ff, #dc2626)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: '#fff' }}>
-                        <User size={18} />
+                    <Link href="/studio" className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FFB800] to-orange-600 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity" title="Studio">
+                        <User size={18} className="text-black" />
                     </Link>
                 ) : (
-                    <Link href="/login" title="Sign in"
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 16px', borderRadius: '20px', border: '1px solid #9147ff', color: '#9147ff', textDecoration: 'none', fontSize: '14px', fontWeight: 500 }}>
-                        <User size={15} /> Sign in
+                    <Link href="/login" className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FFB800]/40 text-[#FFB800] hover:bg-[#FFB800]/10 transition-colors font-medium text-sm">
+                        <LogIn size={16} /> <span className="hidden sm:inline">Sign in</span>
                     </Link>
                 )}
             </div>

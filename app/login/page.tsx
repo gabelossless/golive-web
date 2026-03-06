@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { Eye, EyeOff, Loader2, Video, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Play, Mail, Lock } from 'lucide-react';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -25,77 +25,62 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="auth-screen">
-            {/* Purple + red gradient blobs */}
-            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-                <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(145,71,255,0.25), transparent 70%)', filter: 'blur(40px)' }} />
-                <div style={{ position: 'absolute', bottom: '-10%', right: '-5%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(220,38,38,0.18), transparent 70%)', filter: 'blur(40px)' }} />
+        <div className="auth-screen relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0a0a0a]">
+            {/* Ambient amber glows */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(255,184,0,0.15), transparent 70%)', filter: 'blur(40px)' }} />
+                <div className="absolute bottom-[-10%] right-[-5%] w-[400px] h-[400px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(255,184,0,0.1), transparent 70%)', filter: 'blur(40px)' }} />
             </div>
 
-            <div style={{ position: 'relative', width: '100%', maxWidth: '400px', padding: '0 16px' }}>
-                <div style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '20px',
-                    overflow: 'hidden',
-                    boxShadow: '0 25px 50px rgba(0,0,0,0.6)',
-                }}>
+            <div className="relative w-full max-w-[400px] px-4 z-10">
+                <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
                     {/* Header */}
-                    <div style={{ padding: '36px 32px 24px', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '20px', textDecoration: 'none' }}>
-                            <div style={{ position: 'relative' }}>
-                                <Video size={30} style={{ color: '#dc2626' }} fill="currentColor" />
-                                <div style={{ position: 'absolute', top: '-3px', right: '-3px', width: '8px', height: '8px', background: '#9147ff', borderRadius: '50%' }} />
+                    <div className="pt-10 px-8 pb-6 text-center border-b border-white/5">
+                        <Link href="/" className="inline-flex items-center gap-2 mb-6 no-underline">
+                            <div className="w-8 h-8 rounded-full bg-[#FFB800] flex items-center justify-center relative">
+                                <Play size={16} className="text-black ml-0.5 fill-current" />
                             </div>
-                            <span style={{ fontSize: '22px', fontWeight: '800', color: '#fff', letterSpacing: '-0.5px' }}>
-                                Go<span style={{ color: '#9147ff' }}>Live</span>
+                            <span className="text-2xl font-black text-white tracking-tight">
+                                Vibe<span className="text-[#FFB800]">Stream</span>
                             </span>
                         </Link>
-                        <h1 style={{ fontSize: '22px', fontWeight: '700', color: '#fff', margin: '0 0 4px' }}>Welcome back</h1>
-                        <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>Sign in to your account</p>
+                        <h1 className="text-2xl font-bold text-white mb-1">Welcome back</h1>
+                        <p className="text-sm text-gray-400">Sign in to your account to continue</p>
                     </div>
 
                     {/* Form */}
-                    <form onSubmit={handleLogin} style={{ padding: '28px 32px 32px' }}>
+                    <form onSubmit={handleLogin} className="p-8">
                         {error && (
-                            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '10px', padding: '10px 14px', color: '#f87171', fontSize: '13px', marginBottom: '18px' }}>
+                            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm mb-5 font-medium">
                                 {error}
                             </div>
                         )}
 
                         {/* Email */}
-                        <div style={{ marginBottom: '16px' }}>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#d1d5db', marginBottom: '6px' }}>Email</label>
-                            <div style={{ position: 'relative' }}>
-                                <Mail size={15} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                            <div className="relative group">
+                                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#FFB800] transition-colors" />
                                 <input
                                     type="email"
                                     required
                                     autoComplete="email"
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
-                                    placeholder="you@example.com"
-                                    style={{
-                                        width: '100%', paddingLeft: '38px', paddingRight: '14px', paddingTop: '11px', paddingBottom: '11px',
-                                        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                                        borderRadius: '10px', color: '#fff', fontSize: '14px', outline: 'none',
-                                        boxSizing: 'border-box',
-                                    }}
-                                    onFocus={e => { e.target.style.borderColor = '#9147ff'; e.target.style.boxShadow = '0 0 0 3px rgba(145,71,255,0.15)'; }}
-                                    onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+                                    placeholder="you@email.com"
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white text-sm outline-none focus:border-[#FFB800] focus:ring-1 focus:ring-[#FFB800] transition-all"
                                 />
                             </div>
                         </div>
 
                         {/* Password */}
-                        <div style={{ marginBottom: '24px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                                <label style={{ fontSize: '13px', fontWeight: '500', color: '#d1d5db' }}>Password</label>
-                                <Link href="/forgot-password" style={{ fontSize: '12px', color: '#9147ff', textDecoration: 'none' }}>Forgot password?</Link>
+                        <div className="mb-6">
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="text-sm font-medium text-gray-300">Password</label>
+                                <Link href="/forgot-password" className="text-xs text-[#FFB800] hover:underline">Forgot password?</Link>
                             </div>
-                            <div style={{ position: 'relative' }}>
-                                <Lock size={15} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
+                            <div className="relative group">
+                                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#FFB800] transition-colors" />
                                 <input
                                     type={showPw ? 'text' : 'password'}
                                     required
@@ -103,22 +88,14 @@ export default function LoginPage() {
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
                                     placeholder="••••••••"
-                                    style={{
-                                        width: '100%', paddingLeft: '38px', paddingRight: '42px', paddingTop: '11px', paddingBottom: '11px',
-                                        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                                        borderRadius: '10px', color: '#fff', fontSize: '14px', outline: 'none',
-                                        boxSizing: 'border-box',
-                                    }}
-                                    onFocus={e => { e.target.style.borderColor = '#9147ff'; e.target.style.boxShadow = '0 0 0 3px rgba(145,71,255,0.15)'; }}
-                                    onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white text-sm outline-none focus:border-[#FFB800] focus:ring-1 focus:ring-[#FFB800] transition-all"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPw(!showPw)}
-                                    aria-label="Toggle password"
-                                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
                                 >
-                                    {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                                    {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </div>
                         </div>
@@ -126,21 +103,15 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            style={{
-                                width: '100%', padding: '12px', borderRadius: '10px', fontWeight: '600', fontSize: '14px',
-                                background: loading ? 'rgba(145,71,255,0.4)' : 'linear-gradient(135deg, #9147ff, #7c3aed)',
-                                color: '#fff', border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                boxShadow: loading ? 'none' : '0 4px 20px rgba(145,71,255,0.35)',
-                            }}
+                            className="w-full py-3 rounded-xl font-bold text-sm bg-[#FFB800] text-black hover:bg-[#e6a600] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                         >
                             {loading && <Loader2 size={16} className="animate-spin" />}
-                            {loading ? 'Signing in…' : 'Sign in'}
+                            {loading ? 'Signing in...' : 'Sign in'}
                         </button>
 
-                        <p style={{ textAlign: 'center', fontSize: '13px', color: '#9ca3af', marginTop: '16px' }}>
-                            New to GoLive?{' '}
-                            <Link href="/register" style={{ color: '#9147ff', fontWeight: '500', textDecoration: 'none' }}>Create account →</Link>
+                        <p className="text-center text-sm text-gray-400 mt-6 font-medium">
+                            New to VibeStream?{' '}
+                            <Link href="/register" className="text-[#FFB800] hover:underline">Create account</Link>
                         </p>
                     </form>
                 </div>

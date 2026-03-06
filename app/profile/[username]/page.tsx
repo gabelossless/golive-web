@@ -3,12 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { LayoutGrid, CheckCircle, CheckCircle2, Edit, Settings, Share2, Loader2, User as UserIcon } from 'lucide-react';
+import { CheckCircle2, Edit, Search, Video as VideoIcon, Bell } from 'lucide-react';
 import CommunityTab from '@/components/CommunityTab';
 import VideoCard from '@/components/VideoCard';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
-import { Profile, Video } from '@/types';
+import SubscribeButton from '@/components/SubscribeButton';
+import { motion } from 'motion/react';
+
+function cn(...classes: (string | undefined | null | false)[]) {
+    return classes.filter(Boolean).join(" ");
+}
 
 export default function ProfilePage() {
     const { username } = useParams();
@@ -16,14 +21,17 @@ export default function ProfilePage() {
     const { user: currentUser } = useAuth();
 
     // State
-    const [profile, setProfile] = useState<Profile | null>(null);
+    const [profile, setProfile] = useState<any | null>(null);
     const [videos, setVideos] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('Videos');
+    const [isSubscribed, setIsSubscribed] = useState(false); // Local state for bell UI
 
     // Derived State
     const isOwner = currentUser?.id === profile?.id;
     const decodedUsername = typeof username === 'string' ? decodeURIComponent(username) : '';
+
+    const tabs = ['Home', 'Videos', 'Shorts', 'Live', 'Playlists', 'Community', 'About'];
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -39,7 +47,6 @@ export default function ProfilePage() {
                     .single();
 
                 if (profileError) {
-                    // Ignore "Row not found" error, just set profile to null
                     if (profileError.code === 'PGRST116') {
                         setProfile(null);
                         return;
@@ -52,7 +59,7 @@ export default function ProfilePage() {
                 if (profileData) {
                     const { data: videosData, error: videosError } = await supabase
                         .from('videos')
-                        .select('*, profiles(username, avatar_url)')
+                        .select('*, profiles(username, avatar_url, is_verified)')
                         .eq('user_id', profileData.id)
                         .order('created_at', { ascending: false });
 
@@ -60,20 +67,18 @@ export default function ProfilePage() {
                         const mappedVideos = videosData.map((v: any) => ({
                             id: v.id,
                             title: v.title,
-                            thumbnail: v.thumbnail_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2670&auto=format&fit=crop',
+                            thumbnail_url: v.thumbnail_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2670&auto=format&fit=crop',
                             author: (Array.isArray(v.profiles) ? v.profiles[0] : v.profiles)?.username || 'Unknown',
                             authorAvatar: (Array.isArray(v.profiles) ? v.profiles[0] : v.profiles)?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${(Array.isArray(v.profiles) ? v.profiles[0] : v.profiles)?.username}`,
-                            views: (v.view_count || 0) + ' views',
-                            timestamp: new Date(v.created_at).toLocaleDateString(),
-                            duration: '10:00', // Placeholder as DB doesn't have duration yet
-                            isVerified: profileData.is_verified,
+                            view_count: v.view_count || 0,
+                            created_at: v.created_at,
+                            is_verified: (Array.isArray(v.profiles) ? v.profiles[0] : v.profiles)?.is_verified,
                         }));
-                        setVideos(mappedVideos as any);
+                        setVideos(mappedVideos);
                     }
                 }
             } catch (err) {
                 console.error('Error fetching profile:', err);
-                // If profile not found, likely 404
             } finally {
                 setIsLoading(false);
             }
@@ -84,162 +89,147 @@ export default function ProfilePage() {
 
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center min-h-[60vh] text-primary">
-                <Loader2 size={40} className="animate-spin" />
+            <div className="flex justify-center items-center min-h-[60vh] text-[#FFB800]">
+                <div className="animate-spin w-10 h-10 border-4 border-current border-t-transparent rounded-full" />
             </div>
         );
     }
 
     if (!profile) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
-                <UserIcon size={64} className="text-muted" />
-                <h1 className="text-2xl font-bold">User not found</h1>
-                <p className="text-muted">The profile you are looking for does not exist.</p>
-                <Link href="/" className="btn btn-primary px-6 py-2 rounded-full font-bold">Return Home</Link>
+            <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+                <VideoIcon size={64} className="text-gray-500" />
+                <h1 className="text-2xl font-bold m-0">Channel not found</h1>
+                <p className="text-gray-400 m-0">The channel you are looking for does not exist.</p>
+                <Link href="/" className="px-6 py-2.5 bg-[#FFB800] text-black rounded-full font-bold no-underline mt-2 hover:bg-[#FFB800]/90 transition-colors">Return Home</Link>
             </div>
         );
     }
 
-    return (
-        <div className="-mt-6 -mx-4 md:-mx-6">
-            {/* Banner */}
-            <div className="h-44 md:h-64 w-full relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-background to-accent/20" />
-                {/* Fallback pattern if no banner_url (which doesn't exist in schema yet) */}
-                <div
-                    className="absolute inset-0 opacity-40 group-hover:scale-105 transition-transform duration-[20s] linear"
-                    style={{
-                        backgroundImage: 'url(https://images.unsplash.com/photo-1614028674026-a65e31bfd27c?q=80&w=2670&auto=format&fit=crop)',
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                    }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-black/20" />
+    const displayName = profile.username;
+    const handle = profile.username.toLowerCase().replace(/\s/g, '');
+    const avatar = profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`;
 
-                {isOwner && (
-                    <button onClick={() => router.push('/settings')} className="absolute top-4 right-4 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white text-xs font-bold py-2 px-4 rounded-full border border-white/10 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Edit size={14} /> Edit Profile
-                    </button>
-                )}
+    return (
+        <div className="flex flex-col min-h-full">
+            {/* Banner */}
+            <div className="h-48 md:h-64 bg-gradient-to-r from-[#FFB800] to-orange-700 relative overflow-hidden shrink-0">
+                <div className="absolute inset-0 opacity-30">
+                    <img
+                        src={`https://picsum.photos/seed/${profile.username}/1920/400`}
+                        alt="Banner"
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                    />
+                </div>
             </div>
 
-            <div className="max-w-[1700px] mx-auto px-4 md:px-6">
-                {/* Profile header */}
-                <div className="relative -mt-12 md:-mt-16 flex flex-col md:flex-row md:items-end gap-5 pb-8 border-b border-white/5">
-                    <div className="relative flex-shrink-0">
-                        {/* Premium Avatar Border */}
-                        <div className={`w-28 h-28 md:w-40 md:h-40 rounded-full relative group transition-all duration-300 ${profile.is_verified
-                            ? 'p-[3px] bg-gradient-to-tr from-blue-500 via-primary to-purple-500 shadow-[0_0_30px_rgba(229,9,20,0.2)]'
-                            : 'p-[2px] bg-surface'
-                            }`}>
-                            <div className="w-full h-full rounded-full border-[3px] border-background overflow-hidden relative bg-surface">
-                                <img
-                                    src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`}
-                                    alt={profile.username}
-                                    className="w-full h-full object-cover"
-                                />
-                                {isOwner && (
-                                    <button aria-label="Edit Profile" title="Edit Profile" onClick={() => router.push('/settings')} className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none outline-none">
-                                        <Edit size={24} className="text-white" />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
+            {/* Profile Info */}
+            <div className="px-4 md:px-16 lg:px-24 py-6">
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                    <div className="relative shrink-0">
+                        <img
+                            src={avatar}
+                            alt={displayName}
+                            className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-[#0a0a0a] shadow-xl bg-[#161616]"
+                            referrerPolicy="no-referrer"
+                        />
+                        {/* Example Live Badge logic, could hook up real tracking later */}
                     </div>
 
-                    <div className="flex-1 space-y-3">
-                        <div className="flex items-center gap-3">
-                            <h1 className="text-3xl md:text-5xl font-display font-black tracking-[-0.04em] flex items-center gap-3 uppercase italic">
-                                {profile.username}
-                                {profile.is_verified && <CheckCircle2 className="w-6 h-6 text-[#1D9BF0]" />}
-                            </h1>
-                            {isOwner && (
-                                <span className="bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-primary/20">YOU</span>
+                    <div className="flex-1 space-y-2 min-w-0">
+                        <h1 className="text-3xl md:text-4xl font-bold flex items-center gap-2 m-0">
+                            {displayName}
+                            {profile.is_verified && <CheckCircle2 size={24} className="text-gray-400" />}
+                        </h1>
+                        <div className="flex flex-wrap items-center gap-2 text-gray-400 text-sm md:text-base">
+                            <span className="font-semibold text-white">@{handle}</span>
+                            <span>•</span>
+                            <span>{profile.follower_count?.toLocaleString() || '0'} subscribers</span>
+                            <span>•</span>
+                            <span>{videos.length} videos</span>
+                        </div>
+                        <p className="text-gray-300 text-sm max-w-2xl line-clamp-2 m-0">
+                            {profile.bio || "Welcome to my official channel! Subscribe for more content."}
+                        </p>
+
+                        <div className="flex items-center gap-3 pt-2">
+                            {isOwner ? (
+                                <>
+                                    <button onClick={() => router.push('/studio')} className="px-6 py-2.5 bg-white/10 hover:bg-white/20 rounded-full text-sm font-bold transition-colors text-white">
+                                        Customize Channel
+                                    </button>
+                                    <button onClick={() => router.push('/studio')} className="px-6 py-2.5 bg-white/10 hover:bg-white/20 rounded-full text-sm font-bold transition-colors text-white">
+                                        Manage Videos
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <div onClick={() => setIsSubscribed(!isSubscribed)}>
+                                        <SubscribeButton channelId={profile.id} />
+                                    </div>
+                                    {isSubscribed && (
+                                        <button className="p-2.5 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
+                                            <Bell size={20} />
+                                        </button>
+                                    )}
+                                </>
                             )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-muted font-bold">
-                            <span>@{profile.username}</span>
-                            <span>{videos.length} <span className="font-medium opacity-60">videos</span></span>
-                            {/* Todo: Real subscriber count */}
-                            <span>0 <span className="font-medium opacity-60">subscribers</span></span>
-                        </div>
-                        <p className="text-sm text-foreground/80 mt-2 max-w-2xl leading-relaxed whitespace-pre-wrap">
-                            {profile.bio || "No bio yet."}
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-2 md:mb-1">
-                        {isOwner ? (
-                            <>
-                                <button onClick={() => router.push('/settings')} className="btn btn-primary px-6 py-2.5 font-black text-sm rounded-full shadow-lg shadow-primary/25 hover:scale-105 transition-all">
-                                    EDIT PROFILE
-                                </button>
-                                <button aria-label="Settings" title="Settings" onClick={() => router.push('/settings')} className="bg-surface hover:bg-surface-hover border border-border/50 rounded-full p-3 transition-all">
-                                    <Settings size={20} className="text-foreground" />
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <button className="btn btn-primary px-10 py-2.5 font-black text-sm rounded-full shadow-lg shadow-primary/25">
-                                    SUBSCRIBE
-                                </button>
-                                <button aria-label="Share Profile" title="Share Profile" className="bg-surface hover:bg-surface-hover border border-border/50 rounded-full p-3 transition-all">
-                                    <Share2 size={20} className="text-foreground" />
-                                </button>
-                            </>
-                        )}
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex items-center gap-4 bg-surface/20 p-1 rounded-2xl mt-6 border border-border/40 overflow-x-auto">
-                    {['Videos', 'Live', 'Community', 'About'].map((tab) => (
+                <div className="mt-8 border-b border-white/10 flex items-center gap-8 overflow-x-auto scrollbar-hide">
+                    {tabs.map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`flex-1 md:flex-none px-6 md:px-8 py-2.5 text-sm font-black rounded-xl transition-all whitespace-nowrap ${tab === activeTab
-                                ? 'bg-surface text-foreground shadow-sm ring-1 ring-white/10'
-                                : 'text-muted hover:text-foreground'
-                                }`}
+                            className={cn(
+                                "pb-3 text-sm font-bold uppercase tracking-wider transition-all relative border-none bg-transparent cursor-pointer whitespace-nowrap",
+                                activeTab === tab ? "text-white" : "text-gray-400 hover:text-white"
+                            )}
                         >
                             {tab}
+                            {activeTab === tab && (
+                                <motion.div
+                                    layoutId="activeTab"
+                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FFB800]"
+                                />
+                            )}
                         </button>
                     ))}
+                    <div className="flex-1" />
+                    <button className="pb-3 text-gray-400 hover:text-white border-none bg-transparent cursor-pointer">
+                        <Search size={20} />
+                    </button>
                 </div>
 
-                {/* Content Section */}
-                <div className="py-10 space-y-12">
-                    {activeTab === 'Community' ? (
-                        <CommunityTab />
-                    ) : activeTab === 'Videos' ? (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-xl font-black flex items-center gap-3">
-                                    <LayoutGrid size={24} className="text-primary" />
-                                    Videos
-                                </h2>
+                {/* Content */}
+                <div className="py-8">
+                    {activeTab === 'Videos' || activeTab === 'Home' ? (
+                        videos.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8">
+                                {videos.map((video) => (
+                                    <VideoCard key={video.id} video={video as any} />
+                                ))}
                             </div>
-                            {videos.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
-                                    {videos.map((video) => (
-                                        <VideoCard key={video.id} video={video as any} />
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-20 bg-surface/30 rounded-3xl border border-dashed border-border">
-                                    <p className="text-muted font-bold">No videos yet.</p>
-                                    {isOwner && (
-                                        <Link href="/upload" className="text-primary hover:underline text-sm font-bold mt-2 inline-block">
-                                            Upload your first video
-                                        </Link>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                        ) : (
+                            <div className="text-center p-16 bg-white/5 rounded-2xl border border-white/10">
+                                <VideoIcon size={48} className="text-gray-600 mx-auto mb-4" />
+                                <p className="text-gray-400 font-bold m-0">This channel has no videos.</p>
+                                {isOwner && (
+                                    <Link href="/upload" className="inline-block mt-4 text-[#FFB800] no-underline font-bold hover:underline">
+                                        Upload your first video
+                                    </Link>
+                                )}
+                            </div>
+                        )
+                    ) : activeTab === 'Community' ? (
+                        <CommunityTab />
                     ) : (
-                        <div className="text-center py-20">
-                            <p className="text-muted">Coming soon...</p>
+                        <div className="text-center p-16 text-gray-500">
+                            This content is not available yet.
                         </div>
                     )}
                 </div>

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import VideoCard from '@/components/VideoCard';
 import CategoryBar from '@/components/CategoryBar';
 import { supabase } from '@/lib/supabase';
+import { motion } from 'motion/react';
+import Link from 'next/link';
 
 export default function HomeClient() {
     const [videos, setVideos] = useState<any[]>([]);
@@ -15,7 +17,6 @@ export default function HomeClient() {
             const { data, error } = await supabase
                 .from('videos')
                 .select('id, title, thumbnail_url, view_count, target_views, created_at, is_live, duration, profiles(username, avatar_url)')
-                .not('description', 'ilike', '%[PRIVATE_VIDEO_FLAG]%')
                 .order('created_at', { ascending: false });
 
             if (!error && data) {
@@ -23,8 +24,10 @@ export default function HomeClient() {
                     ...v,
                     profiles: Array.isArray(v.profiles) ? v.profiles[0] : v.profiles,
                 }));
-                setVideos(normalized);
-                setFiltered(normalized);
+                // Filter out private videos safely
+                const pubVideos = normalized.filter(v => !(v.description || '').includes('[PRIVATE_VIDEO_FLAG]'));
+                setVideos(pubVideos);
+                setFiltered(pubVideos);
             }
             setLoading(false);
         }
@@ -37,46 +40,90 @@ export default function HomeClient() {
         setFiltered(videos.filter(v => (v.category || '').toLowerCase() === cat.toLowerCase()));
     };
 
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <CategoryBar onSelect={handleCategory} />
+    const featuredVideo = filtered[0]; // Just use latest for now, real app might curate this
 
-            <div style={{ padding: '24px' }}>
-                {loading ? (
-                    <div style={gridStyle}>
-                        {Array.from({ length: 12 }).map((_, i) => (
-                            <div key={i}>
-                                <div style={{ aspectRatio: '16/9', borderRadius: '12px', background: 'rgba(255,255,255,0.05)' }} />
-                                <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
-                                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', flexShrink: 0 }} />
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', marginBottom: '6px' }} />
-                                        <div style={{ height: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', width: '66%' }} />
+    return (
+        <div className="flex flex-col min-h-full">
+            <CategoryBar />
+
+            <div className="p-2 sm:p-4 md:p-6 lg:p-8 space-y-12">
+                {/* Featured Hero Section */}
+                {!loading && featuredVideo && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="relative aspect-[21/9] w-full rounded-3xl overflow-hidden group cursor-pointer hidden md:block"
+                    >
+                        <Link href={`/watch/${featuredVideo.id}`}>
+                            <img
+                                src={featuredVideo.thumbnail_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2670&auto=format&fit=crop'}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                alt=""
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent p-8 flex flex-col justify-end gap-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="bg-[#FFB800] text-black text-[10px] font-black px-2 py-1 rounded uppercase tracking-tighter">Featured</span>
+                                    {featuredVideo.is_live && <span className="text-xs font-bold text-red-500 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" /> Live</span>}
+                                </div>
+                                <h1 className="text-4xl font-black uppercase tracking-tighter max-w-2xl leading-none">
+                                    {featuredVideo.title || 'Untitled'}
+                                </h1>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <img src={featuredVideo.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${featuredVideo.profiles?.username}`} className="w-6 h-6 rounded-full" alt="" />
+                                        <span className="text-sm font-bold">{featuredVideo.profiles?.username || 'Unknown'}</span>
                                     </div>
+                                    <span className="text-sm text-white/60 font-medium">{Math.max(featuredVideo.view_count || 0, featuredVideo.target_views || 0)} views</span>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                ) : filtered.length > 0 ? (
-                    <div style={gridStyle}>
-                        {filtered.map(video => (
-                            <VideoCard key={video.id} video={video} />
-                        ))}
-                    </div>
-                ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', gap: '16px', textAlign: 'center' }}>
-                        <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>🎬</div>
-                        <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#fff', margin: 0 }}>No videos yet</h2>
-                        <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>Be the first to upload.</p>
-                    </div>
+                        </Link>
+                    </motion.div>
                 )}
+
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between px-2 md:px-0">
+                        <h2 className="text-xl font-black uppercase tracking-tight">Recommended for you</h2>
+                        <button className="text-xs font-black uppercase tracking-widest text-[#FFB800] hover:underline">Refresh Feed</button>
+                    </div>
+
+                    {loading ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-6 sm:gap-y-8">
+                            {Array.from({ length: 10 }).map((_, i) => (
+                                <div key={i} className="animate-pulse">
+                                    <div className="aspect-video bg-white/5 rounded-xl mb-3" />
+                                    <div className="flex gap-3">
+                                        <div className="w-9 h-9 rounded-full bg-white/5 shrink-0" />
+                                        <div className="flex-1 space-y-2 py-1">
+                                            <div className="h-4 bg-white/5 rounded w-3/4" />
+                                            <div className="h-3 bg-white/5 rounded w-1/2" />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : filtered.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-6 sm:gap-y-8">
+                            {filtered.map((video, index) => (
+                                <motion.div
+                                    key={video.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.05 }}
+                                    viewport={{ once: true }}
+                                >
+                                    <VideoCard video={video} />
+                                </motion.div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 text-center">
+                            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-3xl">🎬</div>
+                            <h2 className="text-xl font-bold">No videos found</h2>
+                            <p className="text-gray-400 text-sm">Check back later or try a different category.</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
 }
-
-const gridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-    gap: '32px 16px',
-};

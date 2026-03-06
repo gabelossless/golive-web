@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Loader2, CheckCircle2, Video, Mail, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Loader2, CheckCircle2, Play, Mail, Lock, User } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function RegisterPage() {
@@ -50,15 +50,15 @@ export default function RegisterPage() {
 
     if (success) {
         return (
-            <div className="auth-screen">
-                <div style={{ textAlign: 'center', maxWidth: '360px', padding: '0 24px' }}>
-                    <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-                        <CheckCircle2 size={36} style={{ color: '#10b981' }} />
+            <div className="auth-screen relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0a0a0a]">
+                <div className="text-center max-w-[360px] px-6">
+                    <div className="w-[72px] h-[72px] rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle2 size={36} className="text-green-500" />
                     </div>
-                    <h2 style={{ fontSize: '22px', fontWeight: '700', color: '#fff', marginBottom: '8px' }}>Check your email!</h2>
-                    <p style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '4px' }}>We sent a confirmation link to:</p>
-                    <p style={{ fontSize: '15px', fontWeight: '600', color: '#9147ff', marginBottom: '28px' }}>{successEmail}</p>
-                    <Link href="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 28px', borderRadius: '10px', background: 'linear-gradient(135deg, #9147ff, #7c3aed)', color: '#fff', fontWeight: '600', fontSize: '14px', textDecoration: 'none' }}>
+                    <h2 className="text-2xl font-bold text-white mb-2">Check your email!</h2>
+                    <p className="text-sm text-gray-400 mb-1">We sent a confirmation link to:</p>
+                    <p className="text-[15px] font-bold text-[#FFB800] mb-7">{successEmail}</p>
+                    <Link href="/login" className="inline-flex items-center gap-2 px-7 py-3 rounded-xl bg-[#FFB800] text-black font-bold text-sm tracking-wide hover:bg-[#e6a600] transition-colors">
                         Back to Sign in
                     </Link>
                 </div>
@@ -67,97 +67,85 @@ export default function RegisterPage() {
     }
 
     return (
-        <div className="auth-screen" style={{ overflowY: 'auto', paddingTop: '24px', paddingBottom: '24px' }}>
-            {/* Blobs */}
-            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-                <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(145,71,255,0.25), transparent 70%)', filter: 'blur(40px)' }} />
-                <div style={{ position: 'absolute', bottom: '-10%', left: '-5%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(220,38,38,0.18), transparent 70%)', filter: 'blur(40px)' }} />
+        <div className="auth-screen relative min-h-screen flex items-center justify-center overflow-x-hidden overflow-y-auto bg-[#0a0a0a] py-8">
+            {/* Ambient amber glows */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none fixed">
+                <div className="absolute top-[10%] left-[5%] w-[400px] h-[400px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(255,184,0,0.15), transparent 70%)', filter: 'blur(40px)' }} />
+                <div className="absolute bottom-[10%] right-[5%] w-[400px] h-[400px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(255,184,0,0.1), transparent 70%)', filter: 'blur(40px)' }} />
             </div>
 
-            <div style={{ position: 'relative', width: '100%', maxWidth: '400px', padding: '0 16px' }}>
-                <div style={{
-                    background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px',
-                    overflow: 'hidden', boxShadow: '0 25px 50px rgba(0,0,0,0.6)',
-                }}>
+            <div className="relative w-full max-w-[400px] px-4 z-10 m-auto">
+                <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
                     {/* Header */}
-                    <div style={{ padding: '36px 32px 24px', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '20px', textDecoration: 'none' }}>
-                            <div style={{ position: 'relative' }}>
-                                <Video size={30} style={{ color: '#dc2626' }} fill="currentColor" />
-                                <div style={{ position: 'absolute', top: '-3px', right: '-3px', width: '8px', height: '8px', background: '#9147ff', borderRadius: '50%' }} />
+                    <div className="pt-10 px-8 pb-6 text-center border-b border-white/5">
+                        <Link href="/" className="inline-flex items-center gap-2 mb-6 no-underline">
+                            <div className="w-8 h-8 rounded-full bg-[#FFB800] flex items-center justify-center relative">
+                                <Play size={16} className="text-black ml-0.5 fill-current" />
                             </div>
-                            <span style={{ fontSize: '22px', fontWeight: '800', color: '#fff', letterSpacing: '-0.5px' }}>
-                                Go<span style={{ color: '#9147ff' }}>Live</span>
+                            <span className="text-2xl font-black text-white tracking-tight">
+                                Vibe<span className="text-[#FFB800]">Stream</span>
                             </span>
                         </Link>
-                        <h1 style={{ fontSize: '22px', fontWeight: '700', color: '#fff', margin: '0 0 4px' }}>Create your account</h1>
-                        <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>Free to join. Start creating today.</p>
+                        <h1 className="text-2xl font-bold text-white mb-1">Create account</h1>
+                        <p className="text-sm text-gray-400">Free to join. Start creating today.</p>
                     </div>
 
-                    <form onSubmit={handleRegister} style={{ padding: '28px 32px 32px' }}>
+                    <form onSubmit={handleRegister} className="p-8">
                         {error && (
-                            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '10px', padding: '10px 14px', color: '#f87171', fontSize: '13px', marginBottom: '18px' }}>
+                            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-500 text-sm mb-5 font-bold">
                                 {error}
                             </div>
                         )}
 
                         {/* Username */}
-                        <div style={{ marginBottom: '16px' }}>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#d1d5db', marginBottom: '6px' }}>Username</label>
-                            <div style={{ position: 'relative' }}>
-                                <User size={15} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                            <div className="relative group">
+                                <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#FFB800] transition-colors" />
                                 <input
                                     type="text" required minLength={3} maxLength={20} pattern="[a-zA-Z0-9_]+"
                                     value={username} onChange={e => setUsername(e.target.value.toLowerCase())} placeholder="your_username"
-                                    style={{ width: '100%', paddingLeft: '38px', paddingRight: '14px', paddingTop: '11px', paddingBottom: '11px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#fff', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
-                                    onFocus={e => { e.target.style.borderColor = '#9147ff'; e.target.style.boxShadow = '0 0 0 3px rgba(145,71,255,0.15)'; }}
-                                    onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white text-sm outline-none focus:border-[#FFB800] focus:ring-1 focus:ring-[#FFB800] transition-all"
                                 />
                             </div>
-                            <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Letters, numbers, and underscores only</p>
+                            <p className="text-[11px] text-gray-500 mt-1.5 font-medium">Letters, numbers, and underscores only</p>
                         </div>
 
                         {/* Email */}
-                        <div style={{ marginBottom: '16px' }}>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#d1d5db', marginBottom: '6px' }}>Email</label>
-                            <div style={{ position: 'relative' }}>
-                                <Mail size={15} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                            <div className="relative group">
+                                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#FFB800] transition-colors" />
                                 <input
                                     type="email" required autoComplete="email"
-                                    value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com"
-                                    style={{ width: '100%', paddingLeft: '38px', paddingRight: '14px', paddingTop: '11px', paddingBottom: '11px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#fff', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
-                                    onFocus={e => { e.target.style.borderColor = '#9147ff'; e.target.style.boxShadow = '0 0 0 3px rgba(145,71,255,0.15)'; }}
-                                    onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+                                    value={email} onChange={e => setEmail(e.target.value)} placeholder="you@email.com"
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white text-sm outline-none focus:border-[#FFB800] focus:ring-1 focus:ring-[#FFB800] transition-all"
                                 />
                             </div>
                         </div>
 
                         {/* Password */}
-                        <div style={{ marginBottom: '24px' }}>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#d1d5db', marginBottom: '6px' }}>Password</label>
-                            <div style={{ position: 'relative' }}>
-                                <Lock size={15} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                            <div className="relative group">
+                                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#FFB800] transition-colors" />
                                 <input
                                     type={showPw ? 'text' : 'password'} required minLength={6} autoComplete="new-password"
                                     value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••"
-                                    style={{ width: '100%', paddingLeft: '38px', paddingRight: '42px', paddingTop: '11px', paddingBottom: '11px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#fff', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
-                                    onFocus={e => { e.target.style.borderColor = '#9147ff'; e.target.style.boxShadow = '0 0 0 3px rgba(145,71,255,0.15)'; }}
-                                    onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white text-sm outline-none focus:border-[#FFB800] focus:ring-1 focus:ring-[#FFB800] transition-all"
                                 />
-                                <button type="button" onClick={() => setShowPw(!showPw)} aria-label="Toggle password visibility"
-                                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}>
-                                    {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
+                                    {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </div>
                             {password.length > 0 && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
-                                    <div style={{ display: 'flex', gap: '4px', flex: 1 }}>
+                                <div className="flex items-center gap-2 mt-2.5">
+                                    <div className="flex gap-1 flex-1">
                                         {[1, 2, 3].map(i => (
-                                            <div key={i} style={{ height: '4px', flex: 1, borderRadius: '2px', background: pwStrength >= i ? pwColors[pwStrength] : 'rgba(255,255,255,0.1)', transition: 'background 0.3s' }} />
+                                            <div key={i} className="h-1 flex-1 rounded-full transition-colors" style={{ background: pwStrength >= i ? pwColors[pwStrength] : 'rgba(255,255,255,0.1)' }} />
                                         ))}
                                     </div>
-                                    <span style={{ fontSize: '11px', fontWeight: '600', color: pwColors[pwStrength] }}>{pwLabels[pwStrength]}</span>
+                                    <span className="text-[11px] font-bold" style={{ color: pwColors[pwStrength] }}>{pwLabels[pwStrength]}</span>
                                 </div>
                             )}
                         </div>
@@ -165,25 +153,18 @@ export default function RegisterPage() {
                         <button
                             type="submit"
                             disabled={loading || pwStrength < 1}
-                            style={{
-                                width: '100%', padding: '12px', borderRadius: '10px', fontWeight: '600', fontSize: '14px',
-                                background: loading ? 'rgba(145,71,255,0.4)' : 'linear-gradient(135deg, #9147ff, #7c3aed)',
-                                color: '#fff', border: 'none', cursor: (loading || pwStrength < 1) ? 'not-allowed' : 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                boxShadow: loading ? 'none' : '0 4px 20px rgba(145,71,255,0.35)',
-                                opacity: pwStrength < 1 ? 0.5 : 1,
-                            }}
+                            className="w-full py-3 rounded-xl font-bold text-sm bg-[#FFB800] text-black hover:bg-[#e6a600] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                         >
-                            {loading && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
-                            {loading ? 'Creating account…' : 'Create account'}
+                            {loading && <Loader2 size={16} className="animate-spin" />}
+                            {loading ? 'Creating account...' : 'Create account'}
                         </button>
 
-                        <p style={{ textAlign: 'center', fontSize: '11px', color: '#6b7280', marginTop: '12px' }}>
-                            By creating an account you agree to our <Link href="/terms" style={{ color: '#9147ff', textDecoration: 'none' }}>Terms</Link>
+                        <p className="text-center text-[11px] text-gray-500 mt-4 font-medium">
+                            By creating an account you agree to our <Link href="/terms" className="text-[#FFB800] hover:underline">Terms</Link>
                         </p>
-                        <p style={{ textAlign: 'center', fontSize: '13px', color: '#9ca3af', marginTop: '12px' }}>
+                        <p className="text-center text-sm text-gray-400 mt-4 font-medium">
                             Already have an account?{' '}
-                            <Link href="/login" style={{ color: '#9147ff', fontWeight: '500', textDecoration: 'none' }}>Sign in →</Link>
+                            <Link href="/login" className="text-[#FFB800] hover:underline">Sign in</Link>
                         </p>
                     </form>
                 </div>
