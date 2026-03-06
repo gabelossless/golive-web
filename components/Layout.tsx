@@ -1,17 +1,44 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
 
+const AUTH_ROUTES = ['/login', '/register', '/auth/callback'];
+
 export default function Layout({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
     const [isCollapsed, setIsCollapsed] = useState(false);
 
+    // Auth pages: no navbar/sidebar
+    if (AUTH_ROUTES.includes(pathname)) {
+        return (
+            <div className="min-h-screen" style={{ background: 'var(--background)' }}>
+                {children}
+            </div>
+        );
+    }
+
+    return (
+        <LayoutWithNav isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed}>
+            {children}
+        </LayoutWithNav>
+    );
+}
+
+function LayoutWithNav({
+    children,
+    isCollapsed,
+    setIsCollapsed,
+}: {
+    children: React.ReactNode;
+    isCollapsed: boolean;
+    setIsCollapsed: (v: boolean) => void;
+}) {
     useEffect(() => {
-        const handler = () => {
-            setIsCollapsed(window.innerWidth < 1280);
-        };
+        const handler = () => setIsCollapsed(window.innerWidth < 1280);
         handler();
         window.addEventListener('resize', handler);
         return () => window.removeEventListener('resize', handler);
@@ -23,7 +50,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     return (
         <div style={{ background: 'var(--background)', minHeight: '100vh' }}>
-            <Navbar onMenuClick={() => setIsCollapsed((c) => !c)} />
+            <Navbar onMenuClick={() => setIsCollapsed(!isCollapsed)} />
 
             <div className="flex" style={{ paddingTop: 'var(--spacing-header)' }}>
                 <Sidebar isCollapsed={isCollapsed} />
