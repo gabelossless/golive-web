@@ -26,7 +26,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="relative min-h-screen flex items-center justify-center overflow-hidden" style={{ background: '#0f0f0f' }}>
+        <div className="fixed inset-0 flex items-center justify-center overflow-y-auto" style={{ background: '#0f0f0f' }}>
             {/* Animated gradient blobs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full opacity-20 blur-3xl"
