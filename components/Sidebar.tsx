@@ -1,133 +1,124 @@
 'use client';
 
-import { Home, Compass, PlaySquare, Clock, ThumbsUp, History, Radio, Gamepad2, Music2, Trophy, Flame, ChevronDown, Upload, Settings } from 'lucide-react';
+import { Home, Compass, PlaySquare, History, Clock, ThumbsUp, Radio, Gamepad2, Music2, Trophy, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from './AuthProvider';
-
-interface SidebarProps {
-    isCollapsed: boolean;
-}
-
-function cn(...classes: (string | boolean | undefined)[]) {
-    return classes.filter(Boolean).join(' ');
-}
 
 const menuItems = [
     { icon: Home, label: 'Home', path: '/' },
-    { icon: Flame, label: 'Trending', path: '/trending' },
+    { icon: Compass, label: 'Explore', path: '/trending' },
     { icon: PlaySquare, label: 'Subscriptions', path: '/subscriptions' },
 ];
 
 const libraryItems = [
     { icon: History, label: 'History', path: '/history' },
-    { icon: Clock, label: 'Watch Later', path: '/liked' },
+    { icon: Clock, label: 'Watch Later', path: '/watch-later' },
     { icon: ThumbsUp, label: 'Liked Videos', path: '/liked' },
 ];
 
 const exploreItems = [
-    { icon: Radio, label: 'Live', path: '/studio/golive', color: 'text-red-500' },
-    { icon: Gamepad2, label: 'Gaming', path: '/trending' },
-    { icon: Music2, label: 'Music', path: '/trending' },
-    { icon: Trophy, label: 'Sports', path: '/trending' },
+    { icon: Radio, label: 'Live', path: '/live', color: 'text-red-500' },
+    { icon: Gamepad2, label: 'Gaming', path: '/gaming' },
+    { icon: Music2, label: 'Music', path: '/music' },
+    { icon: Trophy, label: 'Sports', path: '/sports' },
 ];
 
-function SidebarItem({ icon: Icon, label, path, isActive, color, collapsed }: {
-    icon: any; label: string; path: string; isActive?: boolean; color?: string; collapsed?: boolean;
-}) {
-    return (
-        <Link
-            href={path}
-            className={cn(
-                'flex items-center gap-4 rounded-xl transition-all duration-200 group',
-                collapsed ? 'flex-col gap-1 px-2 py-3 mx-1' : 'px-3 py-2',
-                isActive ? 'bg-white/10 font-medium' : 'hover:bg-white/5'
-            )}
-        >
-            <Icon size={collapsed ? 20 : 20} className={cn(isActive ? 'text-white' : 'text-gray-400 group-hover:text-white', color)} />
-            {!collapsed && (
-                <span className={cn('text-sm', isActive ? 'text-white' : 'text-gray-400 group-hover:text-white')}>
-                    {label}
-                </span>
-            )}
-            {collapsed && (
-                <span className="text-[10px] text-gray-400 group-hover:text-white">{label}</span>
-            )}
-        </Link>
-    );
+interface SidebarProps {
+    isCollapsed: boolean;
 }
 
 export default function Sidebar({ isCollapsed }: SidebarProps) {
     const pathname = usePathname();
-    const { user } = useAuth();
 
     if (isCollapsed) {
         return (
             <aside
-                className="fixed top-14 left-0 bottom-0 z-40 flex flex-col items-center py-4 gap-2 bg-[#0f0f0f] border-r border-white/5 overflow-y-auto scrollbar-hide"
-                style={{ width: 'var(--spacing-sidebar-mini)' }}
+                className="fixed top-14 left-0 bottom-0 z-40 flex flex-col items-center py-3 gap-2 bg-[#0f0f0f] border-r border-white/5 overflow-y-auto scrollbar-hide"
+                style={{ width: '72px' }}
             >
-                {menuItems.map((item) => (
-                    <SidebarItem key={item.label} {...item} isActive={pathname === item.path} collapsed />
+                {menuItems.map(item => (
+                    <Link
+                        key={item.label}
+                        href={item.path}
+                        className={`flex flex-col items-center gap-1 px-2 py-3 rounded-xl w-full hover:bg-white/5 transition-colors ${pathname === item.path ? 'bg-white/10' : ''}`}
+                    >
+                        <item.icon size={20} className={pathname === item.path ? 'text-white' : 'text-gray-400'} />
+                        <span className="text-[10px] text-gray-400 text-center leading-tight">{item.label}</span>
+                    </Link>
                 ))}
-                <hr className="w-10 border-white/10 my-1" />
-                {libraryItems.map((item) => (
-                    <SidebarItem key={item.label} {...item} isActive={pathname === item.path} collapsed />
+                <hr className="w-8 border-white/10 my-1" />
+                {exploreItems.map(item => (
+                    <Link
+                        key={item.label}
+                        href={item.path}
+                        className="flex flex-col items-center gap-1 px-2 py-3 rounded-xl w-full hover:bg-white/5 transition-colors"
+                    >
+                        <item.icon size={20} className={`${item.color || 'text-gray-400'}`} />
+                        <span className="text-[10px] text-gray-400 text-center leading-tight">{item.label}</span>
+                    </Link>
                 ))}
-                <hr className="w-10 border-white/10 my-1" />
-                {exploreItems.map((item) => (
-                    <SidebarItem key={item.label} {...item} collapsed />
-                ))}
-                {user && (
-                    <>
-                        <hr className="w-10 border-white/10 my-1" />
-                        <SidebarItem icon={Upload} label="Upload" path="/upload" collapsed />
-                        <SidebarItem icon={Settings} label="Studio" path="/studio" collapsed />
-                    </>
-                )}
             </aside>
         );
     }
 
     return (
         <aside
-            className="fixed top-14 left-0 bottom-0 z-40 flex flex-col py-4 overflow-y-auto scrollbar-hide bg-[#0f0f0f] border-r border-white/5"
-            style={{ width: 'var(--spacing-sidebar)' }}
+            className="fixed top-14 left-0 bottom-0 z-40 flex flex-col py-3 bg-[#0f0f0f] border-r border-white/5 overflow-y-auto scrollbar-hide"
+            style={{ width: '240px' }}
         >
-            <div className="px-3 space-y-1">
-                {menuItems.map((item) => (
+            {/* Main nav */}
+            <div className="px-3 space-y-0.5">
+                {menuItems.map(item => (
                     <SidebarItem key={item.label} {...item} isActive={pathname === item.path} />
                 ))}
             </div>
 
-            <hr className="my-4 border-white/10 mx-4" />
+            <hr className="my-3 border-white/10 mx-4" />
 
-            <div className="px-3 space-y-1">
-                <h3 className="px-3 mb-2 text-xs font-bold text-gray-500 uppercase tracking-widest">Library</h3>
-                {libraryItems.map((item) => (
-                    <SidebarItem key={item.label} {...item} isActive={pathname === item.path} />
-                ))}
+            {/* Following (placeholder) */}
+            <div className="px-3">
+                <h3 className="px-3 mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-widest">Following</h3>
+                <button className="w-full flex items-center gap-4 px-3 py-2 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white transition-colors">
+                    <ChevronDown size={18} />
+                    <span className="text-sm">Show channels</span>
+                </button>
             </div>
 
-            <hr className="my-4 border-white/10 mx-4" />
+            <hr className="my-3 border-white/10 mx-4" />
 
-            <div className="px-3 space-y-1">
-                <h3 className="px-3 mb-2 text-xs font-bold text-gray-500 uppercase tracking-widest">Explore</h3>
-                {exploreItems.map((item) => (
-                    <SidebarItem key={item.label} {...item} />
-                ))}
+            {/* Explore */}
+            <div className="px-3">
+                <h3 className="px-3 mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-widest">Explore</h3>
+                <div className="space-y-0.5">
+                    {exploreItems.map(item => (
+                        <SidebarItem key={item.label} {...item} isActive={false} />
+                    ))}
+                </div>
             </div>
 
-            {user && (
-                <>
-                    <hr className="my-4 border-white/10 mx-4" />
-                    <div className="px-3 space-y-1">
-                        <h3 className="px-3 mb-2 text-xs font-bold text-gray-500 uppercase tracking-widest">Creator</h3>
-                        <SidebarItem icon={Upload} label="Upload Video" path="/upload" />
-                        <SidebarItem icon={Settings} label="Creator Studio" path="/studio" />
-                    </div>
-                </>
-            )}
+            <hr className="my-3 border-white/10 mx-4" />
+
+            {/* Library */}
+            <div className="px-3">
+                <h3 className="px-3 mb-2 text-[11px] font-bold text-gray-500 uppercase tracking-widest">Library</h3>
+                <div className="space-y-0.5">
+                    {libraryItems.map(item => (
+                        <SidebarItem key={item.label} {...item} isActive={pathname === item.path} />
+                    ))}
+                </div>
+            </div>
         </aside>
+    );
+}
+
+function SidebarItem({ icon: Icon, label, path, isActive, color }: any) {
+    return (
+        <Link
+            href={path}
+            className={`flex items-center gap-4 px-3 py-2 rounded-xl transition-all duration-150 group ${isActive ? 'bg-white/10 font-medium' : 'hover:bg-white/5'}`}
+        >
+            <Icon size={20} className={isActive ? 'text-white' : `text-gray-400 group-hover:text-white ${color || ''}`} />
+            <span className={`text-sm ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{label}</span>
+        </Link>
     );
 }

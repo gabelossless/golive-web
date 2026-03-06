@@ -1,125 +1,154 @@
 'use client';
 
-import { Menu, Search, Video, Bell, User, Mic, Camera, Upload, LogOut } from 'lucide-react';
+import { Menu, Search, Video, Bell, Camera, Mic, User, Upload, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import React, { useState } from 'react';
-import { useAuth } from './AuthProvider';
+import { useRouter, usePathname } from 'next/navigation';
+import React, { useState, useRef, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/components/AuthProvider';
 
 interface NavbarProps {
     onMenuClick: () => void;
 }
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
-    const [searchQuery, setSearchQuery] = useState('');
     const router = useRouter();
-    const pathname = usePathname();
-    const { user, signOut } = useAuth();
+    const { user } = useAuth();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        if (searchQuery.trim()) {
-            router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
-        }
+        if (searchQuery.trim()) router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
     };
 
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+        router.push('/login');
+    };
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
     return (
-        <nav className="glass sticky top-0 z-50 flex items-center justify-between px-4 py-2 h-14">
-            {/* Left */}
-            <div className="flex items-center gap-4">
+        <nav className="glass fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2 h-14">
+            {/* Left: Hamburger + Logo */}
+            <div className="flex items-center gap-3">
                 <button
                     onClick={onMenuClick}
                     className="p-2 rounded-full hover:bg-white/10 transition-colors"
-                    aria-label="Toggle menu"
+                    aria-label="Toggle sidebar"
                 >
-                    <Menu size={24} />
+                    <Menu size={22} />
                 </button>
                 <Link href="/" className="flex items-center gap-1 group">
                     <div className="relative">
-                        <Video className="text-red-600 group-hover:scale-110 transition-transform" size={28} fill="currentColor" />
+                        <Video className="text-red-600 group-hover:scale-110 transition-transform" size={26} fill="currentColor" />
                         <div className="absolute -top-1 -right-1 w-2 h-2 bg-[#9147ff] rounded-full animate-pulse" />
                     </div>
-                    <span className="text-xl font-bold tracking-tighter font-display hidden sm:block">
+                    <span className="text-[18px] font-bold tracking-tight hidden sm:block ml-1">
                         Go<span className="text-[#9147ff]">Live</span>
                     </span>
                 </Link>
             </div>
 
-            {/* Search */}
-            <form
-                onSubmit={handleSearch}
-                className="flex-1 max-w-2xl mx-4 hidden md:flex items-center"
-            >
-                <div className="flex flex-1 items-center bg-[#121212] border border-[#3f3f3f] rounded-l-full px-4 py-1.5 focus-within:border-[#9147ff] transition-colors">
-                    <Search className="text-gray-400 mr-2 flex-shrink-0" size={18} />
+            {/* Center: Search (YouTube-style pill) */}
+            <form onSubmit={handleSearch} className="flex-1 max-w-xl mx-4 hidden md:flex items-center">
+                <div className="flex flex-1 items-center bg-[#121212] border border-[#3f3f3f] rounded-l-full px-4 py-1.5 focus-within:border-blue-500 transition-colors">
+                    <Search className="text-gray-400 mr-2 flex-shrink-0" size={16} />
                     <input
                         type="text"
                         placeholder="Search"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={e => setSearchQuery(e.target.value)}
                         className="w-full bg-transparent outline-none text-sm text-white placeholder-gray-500"
-                        aria-label="Search videos"
                     />
                 </div>
                 <button
                     type="submit"
-                    className="bg-[#222222] border border-l-0 border-[#3f3f3f] px-5 py-1.5 rounded-r-full hover:bg-[#333333] transition-colors"
+                    className="bg-[#222] border border-l-0 border-[#3f3f3f] px-5 py-1.5 rounded-r-full hover:bg-[#333] transition-colors"
                     aria-label="Search"
                 >
-                    <Search size={18} />
+                    <Search size={16} />
                 </button>
-                <button type="button" className="ml-4 p-2.5 bg-[#181818] rounded-full hover:bg-white/10 transition-colors" aria-label="Voice search">
-                    <Mic size={18} />
+                <button
+                    type="button"
+                    className="ml-3 p-2 bg-[#181818] rounded-full hover:bg-white/10 transition-colors"
+                    aria-label="Voice search"
+                >
+                    <Mic size={16} />
                 </button>
             </form>
 
-            {/* Right */}
-            <div className="flex items-center gap-2 sm:gap-3">
+            {/* Right: Icons + User */}
+            <div className="flex items-center gap-1 sm:gap-2">
                 {user ? (
                     <>
                         <Link
                             href="/upload"
-                            className="hidden sm:flex items-center gap-2 px-4 py-1.5 bg-white/10 hover:bg-white/20 rounded-full text-sm font-medium transition-colors"
-                            aria-label="Upload video"
+                            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 hover:bg-white/12 border border-white/10 text-sm font-medium transition-colors"
                         >
-                            <Upload size={16} />
+                            <Upload size={15} />
                             <span className="hidden lg:block">Upload</span>
                         </Link>
-                        <button className="p-2 rounded-full hover:bg-white/10 transition-colors hidden sm:block" aria-label="Notifications">
-                            <Bell size={22} />
+                        <button className="p-2 rounded-full hover:bg-white/10 transition-colors hidden sm:block" aria-label="Camera">
+                            <Camera size={20} />
                         </button>
-                        <div className="relative group">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#9147ff] to-red-600 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
-                                <User size={18} />
-                            </div>
-                            {/* Dropdown */}
-                            <div className="absolute right-0 top-10 w-48 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 py-2">
-                                <Link href={user ? `/profile/${user.email?.split('@')[0]}` : '/login'} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-sm transition-colors">
-                                    <User size={16} />
-                                    Your Channel
-                                </Link>
-                                <Link href="/studio" className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-sm transition-colors">
-                                    <Camera size={16} />
-                                    Creator Studio
-                                </Link>
-                                <hr className="border-white/10 my-1" />
-                                <button
-                                    onClick={() => signOut()}
-                                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-sm transition-colors text-left text-red-400"
-                                >
-                                    <LogOut size={16} />
-                                    Sign out
-                                </button>
-                            </div>
+                        <button className="p-2 rounded-full hover:bg-white/10 transition-colors hidden sm:block" aria-label="Notifications">
+                            <Bell size={20} />
+                        </button>
+                        {/* User avatar dropdown */}
+                        <div className="relative" ref={menuRef}>
+                            <button
+                                onClick={() => setMenuOpen(!menuOpen)}
+                                className="w-8 h-8 rounded-full bg-gradient-to-br from-[#9147ff] to-red-600 flex items-center justify-center hover:opacity-80 transition-opacity overflow-hidden"
+                                aria-label="User menu"
+                            >
+                                <User size={16} />
+                            </button>
+                            {menuOpen && (
+                                <div className="absolute right-0 top-10 w-48 rounded-xl border border-white/10 shadow-2xl overflow-hidden z-50"
+                                    style={{ background: '#181818' }}>
+                                    <Link
+                                        href="/studio"
+                                        onClick={() => setMenuOpen(false)}
+                                        className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-white/5 transition-colors"
+                                    >
+                                        Studio
+                                    </Link>
+                                    <Link
+                                        href="/settings"
+                                        onClick={() => setMenuOpen(false)}
+                                        className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-white/5 transition-colors"
+                                    >
+                                        Settings
+                                    </Link>
+                                    <hr className="border-white/10" />
+                                    <button
+                                        onClick={handleSignOut}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-white/5 transition-colors text-left"
+                                    >
+                                        <LogOut size={15} />
+                                        Sign out
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </>
                 ) : (
                     <Link
                         href="/login"
-                        className="px-4 py-1.5 border border-[#3f3f3f] hover:bg-white/10 rounded-full text-sm font-medium transition-colors flex items-center gap-2"
+                        className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#9147ff] text-[#9147ff] hover:bg-[#9147ff]/10 text-sm font-medium transition-colors"
                     >
-                        <User size={16} />
-                        Sign In
+                        <User size={15} />
+                        Sign in
                     </Link>
                 )}
             </div>

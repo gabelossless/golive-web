@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { Eye, EyeOff, Loader2, Video, Mail, Lock } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -26,67 +25,62 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center overflow-y-auto" style={{ background: '#0f0f0f' }}>
-            {/* Animated gradient blobs */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full opacity-20 blur-3xl"
-                    style={{ background: 'radial-gradient(circle, #9147ff, transparent)' }} />
-                <div className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full opacity-15 blur-3xl"
-                    style={{ background: 'radial-gradient(circle, #dc2626, transparent)' }} />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-5 blur-3xl"
-                    style={{ background: 'radial-gradient(circle, #9147ff, #dc2626)' }} />
+        <div className="auth-screen">
+            {/* Purple + red gradient blobs */}
+            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+                <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(145,71,255,0.25), transparent 70%)', filter: 'blur(40px)' }} />
+                <div style={{ position: 'absolute', bottom: '-10%', right: '-5%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(220,38,38,0.18), transparent 70%)', filter: 'blur(40px)' }} />
             </div>
 
-            <motion.div
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="relative w-full max-w-md px-4"
-            >
-                <div className="rounded-2xl border border-white/10 overflow-hidden shadow-2xl shadow-black/60"
-                    style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)' }}>
-
+            <div style={{ position: 'relative', width: '100%', maxWidth: '400px', padding: '0 16px' }}>
+                <div style={{
+                    background: 'rgba(255,255,255,0.04)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '20px',
+                    overflow: 'hidden',
+                    boxShadow: '0 25px 50px rgba(0,0,0,0.6)',
+                }}>
                     {/* Header */}
-                    <div className="px-8 pt-10 pb-6 text-center border-b border-white/5">
-                        <Link href="/" className="inline-flex items-center gap-2 mb-5 group">
-                            <div className="relative">
-                                <Video className="text-red-600 group-hover:scale-110 transition-transform" size={32} fill="currentColor" />
-                                <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#9147ff] rounded-full animate-pulse" />
+                    <div style={{ padding: '36px 32px 24px', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '20px', textDecoration: 'none' }}>
+                            <div style={{ position: 'relative' }}>
+                                <Video size={30} style={{ color: '#dc2626' }} fill="currentColor" />
+                                <div style={{ position: 'absolute', top: '-3px', right: '-3px', width: '8px', height: '8px', background: '#9147ff', borderRadius: '50%' }} />
                             </div>
-                            <span className="text-2xl font-bold tracking-tighter">
-                                Go<span className="text-[#9147ff]">Live</span>
+                            <span style={{ fontSize: '22px', fontWeight: '800', color: '#fff', letterSpacing: '-0.5px' }}>
+                                Go<span style={{ color: '#9147ff' }}>Live</span>
                             </span>
                         </Link>
-                        <h1 className="text-2xl font-bold text-white mb-1">Welcome back</h1>
-                        <p className="text-gray-400 text-sm">Sign in to your account</p>
+                        <h1 style={{ fontSize: '22px', fontWeight: '700', color: '#fff', margin: '0 0 4px' }}>Welcome back</h1>
+                        <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>Sign in to your account</p>
                     </div>
 
                     {/* Form */}
-                    <form onSubmit={handleLogin} className="px-8 py-8 space-y-5">
+                    <form onSubmit={handleLogin} style={{ padding: '28px 32px 32px' }}>
                         {error && (
-                            <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '10px', padding: '10px 14px', color: '#f87171', fontSize: '13px', marginBottom: '18px' }}>
                                 {error}
                             </div>
                         )}
 
                         {/* Email */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1.5" htmlFor="email">Email</label>
-                            <div className="relative">
-                                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#d1d5db', marginBottom: '6px' }}>Email</label>
+                            <div style={{ position: 'relative' }}>
+                                <Mail size={15} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
                                 <input
-                                    id="email"
                                     type="email"
-                                    autoComplete="email"
                                     required
+                                    autoComplete="email"
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
                                     placeholder="you@example.com"
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all duration-200 border"
                                     style={{
-                                        background: 'rgba(255,255,255,0.05)',
-                                        borderColor: 'rgba(255,255,255,0.1)',
-                                        color: '#fff',
+                                        width: '100%', paddingLeft: '38px', paddingRight: '14px', paddingTop: '11px', paddingBottom: '11px',
+                                        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '10px', color: '#fff', fontSize: '14px', outline: 'none',
+                                        boxSizing: 'border-box',
                                     }}
                                     onFocus={e => { e.target.style.borderColor = '#9147ff'; e.target.style.boxShadow = '0 0 0 3px rgba(145,71,255,0.15)'; }}
                                     onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
@@ -95,28 +89,25 @@ export default function LoginPage() {
                         </div>
 
                         {/* Password */}
-                        <div>
-                            <div className="flex items-center justify-between mb-1.5">
-                                <label className="block text-sm font-medium text-gray-300" htmlFor="password">Password</label>
-                                <Link href="/forgot-password" className="text-xs text-[#9147ff] hover:text-purple-300 transition-colors">
-                                    Forgot password?
-                                </Link>
+                        <div style={{ marginBottom: '24px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                <label style={{ fontSize: '13px', fontWeight: '500', color: '#d1d5db' }}>Password</label>
+                                <Link href="/forgot-password" style={{ fontSize: '12px', color: '#9147ff', textDecoration: 'none' }}>Forgot password?</Link>
                             </div>
-                            <div className="relative">
-                                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
+                            <div style={{ position: 'relative' }}>
+                                <Lock size={15} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
                                 <input
-                                    id="password"
                                     type={showPw ? 'text' : 'password'}
-                                    autoComplete="current-password"
                                     required
+                                    autoComplete="current-password"
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
                                     placeholder="••••••••"
-                                    className="w-full pl-10 pr-11 py-3 rounded-xl text-sm outline-none transition-all duration-200 border"
                                     style={{
-                                        background: 'rgba(255,255,255,0.05)',
-                                        borderColor: 'rgba(255,255,255,0.1)',
-                                        color: '#fff',
+                                        width: '100%', paddingLeft: '38px', paddingRight: '42px', paddingTop: '11px', paddingBottom: '11px',
+                                        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '10px', color: '#fff', fontSize: '14px', outline: 'none',
+                                        boxSizing: 'border-box',
                                     }}
                                     onFocus={e => { e.target.style.borderColor = '#9147ff'; e.target.style.boxShadow = '0 0 0 3px rgba(145,71,255,0.15)'; }}
                                     onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none'; }}
@@ -124,22 +115,22 @@ export default function LoginPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowPw(!showPw)}
-                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                                     aria-label="Toggle password"
+                                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}
                                 >
-                                    {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
                                 </button>
                             </div>
                         </div>
 
-                        {/* Submit */}
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3 px-6 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 mt-2"
                             style={{
+                                width: '100%', padding: '12px', borderRadius: '10px', fontWeight: '600', fontSize: '14px',
                                 background: loading ? 'rgba(145,71,255,0.4)' : 'linear-gradient(135deg, #9147ff, #7c3aed)',
-                                color: '#fff',
+                                color: '#fff', border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                                 boxShadow: loading ? 'none' : '0 4px 20px rgba(145,71,255,0.35)',
                             }}
                         >
@@ -147,15 +138,13 @@ export default function LoginPage() {
                             {loading ? 'Signing in…' : 'Sign in'}
                         </button>
 
-                        <p className="text-center text-sm text-gray-400 pt-2">
+                        <p style={{ textAlign: 'center', fontSize: '13px', color: '#9ca3af', marginTop: '16px' }}>
                             New to GoLive?{' '}
-                            <Link href="/register" className="text-[#9147ff] hover:text-purple-300 font-medium transition-colors">
-                                Create an account →
-                            </Link>
+                            <Link href="/register" style={{ color: '#9147ff', fontWeight: '500', textDecoration: 'none' }}>Create account →</Link>
                         </p>
                     </form>
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 }
