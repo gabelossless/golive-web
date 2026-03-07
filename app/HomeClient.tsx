@@ -16,7 +16,7 @@ export default function HomeClient() {
         async function fetchVideos() {
             const { data, error } = await supabase
                 .from('videos')
-                .select('id, title, thumbnail_url, view_count, target_views, created_at, is_live, duration, profiles(username, avatar_url)')
+                .select('id, title, thumbnail_url, view_count, target_views, created_at, is_live, duration, category, description, profiles(username, avatar_url)')
                 .order('created_at', { ascending: false });
 
             if (!error && data) {

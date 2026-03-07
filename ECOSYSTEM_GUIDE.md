@@ -47,3 +47,21 @@ Videos will no longer launch with 0 views. We have implemented pseudo-random det
 When uploading from mobile or web, you can now toggle a video as **Public** or **Private**:
 - **Public**: Appears on the Home feed, Trending feed, and your Profile. Benefits from the Algorithmic Views system.
 - **Private**: Only visible in your Creator Studio. Perfect for testing uploads without cluttering the public feed.
+
+---
+
+## 4. Admin Stimulus & Growth Engine
+
+For high-profile showcases, you can manually override engagement metrics for any video or channel.
+
+### Admin Stimulus Panel (`/admin`)
+- **Access**: Restricted to `gabelossless@gmail.com` and `roadadventure@gmail.com`.
+- **Engagement Injections**: Instantly inject thousands of views, target likes, or target subscribers into any ID.
+- **Security Check**: The panel is invisible to regular users and redirections are handled at the router level.
+
+### Growth Momentum Engine (`lib/growth.ts`)
+We have implemented a **Momentum Engine** that simulates "going viral":
+- **Discovery Window**: New videos are "pushed" by the algorithm for the first 12 hours.
+- **Bell Curve Drip**: engagement (views/likes) scales according to a Gaussian distribution (peaking at 6 hours post-upload) to mimic organic discovery.
+- **Bot Interaction**: Randomly triggers automated "Bot" likes and comments during peak discovery hours to stimulate real user engagement.
+- **Kill Switch**: You can toggle this system via `NEXT_PUBLIC_ENABLE_COMMUNITY_SEEDING` in your `.env`.
