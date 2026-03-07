@@ -53,10 +53,13 @@ export default function CommentSection({ videoId }: CommentSectionProps) {
             if (error) throw error;
 
             // Normalize profiles
-            const formatted = (data || []).map(c => ({
-                ...c,
-                profiles: Array.isArray(c.profiles) ? c.profiles[0] : c.profiles
-            }));
+            const formatted = (data || []).map(c => {
+                const profileData = Array.isArray(c.profiles) ? c.profiles[0] : c.profiles;
+                return {
+                    ...c,
+                    profiles: profileData || { username: 'Unknown', avatar_url: '' }
+                };
+            });
 
             setComments(formatted);
         } catch (err) {

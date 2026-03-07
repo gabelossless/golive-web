@@ -281,8 +281,7 @@ export default function UploadPage() {
                     });
                     xhr.addEventListener('load', () => {
                         if (xhr.status >= 200 && xhr.status < 300) {
-                            const baseUrl = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '').replace(/\/$/, '');
-                            resolve(`${baseUrl}/${path}`);
+                            resolve(path); // Return the relative path for processing
                         } else {
                             reject(new Error(`Storage upload failed: ${xhr.statusText} (${xhr.status})`));
                         }
@@ -295,25 +294,51 @@ export default function UploadPage() {
                 });
             };
 
-            updateToast(uploadToast, { message: `Uploading video to R2 Edge...`, progress: 0 });
-            const videoUrl = await uploadToR2(videoFile, `videos/${user.id}`, (p) => {
-                setUploadProgress(p);
-                updateToast(uploadToast, { progress: Math.floor(p * 0.8) });
+            // 1. RAW UPLOAD
+            updateToast(uploadToast, { message: `Uploading raw video to R2 Edge...`, progress: 10 });
+            const rawPath = await uploadToR2(videoFile, `temp/${user.id}`, (p) => {
+                setUploadProgress(Math.floor(p * 0.7)); // Map to 0-70%
+                updateToast(uploadToast, { progress: Math.floor(p * 0.7) });
             });
 
+            // 2. BACKEND PROCESSING
+            updateToast(uploadToast, { message: 'Optimizing for mobile & web playback...', progress: 75 });
+            setUploadProgress(75);
+
+            const processRes = await fetch('/api/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rawPath, userId: user.id }),
+            });
+
+            if (!processRes.ok) {
+                const procError = await processRes.json().catch(() => ({}));
+                throw new Error(procError.error || 'Video optimization failed.');
+            }
+
+            const { path: processedPath, duration } = await processRes.json();
+            const baseUrl = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '').replace(/\/$/, '');
+            const videoUrl = `${baseUrl}/${processedPath}`;
+
+            // 3. THUMBNAIL UPLOAD
             let thumbnailUrl = null;
-            updateToast(uploadToast, { message: 'Uploading thumbnail artwork...', progress: 85 });
+            updateToast(uploadToast, { message: 'Uploading thumbnail artwork...', progress: 90 });
+            setUploadProgress(90);
 
             if (thumbnailFile) {
-                thumbnailUrl = await uploadToR2(thumbnailFile, `thumbnails/${user.id}`, () => { });
+                const thumbPath = await uploadToR2(thumbnailFile, `thumbnails/${user.id}`, () => { });
+                thumbnailUrl = `${baseUrl}/${thumbPath}`;
             } else if (selectedAutoThumb !== null && autoThumbnails[selectedAutoThumb]) {
                 const res = await fetch(autoThumbnails[selectedAutoThumb]);
                 const blob = await res.blob();
                 const autoFile = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' });
-                thumbnailUrl = await uploadToR2(autoFile, `thumbnails/${user.id}`, () => { });
+                const thumbPath = await uploadToR2(autoFile, `thumbnails/${user.id}`, () => { });
+                thumbnailUrl = `${baseUrl}/${thumbPath}`;
             }
 
-            updateToast(uploadToast, { message: 'Syncing metadata...', progress: 95 });
+            // 4. DATABASE SYNC
+            updateToast(uploadToast, { message: 'Syncing metadata...', progress: 98 });
+            setUploadProgress(98);
 
             const finalDescription = visibility === 'Private' ? `${description}\n\n[PRIVATE_VIDEO_FLAG]` : description;
             const tagStr = tags.length ? `\n\nTags: ${tags.map(t => `#${t}`).join(' ')}` : '';
@@ -325,11 +350,13 @@ export default function UploadPage() {
                 description: finalDescriptionWithCategory,
                 video_url: videoUrl,
                 thumbnail_url: thumbnailUrl,
+                duration: duration || '0:00'
             });
 
             if (dbError) throw dbError;
 
             updateToast(uploadToast, { message: 'Video published successfully!', type: 'success', progress: 100 });
+            setUploadProgress(100);
             setTimeout(() => removeToast(uploadToast), 4000);
             setSuccess(true);
         } catch (err: any) {
@@ -337,6 +364,7 @@ export default function UploadPage() {
             updateToast(uploadToast, { message: err.message || 'Upload failed.', type: 'error' });
             setTimeout(() => removeToast(uploadToast), 5000);
             setIsUploading(false);
+            setUploadProgress(0);
         }
     };
 

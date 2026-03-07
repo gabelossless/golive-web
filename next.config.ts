@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '*.supabase.co' }, // Wildcard for any supabase project
     ],
   },
+  /* 
   async headers() {
     return [
       {
@@ -27,6 +28,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  */
 };
 
 export default nextConfig;

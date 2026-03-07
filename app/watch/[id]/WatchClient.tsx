@@ -27,10 +27,31 @@ export default function WatchClient({ initialVideo }: WatchClientProps) {
     const [video, setVideo] = useState<Video>(initialVideo);
     const [isLiked, setIsLiked] = useState(false);
     const [likes, setLikes] = useState(initialVideo.target_likes || 0);
+    const [isLiking, setIsLiking] = useState(false);
 
     const [recommendations, setRecommendations] = useState<Video[]>([]);
     const [showMobileChat, setShowMobileChat] = useState(false);
     const [isSubscribed, setIsSubscribed] = useState(false);
+
+    useEffect(() => {
+        if (currentUser && video.id) {
+            checkLikeStatus();
+        }
+    }, [currentUser, video.id]);
+
+    const checkLikeStatus = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('likes')
+                .select('*')
+                .eq('user_id', currentUser?.id)
+                .eq('video_id', video.id)
+                .single();
+            if (!error && data) setIsLiked(true);
+        } catch (err) {
+            console.error('Error checking like status:', err);
+        }
+    };
 
     useEffect(() => {
         applyGrowthBoost(video.id);
@@ -67,9 +88,33 @@ export default function WatchClient({ initialVideo }: WatchClientProps) {
         return () => { supabase.removeChannel(subscription); };
     }, [video.id]);
 
-    const handleLike = () => {
-        setIsLiked(!isLiked);
-        setLikes(prev => isLiked ? prev - 1 : prev + 1);
+    const handleLike = async () => {
+        if (!currentUser) return;
+        if (isLiking) return;
+
+        setIsLiking(true);
+        const nextLikedState = !isLiked;
+
+        // Optimistic UI
+        setIsLiked(nextLikedState);
+        setLikes(prev => nextLikedState ? prev + 1 : prev - 1);
+
+        try {
+            if (nextLikedState) {
+                await supabase.from('likes').insert({ user_id: currentUser.id, video_id: video.id });
+                // We could increment a counter on the video table here if we wanted to be super accurate,
+                // but for now we'll rely on the target_likes injection system for the showcase.
+            } else {
+                await supabase.from('likes').delete().eq('user_id', currentUser.id).eq('video_id', video.id);
+            }
+        } catch (err) {
+            console.error('Error toggling like:', err);
+            // Rollback on error
+            setIsLiked(!nextLikedState);
+            setLikes(prev => !nextLikedState ? prev + 1 : prev - 1);
+        } finally {
+            setIsLiking(false);
+        }
     };
 
     const author = video.profiles?.username || 'Unknown';
