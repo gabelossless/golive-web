@@ -474,10 +474,11 @@ export default function UploadPage() {
                             <form onSubmit={handleUpload} className="space-y-6">
                                 <div>
                                     <div className="flex justify-between">
-                                        <label className="block text-sm font-medium text-gray-400 mb-1.5">Title (required)</label>
+                                        <label htmlFor="video-title" className="block text-sm font-medium text-gray-400 mb-1.5">Title (required)</label>
                                         <span className={cn("text-xs font-medium", title.length > TITLE_MAX * 0.9 ? 'text-orange-500' : 'text-gray-500')}>{title.length}/{TITLE_MAX}</span>
                                     </div>
                                     <input
+                                        id="video-title"
                                         type="text"
                                         value={title}
                                         maxLength={TITLE_MAX}
@@ -486,16 +487,18 @@ export default function UploadPage() {
                                         disabled={isUploading}
                                         className={cn("w-full bg-black/50 border rounded-lg px-4 py-2.5 text-white focus:outline-none transition-colors", fieldErrors.title ? "border-red-500 focus:border-red-500" : "border-white/10 focus:border-[#FFB800]")}
                                         placeholder="Add a title that describes your video"
+                                        title="Video Title"
                                     />
                                     {fieldErrors.title && <p className="text-red-500 text-xs font-bold mt-1.5">{fieldErrors.title}</p>}
                                 </div>
 
                                 <div>
                                     <div className="flex justify-between">
-                                        <label className="block text-sm font-medium text-gray-400 mb-1.5">Description</label>
+                                        <label htmlFor="video-description" className="block text-sm font-medium text-gray-400 mb-1.5">Description</label>
                                         <span className={cn("text-xs font-medium", description.length > DESC_MAX * 0.9 ? 'text-orange-500' : 'text-gray-500')}>{description.length}/{DESC_MAX}</span>
                                     </div>
                                     <textarea
+                                        id="video-description"
                                         rows={4}
                                         value={description}
                                         maxLength={DESC_MAX}
@@ -503,6 +506,7 @@ export default function UploadPage() {
                                         disabled={isUploading}
                                         className={cn("w-full bg-black/50 border rounded-lg px-4 py-2.5 text-white focus:outline-none transition-colors resize-none", fieldErrors.description ? "border-red-500 focus:border-red-500" : "border-white/10 focus:border-[#FFB800]")}
                                         placeholder="Tell viewers about your video"
+                                        title="Video Description"
                                     />
                                     {fieldErrors.description && <p className="text-red-500 text-xs font-bold mt-1.5">{fieldErrors.description}</p>}
                                 </div>
@@ -546,12 +550,15 @@ export default function UploadPage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-1.5">Category</label>
+                                        <label htmlFor="video-category" className="block text-sm font-medium text-gray-400 mb-1.5">Category</label>
                                         <select
+                                            id="video-category"
                                             value={category}
                                             onChange={(e) => setCategory(e.target.value)}
                                             disabled={isUploading}
                                             className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#FFB800] transition-colors appearance-none cursor-pointer"
+                                            aria-label="Video Category"
+                                            title="Video Category"
                                         >
                                             {CATEGORY_LIST.map(cat => (
                                                 <option key={cat} value={cat}>{cat}</option>

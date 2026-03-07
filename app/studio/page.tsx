@@ -152,19 +152,22 @@ export default function StudioPage() {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-3">Profile Picture</label>
                                     <div className="flex items-center gap-6">
-                                        <div className="relative group cursor-pointer">
+                                        <div className="relative group cursor-pointer" title="Change Profile Picture">
                                             <img
                                                 src={avatar}
-                                                alt="Avatar"
+                                                alt={`${sidebarDisplayName}'s Avatar`}
                                                 className="w-24 h-24 rounded-full object-cover border-2 border-white/10 group-hover:opacity-50 transition-opacity bg-black"
                                                 referrerPolicy="no-referrer"
                                             />
                                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Camera size={24} className="text-white" />
+                                                <Camera size={24} className="text-white" aria-hidden="true" />
                                             </div>
                                         </div>
                                         <div className="space-y-2">
-                                            <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors text-white border-none cursor-pointer">
+                                            <button
+                                                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors text-white border-none cursor-pointer"
+                                                aria-label="Change Profile Picture"
+                                            >
                                                 Change Picture
                                             </button>
                                             <p className="text-xs text-gray-500 m-0">Recommended: 800x800px. Max 2MB.</p>
@@ -178,12 +181,12 @@ export default function StudioPage() {
                                         <input type="file" id="banner-input" className="hidden" accept="image/*" onChange={handleBannerUpload} aria-label="Upload Channel Banner" />
                                         <img
                                             src={bannerPreview}
-                                            alt="Banner"
+                                            alt={`${sidebarDisplayName}'s Channel Banner`}
                                             className="w-full h-full object-cover group-hover:opacity-50 transition-opacity"
                                             referrerPolicy="no-referrer"
                                         />
                                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Camera size={32} className="text-white" />
+                                            <Camera size={32} className="text-white" aria-hidden="true" />
                                         </div>
                                     </div>
                                 </div>

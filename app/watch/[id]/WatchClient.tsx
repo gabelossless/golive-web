@@ -169,6 +169,8 @@ export default function WatchClient({ initialVideo }: WatchClientProps) {
                                 <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5 shrink-0">
                                     <button
                                         onClick={handleLike}
+                                        title={isLiked ? "Unlike" : "Like"}
+                                        aria-label={isLiked ? "Unlike" : "Like"}
                                         className={cn(
                                             "flex items-center gap-2 px-4 py-2 hover:bg-white/10 transition-colors border-r border-[rgba(255,255,255,0.05)]",
                                             isLiked && "text-[#FFB800]"
@@ -177,19 +179,35 @@ export default function WatchClient({ initialVideo }: WatchClientProps) {
                                         <ThumbsUp size={18} fill={isLiked ? "currentColor" : "none"} />
                                         <span className="text-sm font-bold">{formatViews(likes)}</span>
                                     </button>
-                                    <button className="px-4 py-2 hover:bg-white/10 transition-colors">
+                                    <button
+                                        className="px-4 py-2 hover:bg-white/10 transition-colors"
+                                        title="Dislike"
+                                        aria-label="Dislike"
+                                    >
                                         <ThumbsDown size={18} />
                                     </button>
                                 </div>
-                                <button className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5 shrink-0">
+                                <button
+                                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5 shrink-0"
+                                    title="Share Video"
+                                    aria-label="Share Video"
+                                >
                                     <Share2 size={18} />
                                     <span className="text-sm font-bold">Share</span>
                                 </button>
-                                <button className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors hidden sm:flex border border-white/5 shrink-0">
+                                <button
+                                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors hidden sm:flex border border-white/5 shrink-0"
+                                    title="Save Video"
+                                    aria-label="Save Video"
+                                >
                                     <Download size={18} />
                                     <span className="text-sm font-bold">Save</span>
                                 </button>
-                                <button className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5 shrink-0">
+                                <button
+                                    className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5 shrink-0"
+                                    title="More Options"
+                                    aria-label="More Options"
+                                >
                                     <MoreHorizontal size={18} />
                                 </button>
                             </div>

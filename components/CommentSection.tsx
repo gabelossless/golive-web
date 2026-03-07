@@ -175,6 +175,8 @@ export default function CommentSection({ videoId }: CommentSectionProps) {
                                         <button
                                             onClick={() => handleDeleteComment(comment.id)}
                                             className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-destructive transition-all"
+                                            title="Delete Comment"
+                                            aria-label="Delete Comment"
                                         >
                                             <Trash2 size={14} />
                                         </button>
@@ -182,10 +184,18 @@ export default function CommentSection({ videoId }: CommentSectionProps) {
                                 </div>
                                 <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
                                 <div className="flex items-center gap-4 mt-1">
-                                    <button className="flex items-center gap-1.5 text-muted hover:text-foreground transition-colors group">
+                                    <button
+                                        className="flex items-center gap-1.5 text-muted hover:text-foreground transition-colors group"
+                                        title="Like Comment"
+                                        aria-label="Like Comment"
+                                    >
                                         <ThumbsUp size={14} className="group-hover:scale-110 transition-transform" /> <span className="text-xs font-bold">0</span>
                                     </button>
-                                    <button className="flex items-center gap-1.5 text-muted hover:text-foreground transition-colors group">
+                                    <button
+                                        className="flex items-center gap-1.5 text-muted hover:text-foreground transition-colors group"
+                                        title="Dislike Comment"
+                                        aria-label="Dislike Comment"
+                                    >
                                         <ThumbsDown size={14} className="group-hover:scale-110 transition-transform" />
                                     </button>
                                     <button className="text-xs font-bold text-muted hover:text-foreground">Reply</button>
