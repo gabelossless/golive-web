@@ -14,6 +14,15 @@ export default function StudioPage() {
     const { user, profile } = useAuth();
     const [activeTab, setActiveTab] = useState("Profile");
     const [loading, setLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Profile State
+    const [displayName, setDisplayName] = useState('');
+    const [bio, setBio] = useState('');
+    const [bannerUrl, setBannerUrl] = useState('');
+    const [socialLinks, setSocialLinks] = useState<any>({});
+
+    const bannerPreview = bannerUrl || `https://picsum.photos/seed/${displayName}/1920/400`;
 
     const tabs = [
         { id: "Profile", icon: UserIcon },
@@ -23,10 +32,67 @@ export default function StudioPage() {
     ];
 
     useEffect(() => {
-        if (user) {
+        if (profile) {
+            setDisplayName(profile.username || '');
+            setBio(profile.bio || '');
+            setBannerUrl((profile as any).banner_url || '');
+            setSocialLinks((profile as any).social_links || {});
+            setLoading(false);
+        } else if (user) {
             setLoading(false);
         }
-    }, [user]);
+    }, [user, profile]);
+
+    const handleSave = async () => {
+        if (!user) return;
+        setIsSaving(true);
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    username: displayName,
+                    bio: bio,
+                    banner_url: bannerUrl,
+                    social_links: socialLinks,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', user.id);
+
+            if (error) throw error;
+            alert('Profile updated successfully!');
+        } catch (err: any) {
+            console.error('Error saving profile:', err);
+            alert('Error saving profile: ' + err.message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user) return;
+
+        try {
+            const formData = new FormData();
+            const filename = `banner_${user.id}_${Date.now()}.${file.name.split('.').pop()}`;
+
+            // Re-use upload API or implement direct to R2/Supabase
+            // For now, let's assume we use the /api/upload we built
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename, contentType: file.type, folder: `banners/${user.id}` }),
+            });
+            const { url, path } = await res.json();
+
+            await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
+
+            const baseUrl = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '').replace(/\/$/, '');
+            setBannerUrl(`${baseUrl}/${path}`);
+        } catch (err) {
+            console.error('Banner upload failed:', err);
+        }
+    };
 
     if (!user && !loading) {
         return (
@@ -44,8 +110,8 @@ export default function StudioPage() {
         );
     }
 
-    const displayName = profile?.username || user?.email?.split('@')[0] || 'User';
-    const handle = displayName.toLowerCase().replace(/\s/g, '');
+    const sidebarDisplayName = profile?.username || user?.email?.split('@')[0] || 'User';
+    const sidebarHandle = sidebarDisplayName.toLowerCase().replace(/\s/g, '');
     const avatar = profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.email}&backgroundColor=FFB800`;
 
     return (
@@ -108,9 +174,10 @@ export default function StudioPage() {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-3">Channel Banner</label>
-                                    <div className="relative h-32 rounded-xl overflow-hidden bg-white/5 group cursor-pointer border border-white/10">
+                                    <div className="relative h-32 rounded-xl overflow-hidden bg-white/5 group cursor-pointer border border-white/10" onClick={() => (document.getElementById('banner-input') as HTMLInputElement)?.click()} title="Change Channel Banner">
+                                        <input type="file" id="banner-input" className="hidden" accept="image/*" onChange={handleBannerUpload} aria-label="Upload Channel Banner" />
                                         <img
-                                            src={`https://picsum.photos/seed/${displayName}/1920/400`}
+                                            src={bannerPreview}
                                             alt="Banner"
                                             className="w-full h-full object-cover group-hover:opacity-50 transition-opacity"
                                             referrerPolicy="no-referrer"
@@ -128,39 +195,46 @@ export default function StudioPage() {
                                     <label className="block text-sm font-medium text-gray-400 mb-1.5">Display Name</label>
                                     <input
                                         type="text"
-                                        defaultValue={displayName}
+                                        value={displayName}
+                                        onChange={(e) => setDisplayName(e.target.value)}
                                         className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#FFB800] transition-colors"
+                                        title="Display Name"
+                                        placeholder="Your channel name"
                                     />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1.5">Handle</label>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">@</span>
-                                        <input
-                                            type="text"
-                                            defaultValue={handle}
-                                            className="w-full bg-black/50 border border-white/10 rounded-lg pl-8 pr-4 py-2.5 text-white focus:outline-none focus:border-[#FFB800] transition-colors"
-                                        />
-                                    </div>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1.5">Bio / Description</label>
                                     <textarea
                                         rows={4}
-                                        defaultValue={profile?.bio || "Welcome to my official channel! Subscribe for more content."}
+                                        value={bio}
+                                        onChange={(e) => setBio(e.target.value)}
                                         className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#FFB800] transition-colors resize-none"
+                                        placeholder="Tell your viewers about your channel..."
+                                        title="Bio"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1.5">Website / Link</label>
+                                    <input
+                                        type="text"
+                                        value={socialLinks.website || ''}
+                                        onChange={(e) => setSocialLinks({ ...socialLinks, website: e.target.value })}
+                                        className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#FFB800] transition-colors"
+                                        placeholder="https://yourwebsite.com"
+                                        title="Website URL"
                                     />
                                 </div>
                             </div>
 
                             <div className="pt-4 border-t border-white/10 flex justify-end gap-3 mt-8">
-                                <button className="px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-white/5 transition-colors border-none bg-transparent text-gray-300 cursor-pointer">
-                                    Cancel
-                                </button>
-                                <button className="px-6 py-2.5 bg-[#FFB800] hover:bg-[#FFB800]/90 text-black rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-[#FFB800]/20 active:scale-95 border-none cursor-pointer">
-                                    <Save size={16} /> Save Changes
+                                <button
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                    className="px-6 py-2.5 bg-[#FFB800] hover:bg-[#FFB800]/90 text-black rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-[#FFB800]/20 active:scale-95 border-none cursor-pointer disabled:opacity-50"
+                                >
+                                    <Save size={16} /> {isSaving ? 'Saving...' : 'Save Changes'}
                                 </button>
                             </div>
                         </div>

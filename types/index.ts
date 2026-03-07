@@ -6,6 +6,10 @@ export interface Profile {
     created_at?: string;
     is_verified?: boolean;
     is_premium?: boolean;
+    is_admin?: boolean;
+    banner_url?: string;
+    social_links?: any;
+    is_monetized?: boolean;
 }
 
 export interface Video {
@@ -22,6 +26,11 @@ export interface Video {
     profiles?: Profile; // Joined data often comes as 'profiles'
     target_likes?: number; // Growth hacking: specific target
     target_views?: number; // Growth hacking
+    boosted?: boolean;
+    width?: number;
+    height?: number;
+    bitrate?: number;
+    quality_score?: number;
 }
 
 export interface Comment {

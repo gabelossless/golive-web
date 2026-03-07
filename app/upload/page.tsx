@@ -257,6 +257,8 @@ export default function UploadPage() {
         const uploadToast = addToast('Preparing media pipeline...', 'loading', 0);
 
         try {
+            const { calculateVibeRank } = await import('@/lib/vibe-rank');
+
             const uploadToR2 = async (file: File, folder: string, onProgress: (p: number) => void): Promise<string> => {
                 const response = await fetch('/api/upload', {
                     method: 'POST',
@@ -290,6 +292,7 @@ export default function UploadPage() {
                     xhr.addEventListener('abort', () => reject(new Error('Upload aborted.')));
                     xhr.open('PUT', url);
                     xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+                    xhr.setRequestHeader('Cache-Control', 'public, max-age=31536000, immutable');
                     xhr.send(file);
                 });
             };
@@ -316,7 +319,11 @@ export default function UploadPage() {
                 throw new Error(procError.error || 'Video optimization failed.');
             }
 
-            const { path: processedPath, duration } = await processRes.json();
+            const { path: processedPath, duration, width, height } = await processRes.json();
+
+            // Calculate initial Quality Score
+            const { qualityScore } = calculateVibeRank({ width, height });
+
             const baseUrl = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '').replace(/\/$/, '');
             const videoUrl = `${baseUrl}/${processedPath}`;
 
@@ -350,7 +357,10 @@ export default function UploadPage() {
                 description: finalDescriptionWithCategory,
                 video_url: videoUrl,
                 thumbnail_url: thumbnailUrl,
-                duration: duration || '0:00'
+                duration: duration || '0:00',
+                width,
+                height,
+                quality_score: qualityScore
             });
 
             if (dbError) throw dbError;

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import VideoCard from '@/components/VideoCard';
 import CategoryBar from '@/components/CategoryBar';
 import { supabase } from '@/lib/supabase';
+import { rankVideos } from '@/lib/vibe-rank';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 
@@ -16,7 +17,7 @@ export default function HomeClient() {
         async function fetchVideos() {
             const { data, error } = await supabase
                 .from('videos')
-                .select('id, title, thumbnail_url, view_count, target_views, created_at, is_live, duration, category, description, profiles(username, avatar_url)')
+                .select('id, title, thumbnail_url, view_count, target_views, created_at, is_live, duration, category, description, width, height, quality_score, profiles(username, avatar_url)')
                 .order('created_at', { ascending: false });
 
             if (!error && data) {
@@ -26,8 +27,12 @@ export default function HomeClient() {
                 }));
                 // Filter out private videos safely
                 const pubVideos = normalized.filter(v => !(v.description || '').includes('[PRIVATE_VIDEO_FLAG]'));
-                setVideos(pubVideos);
-                setFiltered(pubVideos);
+
+                // Rank videos by quality & velocity
+                const ranked = rankVideos(pubVideos);
+
+                setVideos(ranked);
+                setFiltered(ranked);
             }
             setLoading(false);
         }
