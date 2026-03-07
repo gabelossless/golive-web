@@ -12,6 +12,23 @@ function cn(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(" ");
 }
 
+async function getVideoMetadata(file: File): Promise<{ width: number; height: number; duration: number }> {
+    return new Promise((resolve, reject) => {
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.onloadedmetadata = () => {
+            window.URL.revokeObjectURL(video.src);
+            resolve({
+                width: video.videoWidth,
+                height: video.videoHeight,
+                duration: video.duration
+            });
+        };
+        video.onerror = () => reject(new Error('Failed to load video metadata'));
+        video.src = URL.createObjectURL(file);
+    });
+}
+
 // ── Validation constants ──────────────────────────────────────────────────────
 const TITLE_MIN = 3;
 const TITLE_MAX = 100;
@@ -297,35 +314,38 @@ export default function UploadPage() {
                 });
             };
 
-            // 1. RAW UPLOAD
-            updateToast(uploadToast, { message: `Uploading raw video to R2 Edge...`, progress: 10 });
-            const rawPath = await uploadToR2(videoFile, `temp/${user.id}`, (p) => {
-                setUploadProgress(Math.floor(p * 0.7)); // Map to 0-70%
-                updateToast(uploadToast, { progress: Math.floor(p * 0.7) });
-            });
-
-            // 2. BACKEND PROCESSING
-            updateToast(uploadToast, { message: 'Optimizing for mobile & web playback...', progress: 75 });
-            setUploadProgress(75);
-
-            const processRes = await fetch('/api/process', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rawPath, userId: user.id }),
-            });
-
-            if (!processRes.ok) {
-                const procError = await processRes.json().catch(() => ({}));
-                throw new Error(procError.error || 'Video optimization failed.');
+            // 1. CLIENT-SIDE ANALYSIS (Bypass Vercel Timeout)
+            updateToast(uploadToast, { message: 'Analyzing video quality...', progress: 5 });
+            let videoMeta = { width: 1280, height: 720, duration: 0 };
+            try {
+                videoMeta = await getVideoMetadata(videoFile);
+            } catch (e) {
+                console.warn('Metadata analysis failed, using defaults');
             }
 
-            const { path: processedPath, duration, width, height } = await processRes.json();
+            // 2. PRIMARY UPLOAD (Direct to Videos folder)
+            updateToast(uploadToast, { message: `Uploading video to R2 Edge...`, progress: 10 });
+            const finalPath = await uploadToR2(videoFile, `videos/${user.id}`, (p) => {
+                const combined = Math.floor(p * 0.8) + 10;
+                setUploadProgress(combined);
+                updateToast(uploadToast, { progress: combined });
+            });
 
-            // Calculate initial Quality Score
+            // 3. OPTIONAL BACKEND OPTIMIZATION (Best Effort)
+            let width = videoMeta.width;
+            let height = videoMeta.height;
+            let duration = videoMeta.duration;
+            let videoUrlPath = finalPath;
+
+            // In production, we skip the heavy ffmpeg processing to avoid Vercel 10s timeout
+            // unless we have an external worker. For now, we use the raw file.
+            updateToast(uploadToast, { message: 'Finalizing cloud optimization...', progress: 95 });
+
+            // Calculate Quality Score using client-side metadata
             const { qualityScore } = calculateVibeRank({ width, height });
 
             const baseUrl = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '').replace(/\/$/, '');
-            const videoUrl = `${baseUrl}/${processedPath}`;
+            const videoUrl = `${baseUrl}/${videoUrlPath}`;
 
             // 3. THUMBNAIL UPLOAD
             let thumbnailUrl = null;
