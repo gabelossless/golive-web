@@ -77,7 +77,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                     <Bell size={22} />
                 </button>
                 {user ? (
-                    <Link href="/studio" className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FFB800] to-orange-600 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity" title="Studio">
+                    <Link href="/studio/dashboard" className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FFB800] to-orange-600 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity" title="Creator Dashboard">
                         <User size={18} className="text-black" />
                     </Link>
                 ) : (

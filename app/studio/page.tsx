@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
-import { Camera, Save, User as UserIcon, Mail, Lock, Bell, Shield, Globe } from 'lucide-react';
+import { Camera, Save, User as UserIcon, Mail, Bell, Shield, Globe, LayoutDashboard, CheckCircle2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 function cn(...classes: (string | undefined | null | false)[]) {
@@ -15,6 +15,7 @@ export default function StudioPage() {
     const [activeTab, setActiveTab] = useState("Profile");
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     // Profile State
     const [displayName, setDisplayName] = useState('');
@@ -22,7 +23,10 @@ export default function StudioPage() {
     const [bannerUrl, setBannerUrl] = useState('');
     const [socialLinks, setSocialLinks] = useState<any>({});
 
-    const bannerPreview = bannerUrl || `https://picsum.photos/seed/${displayName}/1920/400`;
+    // Generate a deterministic gradient from username (no external images)
+    const bannerGradient = displayName
+        ? `linear-gradient(135deg, hsl(${displayName.charCodeAt(0) * 5 % 360}, 60%, 20%), hsl(${(displayName.charCodeAt(0) * 5 + 120) % 360}, 60%, 10%))`
+        : 'linear-gradient(135deg, #1a1a1a, #0a0a0a)';
 
     const tabs = [
         { id: "Profile", icon: UserIcon },
@@ -43,6 +47,11 @@ export default function StudioPage() {
         }
     }, [user, profile]);
 
+    const showToast = (type: 'success' | 'error', message: string) => {
+        setToast({ type, message });
+        setTimeout(() => setToast(null), 3000);
+    };
+
     const handleSave = async () => {
         if (!user) return;
         setIsSaving(true);
@@ -51,18 +60,16 @@ export default function StudioPage() {
                 .from('profiles')
                 .update({
                     username: displayName,
-                    bio: bio,
+                    bio,
                     banner_url: bannerUrl,
                     social_links: socialLinks,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', user.id);
-
             if (error) throw error;
-            alert('Profile updated successfully!');
+            showToast('success', 'Profile updated successfully!');
         } catch (err: any) {
-            console.error('Error saving profile:', err);
-            alert('Error saving profile: ' + err.message);
+            showToast('error', 'Error saving: ' + err.message);
         } finally {
             setIsSaving(false);
         }
@@ -116,7 +123,23 @@ export default function StudioPage() {
 
     return (
         <div className="max-w-6xl mx-auto p-4 md:p-8 flex-1 w-full">
-            <h1 className="text-4xl font-black uppercase tracking-tighter mb-8">Settings</h1>
+            {/* Toast */}
+            {toast && (
+                <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl border font-bold text-sm ${
+                    toast.type === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'
+                }`}>
+                    {toast.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                    {toast.message}
+                </div>
+            )}
+
+            <div className="flex items-center justify-between mb-8">
+                <h1 className="text-3xl font-black tracking-tight">Settings</h1>
+                <Link href="/studio/dashboard"
+                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm font-bold transition-colors">
+                    <LayoutDashboard size={15} /> Creator Dashboard
+                </Link>
+            </div>
 
             <div className="flex flex-col md:flex-row gap-8">
                 {/* Sidebar Tabs */}
@@ -177,18 +200,24 @@ export default function StudioPage() {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-3">Channel Banner</label>
-                                    <div className="relative h-32 rounded-xl overflow-hidden bg-white/5 group cursor-pointer border border-white/10" onClick={() => (document.getElementById('banner-input') as HTMLInputElement)?.click()} title="Change Channel Banner">
+                                    <div className="relative h-32 rounded-xl overflow-hidden group cursor-pointer border border-white/10"
+                                        onClick={() => (document.getElementById('banner-input') as HTMLInputElement)?.click()}
+                                        title="Change Channel Banner">
                                         <input type="file" id="banner-input" className="hidden" accept="image/*" onChange={handleBannerUpload} aria-label="Upload Channel Banner" />
-                                        <img
-                                            src={bannerPreview}
-                                            alt={`${sidebarDisplayName}'s Channel Banner`}
-                                            className="w-full h-full object-cover group-hover:opacity-50 transition-opacity"
-                                            referrerPolicy="no-referrer"
-                                        />
+                                        {bannerUrl ? (
+                                            <img src={bannerUrl} alt="Channel Banner"
+                                                className="w-full h-full object-cover group-hover:opacity-50 transition-opacity" />
+                                        ) : (
+                                            <div className="w-full h-full group-hover:opacity-70 transition-opacity" style={{ background: bannerGradient }} />
+                                        )}
                                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Camera size={32} className="text-white" aria-hidden="true" />
+                                            <div className="flex flex-col items-center gap-1 text-white">
+                                                <Camera size={28} aria-hidden="true" />
+                                                <span className="text-xs font-bold">Upload Banner</span>
+                                            </div>
                                         </div>
                                     </div>
+                                    <p className="text-xs text-gray-600 mt-2">Recommended: 2560x1440px. Max 5MB.</p>
                                 </div>
                             </div>
 
