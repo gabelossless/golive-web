@@ -55,12 +55,31 @@ export async function POST(request: Request) {
 
         fs.writeFileSync(tempInput, videoBuffer);
 
-        // Trim with ffmpeg (open source, $0 cost)
+        // Trim + convert to 9:16 reel format (1080x1920)
+        // If source is horizontal, we create a blurred background fill (Instagram/YouTube Shorts style)
         await new Promise<void>((resolve, reject) => {
             Ffmpeg(tempInput)
                 .setStartTime(startSec)
                 .setDuration(endSec - startSec)
-                .outputOptions(['-c:v libx264', '-c:a aac', '-preset fast', '-crf 23', '-movflags +faststart'])
+                .complexFilter([
+                    // Scale source to 1080 wide, keeping aspect ratio
+                    '[0:v]scale=1080:-2[fg]',
+                    // Create blurred background at full reel resolution (1080x1920)
+                    '[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:20[bg]',
+                    // Overlay the main video centered on the blurred background
+                    '[bg][fg]overlay=(W-w)/2:(H-h)/2[v]'
+                ], 'v')
+                .outputOptions([
+                    '-map [v]',
+                    '-map 0:a?',
+                    '-c:v libx264',
+                    '-c:a aac',
+                    '-preset fast',
+                    '-crf 23',
+                    '-movflags +faststart',
+                    '-r 30',
+                    '-s 1080x1920',
+                ])
                 .output(tempOutput)
                 .on('end', () => resolve())
                 .on('error', reject)
