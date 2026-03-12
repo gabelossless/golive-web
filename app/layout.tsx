@@ -12,12 +12,13 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "GoLive — Watch, Stream & Connect",
-  description: "The platform for streaming video and live content. Upload, go live, and connect with your community.",
-  keywords: ["streaming", "video", "live", "creators", "twitch", "youtube", "GoLive"],
+  title: "VibeStream — Watch, Create & Go Viral",
+  description: "The next-generation video platform for creators. Upload, go live, and build your audience.",
+  keywords: ["streaming", "video", "shorts", "creators", "live", "VibeStream"],
+  manifest: "/manifest.json",
   openGraph: {
-    title: "GoLive — Watch, Stream & Connect",
-    description: "The platform for streaming video and live content.",
+    title: "VibeStream — Watch, Create & Go Viral",
+    description: "The next-generation video platform for creators.",
     type: "website",
   },
 };

@@ -12,7 +12,7 @@ export interface VideoCardProps {
         view_count?: number;
         created_at?: string;
         target_views?: number;
-        profiles?: { username?: string; avatar_url?: string } | null;
+        profiles?: { username?: string; avatar_url?: string; is_verified?: boolean } | null;
         duration?: string;
         is_live?: boolean;
     };
@@ -32,7 +32,6 @@ function timeAgo(dateStr?: string): string {
 
 function formatViews(n?: number): string {
     if (!n) return '0';
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
     if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
     return String(n);
@@ -105,7 +104,7 @@ export default function VideoCard({ video }: VideoCardProps) {
                             className="text-xs text-gray-400 hover:text-[#FFB800] flex items-center gap-1 transition-colors font-medium"
                         >
                             {author}
-                            <CheckCircle2 size={12} className="text-[#FFB800]" />
+                            {video.profiles?.is_verified && <CheckCircle2 size={12} className="text-[#FFB800]" />}
                         </Link>
                         <div className="text-[10px] text-gray-500 mt-0.5 font-bold uppercase tracking-wider">
                             {formatViews(views)} views • {timeStr}
