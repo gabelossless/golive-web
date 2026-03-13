@@ -91,7 +91,7 @@ function parseTagInput(raw: string): string[] {
 type ToastType = { id: number; message: string; type: 'info' | 'success' | 'error' | 'loading'; progress?: number };
 
 export default function UploadPage() {
-    const { user, isLoading: authLoading } = useAuth();
+    const { user, session, isLoading: authLoading } = useAuth();
     const router = useRouter();
 
     React.useEffect(() => {
@@ -294,7 +294,10 @@ export default function UploadPage() {
                 // 1. Initialize Multipart Upload
                 const createRes = await fetch('/api/upload/multipart', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session?.access_token || ''}`
+                    },
                     body: JSON.stringify({ action: 'create', filename: file.name, contentType: file.type || 'application/octet-stream', folder }),
                 });
 
@@ -319,7 +322,10 @@ export default function UploadPage() {
                     // Get presigned URL for this chunk
                     const signRes = await fetch('/api/upload/multipart', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session?.access_token || ''}`
+                        },
                         body: JSON.stringify({ action: 'sign', uploadId, key, partNumber }),
                     });
 
@@ -369,7 +375,10 @@ export default function UploadPage() {
                 updateToast(uploadToast, { message: 'Finalizing cloud optimization...', progress: 95 });
                 const completeRes = await fetch('/api/upload/multipart', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session?.access_token || ''}`
+                    },
                     body: JSON.stringify({ action: 'complete', uploadId, key, parts }),
                 });
 
@@ -444,11 +453,10 @@ export default function UploadPage() {
                 title: title.trim(),
                 description: finalDescriptionWithCategory,
                 video_url: videoUrl,
-                thumbnail_url: thumbnailUrl,
-                duration: duration || '0:00',
+               duration: duration || '0:00',
                 width,
                 height,
-                quality_score: qualityScore
+                quality_score: Math.round(qualityScore * 100)
             });
 
             if (dbError) throw dbError;
