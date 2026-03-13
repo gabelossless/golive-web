@@ -277,41 +277,97 @@ export default function UploadPage() {
             const { calculateVibeRank } = await import('@/lib/vibe-rank');
 
             const uploadToR2 = async (file: File, folder: string, onProgress: (p: number) => void): Promise<string> => {
-                const response = await fetch('/api/upload', {
+                const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB minimum required by S3 API
+                
+                // 1. Initialize Multipart Upload
+                const createRes = await fetch('/api/upload/multipart', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filename: file.name, contentType: file.type || 'application/octet-stream', folder }),
+                    body: JSON.stringify({ action: 'create', filename: file.name, contentType: file.type || 'application/octet-stream', folder }),
                 });
 
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || 'Failed to secure upload link');
+                if (!createRes.ok) {
+                    const errorText = await createRes.text();
+                    throw new Error(`Failed to initialize upload: ${errorText}`);
                 }
 
-                const { url, path } = await response.json();
+                const { uploadId, key } = await createRes.json();
+                
+                // 2. Upload Parts in sequence (we can parallelize later, seq is safest for now)
+                const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+                const parts: { ETag: string, PartNumber: number }[] = [];
+                let uploadedBytes = 0;
 
-                return new Promise<string>((resolve, reject) => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.upload.addEventListener('progress', (event) => {
-                        if (event.lengthComputable) {
-                            const p = Math.round((event.loaded / event.total) * 100);
-                            onProgress(p);
-                        }
+                for (let i = 0; i < totalChunks; i++) {
+                    const start = i * CHUNK_SIZE;
+                    const end = Math.min(start + CHUNK_SIZE, file.size);
+                    const chunk = file.slice(start, end);
+                    const partNumber = i + 1;
+
+                    // Get presigned URL for this chunk
+                    const signRes = await fetch('/api/upload/multipart', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'sign', uploadId, key, partNumber }),
                     });
-                    xhr.addEventListener('load', () => {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            resolve(path); // Return the relative path for processing
-                        } else {
-                            reject(new Error(`Storage upload failed: ${xhr.statusText} (${xhr.status})`));
-                        }
+
+                    if (!signRes.ok) throw new Error(`Failed to sign chunk ${partNumber}`);
+                    
+                    const { url } = await signRes.json();
+
+                    // Perform PUT for chunk
+                    const etag = await new Promise<string>((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
+                        
+                        xhr.upload.addEventListener('progress', (event) => {
+                            if (event.lengthComputable) {
+                                // Calculate total progress smoothly
+                                const currentTotal = uploadedBytes + event.loaded;
+                                const p = Math.round((currentTotal / file.size) * 100);
+                                onProgress(p > 100 ? 100 : p);
+                            }
+                        });
+
+                        xhr.addEventListener('load', () => {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                let eTagHeader = xhr.getResponseHeader('ETag');
+                                if (!eTagHeader) {
+                                    reject(new Error(`No ETag returned for chunk ${partNumber} from generic storage. CORS issue?`));
+                                    return;
+                                }
+                                uploadedBytes += chunk.size;
+                                resolve(eTagHeader.replace(/"/g, '')); // AWS SDK expects quotes wrapped around ETag or strictly stripped depending on implementation - let's keep quotes as SDK completes with raw strings. Actually, SDK CompleteMultipart expects bare or quoted, let's keep exact header value
+                            } else {
+                                reject(new Error(`Chunk upload failed: ${xhr.statusText} (${xhr.status})`));
+                            }
+                        });
+                        
+                        xhr.addEventListener('error', () => reject(new Error(`Network error during chunk ${partNumber} upload.`)));
+                        xhr.addEventListener('abort', () => reject(new Error('Upload aborted.')));
+                        
+                        xhr.open('PUT', url);
+                        // No Cache-Control header here, it's defined in the Create request
+                        xhr.send(chunk);
                     });
-                    xhr.addEventListener('error', () => reject(new Error(`Network error during upload. Check your connection.`)));
-                    xhr.addEventListener('abort', () => reject(new Error('Upload aborted.')));
-                    xhr.open('PUT', url);
-                    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-                    xhr.setRequestHeader('Cache-Control', 'public, max-age=31536000, immutable');
-                    xhr.send(file);
+
+                    parts.push({ ETag: etag, PartNumber: partNumber });
+                }
+
+                // 3. Complete Multipart Upload
+                updateToast(uploadToast, { message: 'Finalizing cloud optimization...', progress: 95 });
+                const completeRes = await fetch('/api/upload/multipart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'complete', uploadId, key, parts }),
                 });
+
+                if (!completeRes.ok) {
+                    const err = await completeRes.text();
+                    throw new Error(`Failed to finalize upload: ${err}`);
+                }
+                
+                const { path } = await completeRes.json();
+                return path;
             };
 
             // 1. CLIENT-SIDE ANALYSIS (Bypass Vercel Timeout)
