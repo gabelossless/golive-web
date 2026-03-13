@@ -94,6 +94,12 @@ export default function UploadPage() {
     const { user, isLoading: authLoading } = useAuth();
     const router = useRouter();
 
+    React.useEffect(() => {
+        if (!authLoading && !user) {
+            router.push('/login?message=Create an account to upload videos');
+        }
+    }, [user, authLoading, router]);
+
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [tagInput, setTagInput] = useState('');
@@ -272,6 +278,12 @@ export default function UploadPage() {
         setUploadProgress(0);
 
         const uploadToast = addToast('Preparing media pipeline...', 'loading', 0);
+
+        if (!user) {
+            updateToast(uploadToast, { message: 'You must be logged in to upload.', type: 'error' });
+            setIsUploading(false);
+            return;
+        }
 
         try {
             const { calculateVibeRank } = await import('@/lib/vibe-rank');
