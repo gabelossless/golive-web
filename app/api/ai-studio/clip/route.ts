@@ -1,135 +1,139 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import Ffmpeg from 'fluent-ffmpeg';
-import ffmpegStatic from 'ffmpeg-static';
-import fs from 'fs';
+import { supabase } from '@/lib/supabase';
+import { createVideoClip, downloadTempVideo } from '@/lib/video-clipping';
 import path from 'path';
-import os from 'os';
-import { Readable } from 'stream';
+import fs from 'fs';
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
-if (ffmpegStatic) Ffmpeg.setFfmpegPath(ffmpegStatic);
-
-const S3 = new S3Client({
-    region: 'auto',
+const s3Client = new S3Client({
+    region: "auto",
     endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
     credentials: {
-        accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+        accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
     },
 });
 
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+export async function POST(req: Request) {
+    let tempInputPath = '';
+    let tempOutputPath = '';
 
-export async function POST(request: Request) {
-    let tempInput = '';
-    let tempOutput = '';
     try {
-        const { videoId, startSec, endSec } = await request.json();
-        if (!videoId || startSec === undefined || endSec === undefined) {
-            return NextResponse.json({ error: 'videoId, startSec, endSec required' }, { status: 400 });
-        }
-        if (endSec - startSec > 60) {
-            return NextResponse.json({ error: 'Clips must be 60 seconds or less' }, { status: 400 });
-        }
+        const body = await req.json();
+        console.log('CLIP REQUEST BODY:', body);
+        const { videoId, startTime, duration, title } = body;
 
-        // Fetch source video
-        const { data: video } = await supabaseAdmin
+        console.log('1. Fetching original video details for ID:', videoId);
+        const { data: video, error: fetchError } = await supabase
             .from('videos')
-            .select('video_url, user_id, title, allow_clipping')
+            .select('video_url, user_id')
             .eq('id', videoId)
             .single();
 
-        if (video?.allow_clipping === false) {
-            return NextResponse.json({ error: 'Clipping is disabled for this video.' }, { status: 403 });
+        if (fetchError || !video) {
+            console.error('Fetch error:', fetchError);
+            throw new Error('Video not found or access denied');
         }
+        console.log('Found video:', video.video_url);
 
-        if (!video?.video_url) return NextResponse.json({ error: 'Video not found' }, { status: 404 });
+        console.log('2. Downloading to local temp...');
+        const tempId = `clip_${Date.now()}`;
+        tempInputPath = await downloadTempVideo(video.video_url, `${tempId}_in`);
+        tempOutputPath = path.join(process.cwd(), 'tmp', `${tempId}_out.mp4`);
+        console.log('Temp paths:', { tempInputPath, tempOutputPath });
 
-        // Download video
-        const videoRes = await fetch(video.video_url);
-        if (!videoRes.ok) throw new Error('Could not download video for clipping');
-        const videoBuffer = Buffer.from(await videoRes.arrayBuffer());
-
-        tempInput = path.join(os.tmpdir(), `ai_clip_input_${Date.now()}.mp4`);
-        tempOutput = path.join(os.tmpdir(), `ai_clip_output_${Date.now()}.mp4`);
-
-        fs.writeFileSync(tempInput, videoBuffer);
-
-        // Trim + convert to 9:16 reel format (1080x1920)
-        // If source is horizontal, we create a blurred background fill (Instagram/YouTube Shorts style)
-        await new Promise<void>((resolve, reject) => {
-            Ffmpeg(tempInput)
-                .setStartTime(startSec)
-                .setDuration(endSec - startSec)
-                .complexFilter([
-                    // Scale source to 1080 wide, keeping aspect ratio
-                    '[0:v]scale=1080:-2[fg]',
-                    // Create blurred background at full reel resolution (1080x1920)
-                    '[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:20[bg]',
-                    // Overlay the main video centered on the blurred background
-                    '[bg][fg]overlay=(W-w)/2:(H-h)/2[v]'
-                ], 'v')
-                .outputOptions([
-                    '-map [v]',
-                    '-map 0:a?',
-                    '-c:v libx264',
-                    '-c:a aac',
-                    '-preset fast',
-                    '-crf 23',
-                    '-movflags +faststart',
-                    '-r 30',
-                    '-s 1080x1920',
-                ])
-                .output(tempOutput)
-                .on('end', () => resolve())
-                .on('error', reject)
-                .run();
+        console.log('3. Starting FFmpeg Process...');
+        await createVideoClip({
+            inputPath: tempInputPath,
+            outputPath: tempOutputPath,
+            startTime,
+            duration,
+            aspectRatio: '9:16'
         });
+        console.log('FFmpeg Process Done.');
 
-        // Upload to R2
-        const shortFilename = `shorts/${video.user_id}/${Date.now()}_short.mp4`;
-        const fileContent = fs.readFileSync(tempOutput);
-
-        await S3.send(new PutObjectCommand({
-            Bucket: process.env.R2_BUCKET_NAME!,
-            Key: shortFilename,
-            ContentType: 'video/mp4',
-            Body: fileContent,
-            // @ts-ignore — R2 supports Cache-Control
-            CacheControl: 'public, max-age=31536000, immutable',
+        console.log('4. Uploading to R2...');
+        const fileBuffer = fs.readFileSync(tempOutputPath);
+        const key = `shorts/${video.user_id}/${tempId}.mp4`;
+        
+        console.log('Uploading key:', key);
+        await s3Client.send(new PutObjectCommand({
+            Bucket: process.env.R2_BUCKET_NAME,
+            Key: key,
+            Body: fileBuffer,
+            ContentType: 'video/mp4'
         }));
+        console.log('R2 Upload Finished.');
 
-        const baseUrl = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '').replace(/\/$/, '');
-        const shortUrl = `${baseUrl}/${shortFilename}`;
+        const publicUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${key}`;
 
-        // Save to database as a Short
-        const shortTitle = `✂️ ${(video.title || 'Clip').slice(0, 80)}`;
-        const { data: newVideo, error: insertErr } = await supabaseAdmin
-            .from('videos')
-            .insert({
-                user_id: video.user_id,
-                title: shortTitle,
-                video_url: shortUrl,
-                is_short: true,
-                duration: Math.round(endSec - startSec),
-                view_count: 0,
-            })
-            .select('id')
+        // 5. Check Premium Status for resilient storage
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('subscription_tier')
+            .eq('id', video.user_id)
             .single();
 
-        if (insertErr || !newVideo) throw new Error('Failed to save Short: ' + (insertErr?.message || 'unknown'));
+        let finalVideoUrl = publicUrl;
+        let storageType = 'r2';
 
-        return NextResponse.json({ shortId: newVideo.id, shortUrl });
+        if (profile?.subscription_tier === 'premium') {
+            console.log('5. Premium User Detected - Dual Upload/Fallback...');
+            try {
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('premium-videos')
+                    .upload(`${video.user_id}/${tempId}.mp4`, fileBuffer, {
+                        contentType: 'video/mp4',
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+                
+                if (!uploadError && uploadData) {
+                    const { data: { publicUrl: supabaseUrl } } = supabase.storage
+                        .from('premium-videos')
+                        .getPublicUrl(uploadData.path);
+                    
+                    console.log('Supabase Premium Storage Uploaded:', supabaseUrl);
+                    finalVideoUrl = supabaseUrl; // Use Supabase for premium as requested for resilience
+                    storageType = 'supabase-premium';
+                } else {
+                    console.error('Supabase Premium Upload Error:', uploadError);
+                }
+            } catch (storageErr) {
+                console.error('Failed premium storage fallback:', storageErr);
+            }
+        }
 
-    } catch (error: any) {
-        console.error('AI Studio clip error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        // 6. Create Database Entry
+        const { data: newShort, error: dbError } = await supabase.from('videos').insert({
+            user_id: video.user_id,
+            title: `[Short] ${title}`,
+            video_url: finalVideoUrl,
+            thumbnail_url: null,
+            is_short: true,
+            duration: duration,
+            category: 'Shorts',
+            visibility: 'public'
+        }).select().single();
+
+        if (dbError) {
+            console.error('DB Insert Error:', dbError);
+            throw dbError;
+        }
+
+        return NextResponse.json({ 
+            success: true, 
+            shortId: newShort.id,
+            url: finalVideoUrl,
+            storage: storageType
+        });
+
+    } catch (err: any) {
+        console.error('Clipping Error:', err);
+        return NextResponse.json({ error: err.message }, { status: 500 });
     } finally {
-        try { if (tempInput) fs.unlinkSync(tempInput); } catch (_) { }
-        try { if (tempOutput) fs.unlinkSync(tempOutput); } catch (_) { }
+        // Cleanup temp files
+        if (tempInputPath && fs.existsSync(tempInputPath)) fs.unlinkSync(tempInputPath);
+        if (tempOutputPath && fs.existsSync(tempOutputPath)) fs.unlinkSync(tempOutputPath);
     }
 }

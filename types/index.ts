@@ -11,6 +11,10 @@ export interface Profile {
     social_links?: any;
     is_monetized?: boolean;
     target_subs?: number;
+    subscription_tier?: 'free' | 'premium';
+    display_name?: string;
+    channel_name?: string;
+    follower_count?: number;
 }
 
 export interface Video {

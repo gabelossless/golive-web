@@ -158,9 +158,9 @@ export default function ProfilePage() {
                         <div className="flex flex-col md:flex-row md:items-start gap-3 md:gap-6">
                             <div className="flex-1 min-w-0">
                                 <h1 className="text-2xl md:text-3xl font-black tracking-tight flex items-center gap-2">
-                                    {profile.username}
-                                    {profile.is_verified && (
-                                        <CheckCircle2 size={20} className="text-[#FFB800] flex-shrink-0" />
+                                    {profile.display_name || profile.channel_name || profile.username}
+                                    {(profile.is_verified || profile.subscription_tier === 'premium') && (
+                                        <CheckCircle2 size={24} className="text-[#FFB800] flex-shrink-0" />
                                     )}
                                 </h1>
                                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-gray-400">
@@ -190,10 +190,10 @@ export default function ProfilePage() {
                                             title="Open Creator Dashboard">
                                             <LayoutDashboard size={15} /> Dashboard
                                         </button>
-                                        <button onClick={() => router.push('/studio')}
+                                        <button onClick={() => router.push('/studio/settings')}
                                             className="flex items-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-sm font-bold transition-colors"
-                                            title="Customize Channel">
-                                            <Settings2 size={15} /> Customize
+                                            title="Channel Settings">
+                                            <Settings2 size={15} /> Settings
                                         </button>
                                     </>
                                 ) : (

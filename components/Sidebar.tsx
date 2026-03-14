@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutGrid, Zap, UserCheck, Clock, ThumbsUp, History, Bookmark, Film, Flame, Activity, Disc, LayoutDashboard, Sparkles, Plus } from "lucide-react";
+import { LayoutGrid, Zap, UserCheck, Clock, ThumbsUp, History, Bookmark, Film, Flame, Activity, Disc, LayoutDashboard, Sparkles, Plus, User } from "lucide-react";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
@@ -18,8 +18,8 @@ interface SidebarProps {
 export default function Sidebar({ isOpen }: SidebarProps) {
     const pathname = usePathname();
     const { user } = useAuth();
-    const [subscriptions, setSubscriptions] = useState<{ id: string; username: string; avatar_url: string | null; is_live: boolean }[]>([]);
-    const [recentVideos, setRecentVideos] = useState<{ id: string; title: string; thumbnail_url: string | null; profiles: { username: string } | null }[]>([]);
+    const [subscriptions, setSubscriptions] = useState<{ id: string; username: string; displayName: string; avatar_url: string | null; is_live: boolean }[]>([]);
+    const [recentVideos, setRecentVideos] = useState<{ id: string; title: string; thumbnail_url: string | null; profiles: { username: string; channel_name?: string; display_name?: string } | null }[]>([]);
 
     useEffect(() => {
         async function loadSidebarData() {
@@ -27,13 +27,14 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             // Load subscriptions
             const { data: subs } = await supabase
                 .from('subscriptions')
-                .select('channel_id, profiles!subscriptions_channel_id_fkey(id, username, avatar_url, is_live)')
+                .select('channel_id, profiles!subscriptions_channel_id_fkey(id, username, avatar_url, is_live, channel_name, display_name)')
                 .eq('subscriber_id', user.id)
                 .limit(6);
             if (subs) {
                 setSubscriptions(subs.map((s: any) => ({
                     id: s.profiles?.id,
                     username: s.profiles?.username || 'Unknown',
+                    displayName: s.profiles?.channel_name || s.profiles?.display_name || s.profiles?.username || 'Unknown',
                     avatar_url: s.profiles?.avatar_url,
                     is_live: s.profiles?.is_live || false,
                 })).filter(s => s.id));
@@ -41,7 +42,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             // Load recent public videos
             const { data: vids } = await supabase
                 .from('videos')
-                .select('id, title, thumbnail_url, profiles(username)')
+                .select('id, title, thumbnail_url, profiles(username, channel_name, display_name)')
                 .order('created_at', { ascending: false })
                 .limit(5);
             if (vids) {
@@ -65,6 +66,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         { icon: LayoutDashboard, label: "Dashboard", path: "/studio/dashboard" },
         { icon: Sparkles, label: "AI Studio", path: "/studio/ai-studio" },
         { icon: Plus, label: "Upload", path: "/upload" },
+        { icon: User, label: "Settings", path: "/studio/settings" },
     ];
 
     const libraryItems = [
@@ -149,7 +151,9 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                                 {sub.is_live && <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[#FFB800] rounded-full border-2 border-[#0a0a0a]" />}
                             </div>
                             <div className="flex flex-col flex-1 min-w-0">
-                                <span className="text-sm font-medium truncate text-gray-200 group-hover:text-white">{sub.username}</span>
+                                <span className="text-sm font-medium truncate text-gray-200 group-hover:text-white">
+                                    {sub.displayName}
+                                </span>
                                 {sub.is_live && <span className="text-[10px] text-[#FFB800] font-bold">LIVE</span>}
                             </div>
                             {sub.is_live && <span className="w-1.5 h-1.5 rounded-full bg-[#FFB800] animate-pulse" />}
@@ -174,7 +178,9 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                             </div>
                             <div className="flex flex-col min-w-0 justify-center">
                                 <h4 className="text-xs font-semibold line-clamp-2 text-gray-300 group-hover:text-white">{video.title}</h4>
-                                <p className="text-[10px] text-gray-500 truncate">{video.profiles?.username || 'Unknown'}</p>
+                                <p className="text-[10px] text-gray-500 truncate">
+                                    {video.profiles?.channel_name || video.profiles?.display_name || video.profiles?.username || 'Unknown'}
+                                </p>
                             </div>
                         </Link>
                     ))}

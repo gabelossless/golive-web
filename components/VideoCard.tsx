@@ -13,7 +13,14 @@ export interface VideoCardProps {
         view_count?: number;
         created_at?: string;
         target_views?: number;
-        profiles?: { username?: string; avatar_url?: string; is_verified?: boolean } | null;
+        profiles?: { 
+            username?: string; 
+            avatar_url?: string; 
+            is_verified?: boolean;
+            subscription_tier?: string;
+            display_name?: string;
+            channel_name?: string;
+        } | null;
         duration?: string;
         is_live?: boolean;
         hype_count?: number;
@@ -24,7 +31,8 @@ const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1611162616475-46b635cb
 const FALLBACK_AVATAR = 'https://api.dicebear.com/7.x/avataaars/svg?seed=default';
 
 export default function VideoCard({ video }: VideoCardProps) {
-    const author = video.profiles?.username || 'Unknown';
+    const username = video.profiles?.username || 'Unknown';
+    const author = video.profiles?.channel_name || video.profiles?.display_name || video.profiles?.username || 'Unknown';
     const avatar = video.profiles?.avatar_url || FALLBACK_AVATAR;
     const thumb = video.thumbnail_url || FALLBACK_THUMB;
     const views = Math.max(video.view_count || 0, video.target_views || 0);
@@ -68,7 +76,7 @@ export default function VideoCard({ video }: VideoCardProps) {
             </Link>
 
             <div className="flex gap-3">
-                <Link href={`/profile/${author}`} className="flex-shrink-0">
+                <Link href={`/profile/${username}`} className="flex-shrink-0">
                     <div className="relative">
                         <img
                             src={avatar}
@@ -89,11 +97,13 @@ export default function VideoCard({ video }: VideoCardProps) {
                     </Link>
                     <div className="flex flex-col mt-1">
                         <Link
-                            href={`/profile/${author}`}
+                            href={`/profile/${username}`}
                             className="text-xs text-gray-400 hover:text-[#FFB800] flex items-center gap-1 transition-colors font-medium"
                         >
                             {author}
-                            {video.profiles?.is_verified && <CheckCircle2 size={12} className="text-[#FFB800]" />}
+                            {(video.profiles?.is_verified || video.profiles?.subscription_tier === 'premium') && (
+                                <CheckCircle2 size={12} className="text-[#FFB800]" fill="currentColor" />
+                            )}
                         </Link>
                         <div className="text-[11px] text-gray-500 mt-1 font-bold uppercase tracking-wider">
                             {formatViews(views)} views • {timeStr}

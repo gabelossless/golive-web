@@ -428,7 +428,34 @@ export default function UploadPage() {
             const { qualityScore } = calculateVibeRank({ width, height });
 
             const baseUrl = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '').replace(/\/$/, '');
-            const videoUrl = `${baseUrl}/${videoUrlPath}`;
+            let videoUrl = `${baseUrl}/${videoUrlPath}`;
+
+            // PREMIUM FALLBACK: Use Supabase storage for premium users as requested
+            if (profile?.subscription_tier === 'premium') {
+                updateToast(uploadToast, { message: 'Premium: Securing high-priority storage layer...', progress: 85 });
+                try {
+                    const supaPath = `${user.id}/${Date.now()}_${videoFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+                    const { data: supaData, error: supaErr } = await supabase.storage
+                        .from('premium-videos')
+                        .upload(supaPath, videoFile, {
+                            cacheControl: '3600',
+                            upsert: false
+                        });
+                    
+                    if (!supaErr && supaData) {
+                        const { data: { publicUrl } } = supabase.storage
+                            .from('premium-videos')
+                            .getPublicUrl(supaData.path);
+                        
+                        console.log('Premium video redundant storage OK:', publicUrl);
+                        videoUrl = publicUrl; // Prioritize Supabase for premium users
+                    } else {
+                        console.warn('Premium fallback upload failed, sticking with R2:', supaErr);
+                    }
+                } catch (e) {
+                    console.error('Premium fallback error:', e);
+                }
+            }
 
             // 3. THUMBNAIL UPLOAD
             let thumbnailUrl = null;

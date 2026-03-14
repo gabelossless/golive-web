@@ -4,7 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { applyGrowthBoost } from '@/lib/growth';
 import { Video } from '@/types';
-import { ThumbsUp, ThumbsDown, Share2, Download, MoreHorizontal, Bell, CheckCircle2, X, MessageSquare, Flame } from 'lucide-react';
+import {
+    ThumbsUp, ThumbsDown, Share2, MessageSquare, MoreHorizontal,
+    Flame, CheckCircle2, X, Bell, Download, Play
+} from 'lucide-react';
 import SubscribeButton from '@/components/SubscribeButton';
 import VideoPlayer from '@/components/VideoPlayer';
 import CommentSection from '@/components/CommentSection';
@@ -18,11 +21,14 @@ function cn(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(" ");
 }
 
-interface WatchClientProps {
-    initialVideo: Video;
+function formatCount(n?: number): string {
+    if (!n) return '0';
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+    return String(n);
 }
 
-export default function WatchClient({ initialVideo }: WatchClientProps) {
+export default function WatchClient({ video: initialVideo, recommendations: initialRecommendations }: { video: Video; recommendations: Video[] }) {
     const { user: currentUser } = useAuth();
     const [video, setVideo] = useState<Video>(initialVideo);
     const [isLiked, setIsLiked] = useState(false);
@@ -32,7 +38,7 @@ export default function WatchClient({ initialVideo }: WatchClientProps) {
     const [isHyping, setIsHyping] = useState(false);
     const [showHypeAnimation, setShowHypeAnimation] = useState(false);
 
-    const [recommendations, setRecommendations] = useState<Video[]>([]);
+    const [recommendations, setRecommendations] = useState<Video[]>(initialRecommendations || []);
     const [showMobileChat, setShowMobileChat] = useState(false);
     const [isSubscribed, setIsSubscribed] = useState(false);
 
@@ -143,13 +149,15 @@ export default function WatchClient({ initialVideo }: WatchClientProps) {
         }
     };
 
-    const author = video.profiles?.username || 'Unknown';
-    const avatar = video.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author}`;
+    const username = video.profiles?.username || 'Unknown';
+    const author = video.profiles?.channel_name || video.profiles?.display_name || video.profiles?.username || 'Unknown';
+    const avatar = video.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
 
     return (
-        <div className="flex flex-col lg:flex-row h-full overflow-hidden w-full">
+        <div className="flex flex-col lg:flex-row h-full overflow-hidden w-full bg-[#0a0a0a]">
+            {/* Main Content Area */}
             <div className="flex-1 overflow-y-auto p-4 lg:p-6 scrollbar-hide">
-                <div className="max-w-[1280px] mx-auto space-y-4">
+                <div className="max-w-[1280px] mx-auto space-y-4 pb-20">
                     {/* Video Player */}
                     <VideoPlayer
                         src={video.video_url}
@@ -158,194 +166,163 @@ export default function WatchClient({ initialVideo }: WatchClientProps) {
                     />
 
                     <div className="space-y-4">
-                        <h1 className="text-xl font-bold leading-tight md:text-2xl">
-                            {video.title}
-                        </h1>
+                        <div className="flex flex-col gap-2">
+                            <h1 className="text-xl font-black leading-tight md:text-2xl tracking-tighter">
+                                {video.title}
+                            </h1>
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 font-bold uppercase tracking-widest">
+                                <span>{formatViews(video.view_count)} views</span>
+                                <span>{new Date(video.created_at).toLocaleDateString()}</span>
+                                <span className="text-[#FFB800]">#VIBESTREAM</span>
+                            </div>
+                        </div>
 
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2 border-y border-white/5">
                             <div className="flex items-center gap-4">
-                                <Link href={`/profile/${author}`} className="flex-shrink-0">
+                                <Link href={`/profile/${username}`} className="flex-shrink-0 relative">
                                     <img
                                         src={avatar}
                                         alt={author}
-                                        className="w-10 h-10 rounded-full object-cover border border-white/10"
+                                        className="w-12 h-12 rounded-full object-cover border-2 border-white/5 shadow-lg shadow-black/50"
                                         referrerPolicy="no-referrer"
                                     />
+                                    {video.is_live && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[#0a0a0a] animate-pulse" />}
                                 </Link>
                                 <div className="flex flex-col min-w-0">
-                                    <Link href={`/profile/${author}`} className="font-bold flex items-center gap-1 hover:text-[#FFB800] transition-colors">
+                                    <Link href={`/profile/${username}`} className="font-black text-sm flex items-center gap-1 hover:text-[#FFB800] transition-colors tracking-tight">
                                         {author}
-                                        {(video.profiles as any)?.is_verified && <CheckCircle2 size={14} className="text-[#FFB800]" />}
+                                        {(video.profiles?.is_verified || video.profiles?.subscription_tier === 'premium') && (
+                                            <CheckCircle2 size={14} className="text-[#FFB800]" fill="currentColor" />
+                                        )}
                                     </Link>
-                                    <span className="text-xs text-gray-400">
-                                        {formatViews(video.view_count)} views
+                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                                        {formatCount(video.profiles?.follower_count || 0)} subscribers
                                     </span>
                                 </div>
-                                <div className="ml-4 flex gap-2 items-center">
+                                <div className="ml-4">
                                     <SubscribeButton channelId={video.profiles?.id || ''} />
-                                    {isSubscribed && (
-                                        <button className="p-2 hover:bg-white/10 rounded-full transition-colors text-[#FFB800]">
-                                            <Bell size={20} fill="currentColor" />
-                                        </button>
-                                    )}
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide shrink-0 pb-2 md:pb-0">
-                                <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5 shrink-0">
+                            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+                                <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/10">
                                     <button
                                         onClick={handleLike}
-                                        title={isLiked ? "Unlike" : "Like"}
-                                        aria-label={isLiked ? "Unlike" : "Like"}
                                         className={cn(
-                                            "flex items-center gap-2 px-4 py-2 hover:bg-white/10 transition-colors border-r border-[rgba(255,255,255,0.05)]",
-                                            isLiked && "text-[#FFB800]"
+                                            "flex items-center gap-2 px-5 py-2.5 hover:bg-white/10 transition-colors border-r border-white/5 font-black uppercase tracking-widest text-[10px]",
+                                            isLiked ? "text-[#FFB800]" : "text-gray-400"
                                         )}
                                     >
-                                        <ThumbsUp size={18} fill={isLiked ? "currentColor" : "none"} />
-                                        <span className="text-sm font-bold">{formatViews(likes)}</span>
+                                        <ThumbsUp size={16} fill={isLiked ? "currentColor" : "none"} />
+                                        {formatViews(likes)}
                                     </button>
-                                    <button
-                                        className="px-4 py-2 hover:bg-white/10 transition-colors"
-                                        title="Dislike"
-                                        aria-label="Dislike"
-                                    >
-                                        <ThumbsDown size={18} />
+                                    <button className="px-5 py-2.5 hover:bg-white/10 transition-colors text-gray-500" title="Dislike" aria-label="Dislike">
+                                        <ThumbsDown size={16} />
                                     </button>
                                 </div>
-                                <button
-                                    onClick={() => {
-                                        const url = window.location.href;
-                                        navigator.clipboard.writeText(url);
-                                        alert('Link copied to clipboard!');
-                                    }}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5 shrink-0"
-                                    title="Share Video"
-                                    aria-label="Share Video"
-                                >
-                                    <Share2 size={18} />
-                                    <span className="text-sm font-bold">Share</span>
-                                </button>
-                                <button
+
+                                <motion.button
+                                    whileTap={{ scale: 0.95 }}
                                     onClick={handleHype}
                                     disabled={isHyping}
-                                    className={cn(
-                                        "relative flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 font-bold text-sm",
-                                        "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/20 active:scale-95 disabled:opacity-50"
-                                    )}
-                                    title="Hype this video"
-                                    aria-label="Hype this video"
+                                    className="relative flex items-center gap-2 px-6 py-2.5 rounded-full font-black uppercase tracking-widest text-[10px] bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/20 disabled:opacity-50"
                                 >
-                                    <Flame size={18} fill="currentColor" className={isHyping ? "animate-bounce" : ""} />
-                                    <span>Hype</span>
-                                    <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">{formatViews(hypes)}</span>
-                                    
-                                    {/* Sparkle Animation */}
+                                    <Flame size={16} fill="currentColor" className={isHyping ? "animate-bounce" : ""} />
+                                    {formatViews(hypes)} Hype
                                     <AnimatePresence>
                                         {showHypeAnimation && (
-                                            <motion.div 
-                                                initial={{ opacity: 0, scale: 0 }}
-                                                animate={{ opacity: 1, scale: 1.5 }}
-                                                exit={{ opacity: 0, scale: 2 }}
-                                                className="absolute -top-4 -right-4 pointer-events-none"
-                                            >
+                                            <motion.div initial={{ opacity: 0, y: 0 }} animate={{ opacity: 1, y: -20 }} exit={{ opacity: 0 }} className="absolute -top-4 -right-2 text-xl pointer-events-none">
                                                 ✨
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
+                                </motion.button>
+
+                                <button onClick={() => { navigator.clipboard.writeText(window.location.href); alert('Link copied!'); }} className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5 font-black uppercase tracking-widest text-[10px]" title="Share video" aria-label="Share video">
+                                    <Share2 size={16} />
+                                    Share
                                 </button>
-                                <button
-                                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors hidden sm:flex border border-white/5 shrink-0"
-                                    title="Save Video"
-                                    aria-label="Save Video"
-                                >
-                                    <Download size={18} />
-                                    <span className="text-sm font-bold">Save</span>
-                                </button>
-                                <button
-                                    className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5 shrink-0"
-                                    title="More Options"
-                                    aria-label="More Options"
-                                >
+                                
+                                <button className="p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5" title="More options" aria-label="More options">
                                     <MoreHorizontal size={18} />
                                 </button>
                             </div>
                         </div>
 
-                        <div className="bg-white/5 rounded-2xl p-4 text-sm hover:bg-white/10 transition-colors border border-white/5 mt-4">
-                            <div className="flex gap-3 font-black uppercase tracking-tighter mb-1 text-xs text-gray-400">
-                                <span>{formatViews(video.view_count)} views</span>
-                                <span>{new Date(video.created_at).toLocaleDateString()}</span>
-                                <span className="text-[#FFB800]">#VIBESTREAM</span>
-                            </div>
-                            <p className="whitespace-pre-wrap text-gray-300 font-medium">
+                        <div className="bg-[#121212] rounded-3xl p-6 text-sm hover:bg-white/[0.03] transition-colors border border-white/5">
+                            <p className="whitespace-pre-wrap text-gray-400 font-medium leading-relaxed">
                                 {video.description?.replace(/\[PRIVATE_VIDEO_FLAG\]/, '').trim() || 'No description provided.'}
                             </p>
                         </div>
                     </div>
 
-                    <hr className="border-white/10 my-4" />
+                    <hr className="border-white/5 my-8" />
 
                     {/* Mobile Chat Toggle (Only for Live) */}
                     {video.is_live && (
                         <button
                             onClick={() => setShowMobileChat(true)}
-                            className="lg:hidden w-full p-4 bg-white/5 rounded-xl flex items-center justify-between hover:bg-white/10 transition-colors"
+                            className="lg:hidden w-full p-5 bg-white/5 rounded-2xl flex items-center justify-between hover:bg-white/10 transition-colors border border-white/5 mb-6"
                         >
                             <div className="flex items-center gap-3">
-                                <MessageSquare size={18} className="text-[#FFB800]" />
-                                <span className="font-bold">Live Chat</span>
-                                <span className="text-xs text-gray-400">Tap to view</span>
+                                <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
+                                    <MessageSquare size={18} className="text-red-500" />
+                                </div>
+                                <span className="font-black uppercase tracking-widest text-xs">Live Chat</span>
                             </div>
-                            <MoreHorizontal size={18} className="rotate-90 text-gray-400" />
+                            <MoreHorizontal size={18} className="rotate-90 text-gray-500" />
                         </button>
                     )}
 
-                    {/* Comments Section (Only for Non-Live) */}
-                    {!video.is_live && (
-                        <div className="mt-4">
-                            {video.allow_comments !== false ? (
-                                <CommentSection videoId={video.id} />
-                            ) : (
-                                <div className="p-8 bg-white/5 border border-white/5 rounded-2xl flex flex-col items-center justify-center gap-2 text-center">
-                                    <MessageSquare size={32} className="text-gray-600 mb-2" />
-                                    <h3 className="font-bold text-gray-400">Comments are turned off</h3>
-                                    <p className="text-xs text-gray-500 max-w-xs">The creator has disabled comments for this video.</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                    {/* Comments or Recommendations */}
+                    <div className="grid grid-cols-1 gap-12">
+                        {!video.is_live && (
+                            <div className="space-y-6">
+                                <h3 className="font-black font-display text-xl uppercase tracking-tighter">Comments</h3>
+                                {video.allow_comments !== false ? (
+                                    <CommentSection videoId={video.id} />
+                                ) : (
+                                    <div className="p-12 bg-white/5 border border-white/5 rounded-[40px] flex flex-col items-center justify-center gap-4 text-center">
+                                        <MessageSquare size={48} className="text-gray-700" />
+                                        <p className="font-black text-gray-500 uppercase tracking-widest text-xs">Comments disabled</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
-                    {/* Recommendations */}
-                    <div className="space-y-4 mt-8">
-                        <h3 className="font-bold text-lg">Recommended</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {recommendations.map(v => (
-                                <VideoCard key={v.id} video={v as any} />
-                            ))}
+                        <div className="space-y-6">
+                            <h3 className="font-black font-display text-xl uppercase tracking-tighter">Recommended</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {recommendations.map(v => (
+                                    <VideoCard key={v.id} video={v as any} />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Twitch-style Chat Sidebar (Desktop - Only for Live) */}
+            {/* Desktop Side Sidebar (Live Chat) */}
             {video.is_live && (
-                <div className="hidden lg:flex w-[400px] border-l border-white/10 bg-[#0a0a0a] flex-col h-full shrink-0">
-                    <div className="p-4 border-b border-white/10 flex items-center justify-between font-bold text-sm">
+                <div className="hidden lg:flex w-[400px] border-l border-white/5 bg-[#0a0a0a] flex-col h-full shrink-0">
+                    <div className="p-6 border-b border-white/5 flex items-center justify-between font-black uppercase tracking-[0.2em] text-[10px]">
                         Stream Chat
-                        <span className="flex items-center gap-1 text-xs text-red-500"><span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" /> LIVE</span>
+                        <span className="flex items-center gap-1.5 text-red-500">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                            LIVE
+                        </span>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-4 flex flex-col justify-end">
-                        <div className="text-center text-gray-500 text-sm py-8 font-medium">
-                            Welcome to the chat room!
+                    <div className="flex-1 overflow-y-auto p-6 flex flex-col justify-end">
+                        <div className="text-center text-gray-600 text-xs font-bold uppercase tracking-widest py-10 opacity-50">
+                            Welcome to the vibe.
                         </div>
                     </div>
-                    <div className="p-4 border-t border-white/10 bg-[#0f0f0f]">
+                    <div className="p-6 border-t border-white/5 bg-[#0a0a0a]">
                         <input
                             type="text"
                             placeholder="Send a message"
                             disabled
-                            className="w-full bg-[#161616] border border-white/10 focus:border-[#FFB800]/50 rounded-xl px-4 py-2.5 outline-none text-sm transition-colors"
+                            className="w-full bg-[#121212] border border-white/5 focus:border-[#FFB800]/50 rounded-2xl px-5 py-4 outline-none text-sm transition-all font-bold placeholder:text-gray-600"
                         />
                     </div>
                 </div>
@@ -358,31 +335,28 @@ export default function WatchClient({ initialVideo }: WatchClientProps) {
                         initial={{ y: "100%" }}
                         animate={{ y: 0 }}
                         exit={{ y: "100%" }}
-                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                        className="lg:hidden fixed inset-0 z-[60] bg-black flex flex-col"
+                        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                        className="lg:hidden fixed inset-0 z-[60] bg-[#0a0a0a] flex flex-col pt-safe"
                     >
-                        <div className="p-4 border-b border-white/10 flex items-center justify-between">
-                            <span className="font-bold flex items-center gap-2">
+                        <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                            <span className="font-black uppercase tracking-widest text-xs flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> Live Chat
                             </span>
-                            <button
-                                onClick={() => setShowMobileChat(false)}
-                                className="p-2 hover:bg-white/10 rounded-full"
-                            >
+                            <button onClick={() => setShowMobileChat(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
                                 <X size={24} />
                             </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4 flex flex-col justify-end">
-                            <div className="text-center text-gray-500 text-sm py-8 font-medium">
-                                Welcome to the chat room!
+                        <div className="flex-1 overflow-y-auto p-6 flex flex-col justify-end">
+                            <div className="text-center text-gray-600 text-xs font-bold uppercase tracking-widest py-10 opacity-50">
+                                Welcome to the vibe.
                             </div>
                         </div>
-                        <div className="p-4 border-t border-white/10 bg-[#0f0f0f]">
+                        <div className="p-6 border-t border-white/5">
                             <input
                                 type="text"
                                 placeholder="Send a message"
                                 disabled
-                                className="w-full bg-[#161616] border border-white/10 focus:border-[#FFB800]/50 rounded-xl px-4 py-2.5 outline-none text-sm transition-colors"
+                                className="w-full bg-[#121212] border border-white/5 focus:border-[#FFB800]/50 rounded-2xl px-5 py-4 outline-none text-sm transition-all font-bold"
                             />
                         </div>
                     </motion.div>

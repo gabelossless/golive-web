@@ -1,6 +1,6 @@
 'use client';
 
-import { Menu, Search, Zap, Bell, User, Mic, PlusCircle, LogIn } from "lucide-react";
+import { Menu, Search, Zap, Bell, User, Mic, PlusCircle, LogIn, CheckCircle2 } from "lucide-react";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useState } from "react";
@@ -13,7 +13,7 @@ interface NavbarProps {
 export default function Navbar({ onMenuClick }: NavbarProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -70,16 +70,45 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                 <button className="p-2 rounded-full hover:bg-white/10 transition-colors md:hidden" title="Search">
                     <Search size={22} />
                 </button>
-                <Link href="/upload" className="p-2 rounded-full hover:bg-white/10 transition-colors hidden sm:block" title="Create">
+                <Link href="/upload" className="p-2 rounded-full hover:bg-white/10 transition-colors hidden sm:block" title="Create Video">
                     <PlusCircle size={22} />
                 </Link>
-                <button className="p-2 rounded-full hover:bg-white/10 transition-colors hidden sm:block" title="Notifications">
+                {user && (
+                    <Link 
+                        href="/premium" 
+                        className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#FFB800] to-orange-600 text-black font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all hidden lg:flex items-center gap-1"
+                        title="Get Premium"
+                    >
+                        <CheckCircle2 size={12} />
+                        Get Premium
+                    </Link>
+                )}
+                <button className="p-2 rounded-full hover:bg-white/10 transition-colors hidden sm:block" title="View Notifications">
                     <Bell size={22} />
                 </button>
                 {user ? (
-                    <Link href="/studio/dashboard" className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FFB800] to-orange-600 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity" title="Creator Dashboard">
-                        <User size={18} className="text-black" />
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <div className="hidden sm:flex flex-col items-end mr-1">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[#FFB800] leading-none mb-0.5">
+                                {profile?.subscription_tier === 'premium' ? 'Premium' : 'Creator'}
+                            </span>
+                            <div className="flex items-center gap-1">
+                                <span className="text-xs font-bold text-white max-w-[120px] truncate">
+                                    {profile?.channel_name || profile?.display_name || profile?.username}
+                                </span>
+                                {(profile?.is_verified || profile?.subscription_tier === 'premium') && (
+                                    <CheckCircle2 size={12} className="text-[#FFB800]" fill="currentColor" />
+                                )}
+                            </div>
+                        </div>
+                        <Link href="/studio/dashboard" className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FFB800] to-orange-600 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity" title="Creator Studio">
+                            {profile?.avatar_url ? (
+                                <img src={profile.avatar_url} className="w-full h-full rounded-full object-cover" alt="" />
+                            ) : (
+                                <User size={18} className="text-black" />
+                            )}
+                        </Link>
+                    </div>
                 ) : (
                     <Link href="/login" className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FFB800]/40 text-[#FFB800] hover:bg-[#FFB800]/10 transition-colors font-medium text-sm">
                         <LogIn size={16} /> <span className="hidden sm:inline">Sign in</span>

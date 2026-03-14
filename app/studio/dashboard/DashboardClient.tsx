@@ -199,13 +199,14 @@ export default function DashboardClient() {
                                             <Link href={`/watch/${video.id}`} className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all" title="View video" aria-label="View video">
                                                 <Eye size={18} />
                                             </Link>
-                                            <button 
+                                            <Link 
+                                                href={`/studio/video/${video.id}`}
                                                 className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"
                                                 title="Edit video"
                                                 aria-label="Edit video"
                                             >
                                                 <Edit size={18} />
-                                            </button>
+                                            </Link>
                                             <button 
                                                 onClick={() => handleDelete(video.id)}
                                                 className="p-2 hover:bg-red-500/10 rounded-lg text-gray-400 hover:text-red-500 transition-colors"

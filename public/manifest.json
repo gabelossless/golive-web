@@ -1,19 +1,21 @@
 {
   "name": "VibeStream",
   "short_name": "VibeStream",
-  "description": "The next-generation video platform for creators and viewers.",
+  "description": "Watch, Create & Go Viral",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
-  "orientation": "any",
+  "theme_color": "#FFB800",
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "any",
-      "type": "image/x-icon"
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
-  ],
-  "categories": ["entertainment", "social"],
-  "lang": "en"
+  ]
 }

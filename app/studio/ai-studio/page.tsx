@@ -13,7 +13,8 @@ import {
     ChevronRight,
     Loader2,
     Play,
-    Timer
+    Timer,
+    TrendingUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
@@ -29,16 +30,24 @@ export default function AIStudioPage() {
 
     useEffect(() => {
         async function fetchVideos() {
-            if (!user) return;
-            const { data } = await supabase
-                .from('videos')
-                .select('*')
-                .eq('user_id', user.id)
-                .is('is_short', false)
-                .order('created_at', { ascending: false });
-            
-            if (data) setVideos(data);
-            setLoading(false);
+            if (!user) {
+                setLoading(false);
+                return;
+            }
+            try {
+                const { data } = await supabase
+                    .from('videos')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .is('is_short', false)
+                    .order('created_at', { ascending: false });
+                
+                if (data) setVideos(data);
+            } catch (err) {
+                console.error('Fetch error:', err);
+            } finally {
+                setLoading(false);
+            }
         }
         fetchVideos();
     }, [user]);
@@ -65,7 +74,51 @@ export default function AIStudioPage() {
         }
     };
 
-    if (loading) return <div className="p-20 text-center text-[#FFB800] animate-pulse font-black uppercase tracking-widest">Initializing AI Engine...</div>;
+    const [isClipping, setIsClipping] = useState(false);
+
+    const handleClip = async (moment: any) => {
+        if (!selectedVideo || isClipping) return;
+        setIsClipping(true);
+        try {
+            const res = await fetch('/api/ai-studio/clip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    videoId: selectedVideo.id,
+                    startTime: moment.start,
+                    duration: 15, // Default for now, could be dynamic
+                    title: selectedVideo.title
+                })
+            });
+            if (res.ok) setStep(3);
+        } catch (err) {
+            console.error('Clipping failed:', err);
+        } finally {
+            setIsClipping(false);
+        }
+    };
+
+    if (loading) return (
+        <div className="p-20 text-center flex flex-col items-center justify-center min-h-[60vh] gap-6">
+            <Loader2 className="animate-spin text-[#FFB800]" size={48} />
+            <div className="text-[#FFB800] animate-pulse font-black uppercase tracking-widest text-sm">Initializing AI Engine...</div>
+        </div>
+    );
+
+    if (!user) return (
+        <div className="p-20 text-center flex flex-col items-center justify-center min-h-[60vh] gap-8">
+            <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center text-gray-500 border border-white/10">
+                <Video size={36} />
+            </div>
+            <div className="space-y-4">
+                <h2 className="text-3xl font-black uppercase tracking-tighter">Login Required</h2>
+                <p className="text-gray-500 max-w-sm mx-auto">Please login to access the AI Studio and start clipping your viral moments.</p>
+            </div>
+            <Link href="/login" className="px-12 py-4 bg-[#FFB800] text-black rounded-full font-black uppercase tracking-[0.2em] text-sm shadow-xl shadow-[#FFB800]/20 hover:scale-105 transition-all">
+                Login to Studio
+            </Link>
+        </div>
+    );
 
     return (
         <div className="max-w-5xl mx-auto p-6 md:p-12 min-h-[80vh] flex flex-col items-center">
@@ -160,10 +213,12 @@ export default function AIStudioPage() {
                                         </div>
                                         <p className="text-sm text-gray-300 font-medium leading-relaxed italic">"{moment.reason}"</p>
                                         <button 
-                                            onClick={() => setStep(3)}
-                                            className="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-black uppercase tracking-widest text-[#FFB800] border border-white/10 transition-colors flex items-center justify-center gap-2 group"
+                                            onClick={() => handleClip(moment)}
+                                            disabled={isClipping}
+                                            className="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-black uppercase tracking-widest text-[#FFB800] border border-white/10 transition-colors flex items-center justify-center gap-2 group disabled:opacity-50"
                                         >
-                                            <Scissors size={14} className="group-hover:rotate-12 transition-transform" /> Clip & Post Short
+                                            {isClipping ? <Loader2 size={14} className="animate-spin" /> : <Scissors size={14} className="group-hover:rotate-12 transition-transform" />}
+                                            {isClipping ? 'Clipping Video...' : 'Clip & Post Short'}
                                         </button>
                                     </div>
                                 ))}
