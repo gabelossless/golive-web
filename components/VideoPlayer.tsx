@@ -27,6 +27,7 @@ export default function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [showControls, setShowControls] = useState(true);
     const [buffered, setBuffered] = useState(0);
+    const [error, setError] = useState<string | null>(null);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -111,8 +112,19 @@ export default function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
                 poster={poster}
                 className="w-full h-full object-contain cursor-pointer"
                 onTimeUpdate={handleTimeUpdate}
-                onLoadedMetadata={() => videoRef.current && setDuration(videoRef.current.duration)}
+                onLoadedMetadata={() => {
+                    setError(null);
+                    if (videoRef.current) setDuration(videoRef.current.duration);
+                }}
                 onEnded={() => setIsPlaying(false)}
+                onError={() => {
+                    const isMov = src?.toLowerCase().endsWith('.mov');
+                    if (isMov) {
+                        setError('This video is in .MOV format, which might not be supported by your browser. Try using Safari or a different device.');
+                    } else {
+                        setError('Failed to load video. Please check your connection or try again later.');
+                    }
+                }}
                 playsInline
             />
 
@@ -127,6 +139,42 @@ export default function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
                     >
                         <div className="w-20 h-20 bg-red-600/90 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(220,38,38,0.5)] backdrop-blur-sm">
                             <Play size={36} className="text-white ml-2" fill="currentColor" />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Error Overlay */}
+            <AnimatePresence>
+                {error && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm z-10"
+                    >
+                        <div className="text-center max-w-sm">
+                            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                                <Settings size={32} className="text-red-500" />
+                            </div>
+                            <h3 className="text-lg font-bold text-white mb-2">Playback Error</h3>
+                            <p className="text-sm text-gray-400 mb-6">{error}</p>
+                            <div className="flex gap-3 justify-center">
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); location.reload(); }}
+                                    className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold transition-colors"
+                                >
+                                    Retry
+                                </button>
+                                <a 
+                                    href={src} 
+                                    download 
+                                    className="px-4 py-2 bg-[#FFB800] text-black rounded-lg text-xs font-bold no-underline hover:bg-orange-500 transition-colors"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    Download Video
+                                </a>
+                            </div>
                         </div>
                     </motion.div>
                 )}
