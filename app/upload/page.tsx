@@ -91,7 +91,7 @@ function parseTagInput(raw: string): string[] {
 type ToastType = { id: number; message: string; type: 'info' | 'success' | 'error' | 'loading'; progress?: number };
 
 export default function UploadPage() {
-    const { user, session, isLoading: authLoading } = useAuth();
+    const { user, session, profile, isLoading: authLoading } = useAuth();
     const router = useRouter();
 
     React.useEffect(() => {
@@ -110,7 +110,13 @@ export default function UploadPage() {
     const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
     const [autoThumbnails, setAutoThumbnails] = useState<string[]>([]);
     const [selectedAutoThumb, setSelectedAutoThumb] = useState<number | null>(null);
-    const [visibility, setVisibility] = useState<'Public' | 'Private'>('Public');
+    const [visibility, setVisibility] = useState<'Public' | 'Unlisted' | 'Private'>('Public');
+
+    // Advanced Creator Options
+    const [allowClipping, setAllowClipping] = useState(true);
+    const [allowComments, setAllowComments] = useState(true);
+    const [license, setLicense] = useState<'Standard' | 'Creative Commons'>('Standard');
+    const [scheduledFor, setScheduledFor] = useState('');
 
     const [isUploading, setIsUploading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -453,10 +459,16 @@ export default function UploadPage() {
                 title: title.trim(),
                 description: finalDescriptionWithCategory,
                 video_url: videoUrl,
-               duration: duration || '0:00',
+                thumbnail_url: thumbnailUrl,
+                duration: duration || '0:00',
                 width,
                 height,
-                quality_score: Math.round(qualityScore * 100)
+                quality_score: Math.round(qualityScore * 100),
+                allow_clipping: allowClipping,
+                allow_comments: allowComments,
+                visibility: visibility,
+                license: license,
+                scheduled_for: scheduledFor ? new Date(scheduledFor).toISOString() : null
             });
 
             if (dbError) throw dbError;
@@ -540,6 +552,30 @@ export default function UploadPage() {
                     </div>
                 ))}
             </div>
+
+            {/* Identity Header */}
+            {user && profile && (
+                <motion.div 
+                   initial={{ opacity: 0, y: -10 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   className="flex items-center gap-4 mb-8 p-4 bg-white/5 border border-white/10 rounded-2xl w-fit"
+                >
+                    <div className="relative">
+                        <img 
+                           src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`} 
+                           className="w-12 h-12 rounded-full border-2 border-[#FFB800]" 
+                           alt="" 
+                        />
+                        <div className="absolute -bottom-1 -right-1 bg-[#FFB800] rounded-full p-0.5 border-2 border-[#1a1a1a]">
+                            <CheckCircle size={12} className="text-black" />
+                        </div>
+                    </div>
+                    <div>
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Uploading as</p>
+                        <h3 className="text-lg font-black tracking-tight">{profile.username} <span className="text-[#FFB800] text-xs lowercase ml-1 font-medium italic opacity-60">Creator Studio</span></h3>
+                    </div>
+                </motion.div>
+            )}
 
             <h1 className="text-3xl font-bold mb-8">Upload Video</h1>
 
@@ -685,43 +721,70 @@ export default function UploadPage() {
                                     </div>
                                 </div>
 
-                                {/* Visibility Selection */}
-                                <div className="pt-4 border-t border-white/5">
-                                    <h3 className="text-sm font-medium text-gray-400 mb-4">Visibility</h3>
+
+
+                                {/* Advanced Creator Studio Options */}
+                                <div className="pt-8 border-t border-white/5 space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h3 className="text-sm font-bold text-white">Advanced Creator Options</h3>
+                                            <p className="text-xs text-gray-500 font-medium">Configure advanced ecosystem & audience settings</p>
+                                        </div>
+                                        <div className="px-2 py-0.5 rounded bg-[#FFB800]/10 border border-[#FFB800]/30 text-[#FFB800] text-[10px] font-black uppercase tracking-tighter">Pro</div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <label className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="text-sm font-bold">Allow AI Clipping</span>
+                                                <span className="text-[10px] text-gray-500 font-medium tracking-tight">Let others create Shorts from this video</span>
+                                            </div>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={allowClipping} 
+                                                onChange={(e) => setAllowClipping(e.target.checked)}
+                                                className="w-5 h-5 accent-[#FFB800] cursor-pointer"
+                                            />
+                                        </label>
+
+                                        <label className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="text-sm font-bold">Allow Comments</span>
+                                                <span className="text-[10px] text-gray-400 font-medium tracking-tight">Enable community discussion on this video</span>
+                                            </div>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={allowComments} 
+                                                onChange={(e) => setAllowComments(e.target.checked)}
+                                                className="w-5 h-5 accent-[#FFB800] cursor-pointer"
+                                            />
+                                        </label>
+                                    </div>
+
                                     <div className="space-y-3">
-                                        {visibilityOptions.map((option) => (
-                                            <label
-                                                key={option.id}
+                                        <label className="block text-sm font-bold text-gray-400">License & Distribution</label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button 
+                                                type="button"
+                                                onClick={() => setLicense('Standard')}
                                                 className={cn(
-                                                    "flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all",
-                                                    visibility === option.id
-                                                        ? "bg-[#FFB800]/10 border-[#FFB800]"
-                                                        : "bg-white/5 border-white/5 hover:bg-white/10"
+                                                    "px-4 py-3 rounded-xl border text-xs font-bold transition-all",
+                                                    license === 'Standard' ? "bg-white/10 border-[#FFB800] text-white" : "bg-white/5 border-white/5 text-gray-500 hover:bg-white/10"
                                                 )}
                                             >
-                                                <input
-                                                    type="radio"
-                                                    name="visibility"
-                                                    className="hidden"
-                                                    checked={visibility === option.id}
-                                                    onChange={() => setVisibility(option.id as any)}
-                                                    disabled={isUploading}
-                                                />
-                                                <div className={cn(
-                                                    "p-2 rounded-lg shrink-0 transition-colors",
-                                                    visibility === option.id ? "bg-[#FFB800] text-black" : "bg-white/10 text-gray-400"
-                                                )}>
-                                                    <option.icon size={20} />
-                                                </div>
-                                                <div className="flex flex-col">
-                                                    <span className={cn(
-                                                        "text-sm font-bold",
-                                                        visibility === option.id ? "text-white" : "text-gray-300"
-                                                    )}>{option.id}</span>
-                                                    <span className="text-xs text-gray-500 font-medium mt-0.5">{option.desc}</span>
-                                                </div>
-                                            </label>
-                                        ))}
+                                                Standard License
+                                            </button>
+                                            <button 
+                                                type="button"
+                                                onClick={() => setLicense('Creative Commons')}
+                                                className={cn(
+                                                    "px-4 py-3 rounded-xl border text-xs font-bold transition-all",
+                                                    license === 'Creative Commons' ? "bg-white/10 border-[#FFB800] text-white" : "bg-white/5 border-white/5 text-gray-500 hover:bg-white/10"
+                                                )}
+                                            >
+                                                Creative Commons
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -763,7 +826,7 @@ export default function UploadPage() {
                                     <FileVideo size={48} className="text-gray-600" />
                                 )}
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-4">
-                                    <span className="text-sm font-medium truncate text-white">{videoFile.name}</span>
+                                    <span className="text-sm font-medium truncate text-white">{videoFile?.name || 'Uploading...'}</span>
                                 </div>
                             </div>
                             <div className="p-4 bg-[#222]">
@@ -785,7 +848,7 @@ export default function UploadPage() {
                             <div className="p-4 border-t border-white/5 space-y-3 bg-[#1a1a1a]">
                                 <div className="flex justify-between text-xs">
                                     <span className="text-gray-500 font-medium">Video size</span>
-                                    <span className="text-gray-300 font-bold ml-4">{(videoFile.size / (1024 * 1024)).toFixed(1)} MB</span>
+                                    <span className="text-gray-300 font-bold ml-4">{((videoFile?.size || 0) / (1024 * 1024)).toFixed(1)} MB</span>
                                 </div>
                                 <div className="flex justify-between text-xs">
                                     <span className="text-gray-500 font-medium">Visibility</span>

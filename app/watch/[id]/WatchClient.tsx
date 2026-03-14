@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { applyGrowthBoost } from '@/lib/growth';
 import { Video } from '@/types';
-import { ThumbsUp, ThumbsDown, Share2, Download, MoreHorizontal, Bell, CheckCircle2, X, MessageSquare } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Share2, Download, MoreHorizontal, Bell, CheckCircle2, X, MessageSquare, Flame } from 'lucide-react';
 import SubscribeButton from '@/components/SubscribeButton';
 import VideoPlayer from '@/components/VideoPlayer';
 import CommentSection from '@/components/CommentSection';
@@ -28,6 +28,9 @@ export default function WatchClient({ initialVideo }: WatchClientProps) {
     const [isLiked, setIsLiked] = useState(false);
     const [likes, setLikes] = useState(initialVideo.target_likes || 0);
     const [isLiking, setIsLiking] = useState(false);
+    const [hypes, setHypes] = useState(initialVideo.hype_count || 0);
+    const [isHyping, setIsHyping] = useState(false);
+    const [showHypeAnimation, setShowHypeAnimation] = useState(false);
 
     const [recommendations, setRecommendations] = useState<Video[]>([]);
     const [showMobileChat, setShowMobileChat] = useState(false);
@@ -117,6 +120,29 @@ export default function WatchClient({ initialVideo }: WatchClientProps) {
         }
     };
 
+    const handleHype = async () => {
+        if (!currentUser) return;
+        setIsHyping(true);
+        setShowHypeAnimation(true);
+
+        // Optimistic UI
+        setHypes(prev => prev + 1);
+
+        try {
+            const { error } = await supabase.rpc('increment_hype_count', { video_id: video.id });
+            if (error) throw error;
+            
+            // Clean up animation
+            setTimeout(() => setShowHypeAnimation(false), 2000);
+        } catch (err) {
+            console.error('Error hyping:', err);
+            setHypes(prev => prev - 1);
+            setShowHypeAnimation(false);
+        } finally {
+            setIsHyping(false);
+        }
+    };
+
     const author = video.profiles?.username || 'Unknown';
     const avatar = video.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author}`;
 
@@ -188,12 +214,45 @@ export default function WatchClient({ initialVideo }: WatchClientProps) {
                                     </button>
                                 </div>
                                 <button
+                                    onClick={() => {
+                                        const url = window.location.href;
+                                        navigator.clipboard.writeText(url);
+                                        alert('Link copied to clipboard!');
+                                    }}
                                     className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5 shrink-0"
                                     title="Share Video"
                                     aria-label="Share Video"
                                 >
                                     <Share2 size={18} />
                                     <span className="text-sm font-bold">Share</span>
+                                </button>
+                                <button
+                                    onClick={handleHype}
+                                    disabled={isHyping}
+                                    className={cn(
+                                        "relative flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 font-bold text-sm",
+                                        "bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/20 active:scale-95 disabled:opacity-50"
+                                    )}
+                                    title="Hype this video"
+                                    aria-label="Hype this video"
+                                >
+                                    <Flame size={18} fill="currentColor" className={isHyping ? "animate-bounce" : ""} />
+                                    <span>Hype</span>
+                                    <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px]">{formatViews(hypes)}</span>
+                                    
+                                    {/* Sparkle Animation */}
+                                    <AnimatePresence>
+                                        {showHypeAnimation && (
+                                            <motion.div 
+                                                initial={{ opacity: 0, scale: 0 }}
+                                                animate={{ opacity: 1, scale: 1.5 }}
+                                                exit={{ opacity: 0, scale: 2 }}
+                                                className="absolute -top-4 -right-4 pointer-events-none"
+                                            >
+                                                ✨
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </button>
                                 <button
                                     className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors hidden sm:flex border border-white/5 shrink-0"
@@ -245,7 +304,15 @@ export default function WatchClient({ initialVideo }: WatchClientProps) {
                     {/* Comments Section (Only for Non-Live) */}
                     {!video.is_live && (
                         <div className="mt-4">
-                            <CommentSection videoId={video.id} />
+                            {video.allow_comments !== false ? (
+                                <CommentSection videoId={video.id} />
+                            ) : (
+                                <div className="p-8 bg-white/5 border border-white/5 rounded-2xl flex flex-col items-center justify-center gap-2 text-center">
+                                    <MessageSquare size={32} className="text-gray-600 mb-2" />
+                                    <h3 className="font-bold text-gray-400">Comments are turned off</h3>
+                                    <p className="text-xs text-gray-500 max-w-xs">The creator has disabled comments for this video.</p>
+                                </div>
+                            )}
                         </div>
                     )}
 

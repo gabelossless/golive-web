@@ -10,6 +10,7 @@ export interface Profile {
     banner_url?: string;
     social_links?: any;
     is_monetized?: boolean;
+    target_subs?: number;
 }
 
 export interface Video {
@@ -31,6 +32,13 @@ export interface Video {
     height?: number;
     bitrate?: number;
     quality_score?: number;
+    allow_clipping?: boolean;
+    allow_comments?: boolean;
+    visibility?: string;
+    scheduled_for?: string | null;
+    license?: string;
+    hype_count?: number;
+    is_short?: boolean;
 }
 
 export interface Comment {

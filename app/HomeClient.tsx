@@ -17,7 +17,27 @@ export default function HomeClient() {
         async function fetchVideos() {
             const { data, error } = await supabase
                 .from('videos')
-                .select('id, title, thumbnail_url, view_count, target_views, created_at, is_live, duration, category, description, width, height, quality_score, profiles(username, avatar_url)')
+                .select(`
+                    id, 
+                    title, 
+                    thumbnail_url, 
+                    view_count, 
+                    target_views, 
+                    created_at, 
+                    is_live, 
+                    duration, 
+                    category, 
+                    description, 
+                    width, 
+                    height,
+                    is_short,
+                    profiles (
+                        id, 
+                        username, 
+                        avatar_url,
+                        is_verified
+                    )
+                `)
                 .order('created_at', { ascending: false });
 
             if (!error && data) {
@@ -41,6 +61,13 @@ export default function HomeClient() {
 
     const handleCategory = (cat: string) => {
         if (cat === 'All') { setFiltered(videos); return; }
+        if (cat === 'Recent') {
+            const sorted = [...videos].sort((a, b) => 
+                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            );
+            setFiltered(sorted);
+            return;
+        }
         if (cat === 'Live') { setFiltered(videos.filter(v => v.is_live)); return; }
         setFiltered(videos.filter(v => (v.category || '').toLowerCase() === cat.toLowerCase()));
     };
@@ -49,7 +76,7 @@ export default function HomeClient() {
 
     return (
         <div className="flex flex-col min-h-full">
-            <CategoryBar />
+            <CategoryBar onSelect={handleCategory} />
 
             <div className="p-2 sm:p-4 md:p-6 lg:p-8 space-y-12">
                 {/* Featured Hero Section */}
@@ -92,13 +119,13 @@ export default function HomeClient() {
                     </div>
 
                     {loading ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-6 sm:gap-y-8">
-                            {Array.from({ length: 10 }).map((_, i) => (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-12">
+                            {Array.from({ length: 12 }).map((_, i) => (
                                 <div key={i} className="animate-pulse">
-                                    <div className="aspect-video bg-white/5 rounded-xl mb-3" />
-                                    <div className="flex gap-3">
-                                        <div className="w-9 h-9 rounded-full bg-white/5 shrink-0" />
-                                        <div className="flex-1 space-y-2 py-1">
+                                    <div className="aspect-video bg-white/5 rounded-2xl mb-4" />
+                                    <div className="flex gap-4">
+                                        <div className="w-10 h-10 rounded-full bg-white/5 shrink-0" />
+                                        <div className="flex-1 space-y-3 py-1">
                                             <div className="h-4 bg-white/5 rounded w-3/4" />
                                             <div className="h-3 bg-white/5 rounded w-1/2" />
                                         </div>
@@ -107,7 +134,7 @@ export default function HomeClient() {
                             ))}
                         </div>
                     ) : filtered.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-6 sm:gap-y-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-12">
                             {filtered.map((video, index) => (
                                 <motion.div
                                     key={video.id}

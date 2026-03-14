@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { CheckCircle2, MoreVertical } from 'lucide-react';
+import { CheckCircle2, MoreVertical, Play, Flame } from 'lucide-react';
 import { motion } from 'motion/react';
+import { formatViews, timeAgo, formatDuration } from '@/lib/utils';
 
 export interface VideoCardProps {
     video: {
@@ -15,29 +16,11 @@ export interface VideoCardProps {
         profiles?: { username?: string; avatar_url?: string; is_verified?: boolean } | null;
         duration?: string;
         is_live?: boolean;
+        hype_count?: number;
     };
 }
 
-function timeAgo(dateStr?: string): string {
-    if (!dateStr) return '';
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    if (days < 7) return `${days}d ago`;
-    return `${Math.floor(days / 7)}w ago`;
-}
-
-function formatViews(n?: number): string {
-    if (!n) return '0';
-    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-    return String(n);
-}
-
-const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=480&q=80';
+const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=800&q=80';
 const FALLBACK_AVATAR = 'https://api.dicebear.com/7.x/avataaars/svg?seed=default';
 
 export default function VideoCard({ video }: VideoCardProps) {
@@ -45,7 +28,7 @@ export default function VideoCard({ video }: VideoCardProps) {
     const avatar = video.profiles?.avatar_url || FALLBACK_AVATAR;
     const thumb = video.thumbnail_url || FALLBACK_THUMB;
     const views = Math.max(video.view_count || 0, video.target_views || 0);
-    const timeStr = timeAgo(video.created_at);
+    const timeStr = timeAgo(video.created_at || new Date().toISOString());
     const isLive = video.is_live;
 
     return (
@@ -64,13 +47,19 @@ export default function VideoCard({ video }: VideoCardProps) {
                 />
                 {video.duration && !isLive && (
                     <div className="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                        {video.duration}
+                        {formatDuration(video.duration)}
                     </div>
                 )}
                 {isLive && (
                     <div className="absolute top-2 left-2 live-badge flex items-center gap-1">
                         <span className="w-1.5 h-1.5 bg-black rounded-full animate-pulse" />
                         Live
+                    </div>
+                )}
+                {video.hype_count && video.hype_count > 0 && (
+                    <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-red-600 text-white px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-tighter shadow-lg flex items-center gap-1 z-10">
+                        <Flame size={10} fill="currentColor" />
+                        Hyped
                     </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
@@ -106,7 +95,7 @@ export default function VideoCard({ video }: VideoCardProps) {
                             {author}
                             {video.profiles?.is_verified && <CheckCircle2 size={12} className="text-[#FFB800]" />}
                         </Link>
-                        <div className="text-[10px] text-gray-500 mt-0.5 font-bold uppercase tracking-wider">
+                        <div className="text-[11px] text-gray-500 mt-1 font-bold uppercase tracking-wider">
                             {formatViews(views)} views • {timeStr}
                         </div>
                     </div>

@@ -76,3 +76,29 @@ export function calculateAlgorithmicViews(videoId: string, createdAtString?: str
 
     return baseViews + timeBonus + actual;
 }
+
+/**
+ * Format raw seconds/string into HH:MM:SS or MM:SS
+ * e.g. 73 -> "1:13", 3601 -> "1:00:01"
+ */
+export function formatDuration(duration: number | string | undefined): string {
+    if (duration === undefined) return '';
+    const totalSeconds = typeof duration === 'string' ? Math.floor(parseFloat(duration)) : Math.floor(duration);
+    
+    if (isNaN(totalSeconds) || totalSeconds < 0) return '';
+    
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    
+    const parts = [];
+    if (hours > 0) {
+        parts.push(hours.toString());
+        parts.push(minutes.toString().padStart(2, '0'));
+    } else {
+        parts.push(minutes.toString());
+    }
+    parts.push(seconds.toString().padStart(2, '0'));
+    
+    return parts.join(':');
+}

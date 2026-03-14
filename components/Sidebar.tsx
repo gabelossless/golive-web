@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutGrid, Zap, UserCheck, Clock, ThumbsUp, History, Bookmark, Film, Flame, Activity, Disc } from "lucide-react";
+import { LayoutGrid, Zap, UserCheck, Clock, ThumbsUp, History, Bookmark, Film, Flame, Activity, Disc, LayoutDashboard, Sparkles, Plus } from "lucide-react";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
@@ -61,6 +61,12 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         { icon: UserCheck, label: "Following", path: "/subscriptions" },
     ];
 
+    const studioItems = [
+        { icon: LayoutDashboard, label: "Dashboard", path: "/studio/dashboard" },
+        { icon: Sparkles, label: "AI Studio", path: "/studio/ai-studio" },
+        { icon: Plus, label: "Upload", path: "/upload" },
+    ];
+
     const libraryItems = [
         { icon: History, label: "History", path: "/history" },
         { icon: Clock, label: "Watch Later", path: "/watch-later" },
@@ -108,6 +114,24 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                     />
                 ))}
             </div>
+
+            {user && (
+                <>
+                    <hr className="my-4 border-white/10 mx-4" />
+                    <div className="px-3">
+                        <h3 className="px-3 mb-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Studio</h3>
+                        <div className="space-y-1">
+                            {studioItems.map((item) => (
+                                <SidebarItem
+                                    key={item.label}
+                                    {...item}
+                                    isActive={pathname === item.path}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                </>
+            )}
 
             <hr className="my-4 border-white/10 mx-4" />
 

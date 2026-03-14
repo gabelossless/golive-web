@@ -29,9 +29,14 @@ export function calculateVibeRank(video: any, hourlyGrowth: number = 0): VibeRan
     const decay = Math.pow(ageInHours + 2, 1.5);
     const velocityScore = Math.min(1.0, (hourlyGrowth * 10) / decay);
 
-    // 3. Final Aggregated Score
+    // 3. Hype Boost (0.0 - 2.0)
+    // Hypes are community-driven markers of extreme quality/virality.
+    const hypeScore = Math.min(2.0, (video.hype_count || 0) * 0.2);
+
+    // 4. Final Aggregated Score
     // We weigh velocity higher for discovery, but quality is the gatekeeper.
-    const totalScore = (qualityScore * 0.4) + (velocityScore * 0.6);
+    // Hype score acts as a multiplier/additive surge.
+    const totalScore = ((qualityScore * 0.4) + (velocityScore * 0.6)) + hypeScore;
 
     return {
         totalScore,

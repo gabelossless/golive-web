@@ -39,9 +39,13 @@ export async function POST(request: Request) {
         // Fetch source video
         const { data: video } = await supabaseAdmin
             .from('videos')
-            .select('video_url, user_id, title')
+            .select('video_url, user_id, title, allow_clipping')
             .eq('id', videoId)
             .single();
+
+        if (video?.allow_clipping === false) {
+            return NextResponse.json({ error: 'Clipping is disabled for this video.' }, { status: 403 });
+        }
 
         if (!video?.video_url) return NextResponse.json({ error: 'Video not found' }, { status: 404 });
 
@@ -111,7 +115,7 @@ export async function POST(request: Request) {
                 title: shortTitle,
                 video_url: shortUrl,
                 is_short: true,
-                duration: endSec - startSec,
+                duration: Math.round(endSec - startSec),
                 view_count: 0,
             })
             .select('id')
