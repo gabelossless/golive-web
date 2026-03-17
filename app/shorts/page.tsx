@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
-import { Heart, MessageCircle, Share2, UserPlus, Volume2, VolumeX, ChevronUp, ChevronDown } from 'lucide-react';
+import { Heart, MessageCircle, Share2, UserPlus, Volume2, VolumeX, ChevronUp, ChevronDown, MoreVertical, Music2 } from 'lucide-react';
 
 interface Short {
     id: string;
@@ -162,16 +162,17 @@ export default function ShortsPage() {
                             transition={{ duration: 0.25 }}
                             className="absolute inset-0 flex items-center justify-center bg-black overflow-hidden"
                         >
-                            {/* Background Blur for non-vertical videos */}
-                            <div className="absolute inset-0 opacity-50 scale-125 blur-3xl pointer-events-none">
+                            {/* Background Blur - Cinematic Ambient */}
+                            <div className="absolute inset-0 pointer-events-none">
                                 <video
                                     src={short.video_url}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover opacity-40 blur-[80px] scale-150"
                                     muted
                                     playsInline
                                     autoPlay
                                     loop
                                 />
+                                <div className="absolute inset-0 bg-black/40" />
                             </div>
 
                             {/* Video */}
@@ -189,43 +190,88 @@ export default function ShortsPage() {
                             {/* Gradient overlay */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none md:rounded-2xl" />
 
-                            {/* Right Action Bar */}
-                            <div className="absolute right-4 bottom-24 md:right-8 flex flex-col items-center gap-5 z-10">
-                                <ActionBtn icon={<Heart size={24} />} label={short.like_count || 0} title="Like" />
-                                <ActionBtn icon={<MessageCircle size={24} />} label="Reply" title="Reply" />
-                                <ActionBtn icon={<Share2 size={24} />} label="Share" title="Share" />
-                                <ActionBtn
-                                    icon={<UserPlus size={24} />}
-                                    label="Follow"
-                                    title={`Follow ${short.profiles?.username}`}
-                                />
-                                <button
-                                    onClick={() => setMuted(m => !m)}
-                                    className="flex flex-col items-center gap-1 text-white"
-                                    aria-label={muted ? 'Unmute' : 'Mute'}
-                                    title={muted ? 'Unmute' : 'Mute'}
+                            {/* Right Action Bar - YouTube Tonal Style */}
+                            <div className="absolute right-3 bottom-20 md:right-8 flex flex-col items-center gap-6 z-20">
+                                <div className="flex flex-col items-center gap-1 group">
+                                    <motion.button 
+                                        whileTap={{ scale: 0.8 }}
+                                        className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-xl flex items-center justify-center transition-colors shadow-lg"
+                                        aria-label="Like"
+                                        title="Like"
+                                    >
+                                        <Heart size={28} className="text-white group-hover:scale-110 transition-transform" />
+                                    </motion.button>
+                                    <span className="text-[11px] font-bold text-white tracking-tight drop-shadow-md">{formatCount(short.view_count / 10)}</span>
+                                </div>
+
+                                <div className="flex flex-col items-center gap-1 group">
+                                    <button 
+                                        className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-xl flex items-center justify-center transition-colors shadow-lg"
+                                        title="View Replies"
+                                    >
+                                        <MessageCircle size={28} className="text-white group-hover:scale-110 transition-transform" />
+                                    </button>
+                                    <span className="text-[11px] font-bold text-white tracking-tight drop-shadow-md">Replies</span>
+                                </div>
+
+                                <div className="flex flex-col items-center gap-1 group">
+                                    <button 
+                                        className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-xl flex items-center justify-center transition-colors shadow-lg"
+                                        title="Share"
+                                    >
+                                        <Share2 size={28} className="text-white group-hover:scale-110 transition-transform" />
+                                    </button>
+                                    <span className="text-[11px] font-bold text-white tracking-tight drop-shadow-md">Share</span>
+                                </div>
+
+                                <div className="flex flex-col items-center gap-1 group">
+                                    <button 
+                                        className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-xl flex items-center justify-center transition-colors shadow-lg"
+                                        title="More Options"
+                                    >
+                                        <MoreVertical size={28} className="text-white group-hover:scale-110 transition-transform" />
+                                    </button>
+                                </div>
+
+                                {/* Audio Pivot - YT Style */}
+                                <motion.div 
+                                    animate={{ rotate: 360 }} 
+                                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                                    className="w-10 h-10 mt-4 rounded-xl overflow-hidden border-2 border-white/20 shadow-2xl bg-black"
                                 >
-                                    <div className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10">
-                                        {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-                                    </div>
-                                </button>
+                                    <img src={short.profiles?.avatar_url || ''} className="w-full h-full object-cover" alt="Audio track" />
+                                </motion.div>
                             </div>
 
-                            {/* Bottom Info */}
-                            <div className="absolute bottom-6 left-4 right-16 z-10">
-                                <Link href={`/profile/${short.profiles?.username}`} className="flex items-center gap-2 mb-2 group">
-                                    <img
-                                        src={short.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${short.profiles?.username}`}
-                                        alt={short.profiles?.username || ''}
-                                        className="w-9 h-9 rounded-full border-2 border-white/20 object-cover"
-                                    />
-                                    <span className="font-bold text-sm group-hover:text-[#FFB800] transition-colors">
-                                        @{short.profiles?.username || 'unknown'}
-                                    </span>
-                                </Link>
-                                <p className="text-sm font-medium text-white/90 line-clamp-2 max-w-[80vw] md:max-w-sm">
-                                    {short.title}
-                                </p>
+                            {/* Bottom Info - YouTube Layout */}
+                            <div className="absolute bottom-6 left-4 right-16 z-20">
+                                <div className="flex flex-col gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <Link href={`/profile/${short.profiles?.username}`} className="flex items-center gap-2 group">
+                                            <img
+                                                src={short.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${short.profiles?.username}`}
+                                                alt={short.profiles?.username || ''}
+                                                className="w-10 h-10 rounded-full border border-white/10 object-cover shadow-lg"
+                                            />
+                                            <span className="font-black text-sm tracking-tight drop-shadow-lg">
+                                                @{short.profiles?.username || 'unknown'}
+                                            </span>
+                                        </Link>
+                                        <button className="px-4 py-1.5 bg-white text-black text-xs font-black rounded-full hover:bg-white/90 transition-all active:scale-95 shadow-lg">
+                                            Subscribe
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <p className="text-sm font-bold text-white leading-tight drop-shadow-lg line-clamp-2 max-w-[85%]">
+                                            {short.title}
+                                        </p>
+                                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#FFB800] drop-shadow-lg">
+                                            <Music2 size={12} />
+                                            <span>Original Audio • {short.profiles?.username}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </motion.div>
                     )
@@ -235,13 +281,19 @@ export default function ShortsPage() {
     );
 }
 
+function formatCount(count: number) {
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
+    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
+    return count.toString();
+}
+
 function ActionBtn({ icon, label, title }: { icon: React.ReactNode; label: string | number; title: string }) {
     return (
         <button className="flex flex-col items-center gap-1 text-white" aria-label={title} title={title}>
-            <div className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-white/20 transition-colors">
+            <div className="w-12 h-12 rounded-full bg-black/20 backdrop-blur-xl flex items-center justify-center border border-white/5 hover:bg-white/30 transition-colors">
                 {icon}
             </div>
-            <span className="text-xs font-bold">{label}</span>
+            <span className="text-[10px] font-black uppercase tracking-widest drop-shadow-md">{label}</span>
         </button>
     );
 }
