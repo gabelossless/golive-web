@@ -7,11 +7,16 @@ import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { Profile } from '@/types';
 
+function cn(...classes: (string | undefined | null | false)[]) {
+  return classes.filter(Boolean).join(' ');
+}
+
 export default function SettingsPage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Partial<Profile>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'profile' | 'account' | 'privacy'>('profile');
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   useEffect(() => {
@@ -116,167 +121,208 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-4">
-      <div className="mb-12">
-        <h1 className="text-3xl font-black font-display tracking-tight mb-2">CHANNEL SETTINGS</h1>
-        <p className="text-gray-500 font-medium tracking-tight">Customize how your vibe looks to others.</p>
+    <div className="max-w-6xl mx-auto py-8 md:py-16 px-4 md:px-10 pb-40">
+      {/* Header with Navigation */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+        <div>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-3">STUDIO CONFIG</h1>
+          <p className="text-gray-500 font-medium text-lg">Architect your channel's identity and discovery meta.</p>
+        </div>
+        <div className="flex gap-2 p-1 bg-white/5 border border-white/10 rounded-2xl">
+          <button onClick={() => setActiveTab('profile')} className={cn("px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all", activeTab === 'profile' ? "bg-[#FFB800] text-black shadow-lg shadow-[#FFB800]/20" : "text-gray-400 hover:text-white")}>Profile</button>
+          <button onClick={() => setActiveTab('account')} className={cn("px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all", activeTab === 'account' ? "bg-[#FFB800] text-black shadow-lg shadow-[#FFB800]/20" : "text-gray-400 hover:text-white")}>Account</button>
+          <button onClick={() => setActiveTab('privacy')} className={cn("px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all", activeTab === 'privacy' ? "bg-[#FFB800] text-black shadow-lg shadow-[#FFB800]/20" : "text-gray-400 hover:text-white")}>Privacy</button>
+        </div>
       </div>
 
-      <form onSubmit={handleUpdate} className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Identity Section */}
-          <div className="space-y-6">
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#FFB800] mb-4">Identity</h3>
-            
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Handle (@username)</label>
-              <div className="relative group">
-                <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#FFB800] transition-colors" size={18} />
-                <input 
-                  type="text"
-                  value={profile.username || ''}
-                  onChange={(e) => setProfile({ ...profile, username: e.target.value })}
-                  className="w-full bg-[#121212] border border-white/5 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#FFB800]/50 transition-all font-bold text-sm"
-                  placeholder="vibecode"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Display Name</label>
-              <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#FFB800] transition-colors" size={18} />
-                <input 
-                  type="text"
-                  value={profile.display_name || ''}
-                  onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
-                  className="w-full bg-[#121212] border border-white/5 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#FFB800]/50 transition-all font-bold text-sm"
-                  placeholder="Vibe Master"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Channel Name</label>
-              <div className="relative group">
-                <Tv className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#FFB800] transition-colors" size={18} />
-                <input 
-                  type="text"
-                  value={profile.channel_name || ''}
-                  onChange={(e) => setProfile({ ...profile, channel_name: e.target.value })}
-                  className="w-full bg-[#121212] border border-white/5 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-[#FFB800]/50 transition-all font-bold text-sm"
-                  placeholder="Official Vibe TV"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Visuals Section */}
-          <div className="space-y-6">
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#FFB800] mb-4">Branding</h3>
-            
-            <div className="grid grid-cols-1 gap-6">
-              {/* Avatar Upload */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Avatar / Picture</label>
-                <div className="flex items-center gap-6 bg-[#121212] p-6 rounded-3xl border border-white/5">
-                  <div className="relative group shrink-0">
-                    <img 
-                      src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`} 
-                      className="w-24 h-24 rounded-full object-cover border-4 border-white/5 shadow-2xl"
-                      alt="Avatar"
+      <form onSubmit={handleUpdate} className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        {/* Left Column: Core Identity */}
+        <div className="lg:col-span-8 space-y-10">
+          {/* Identity Bento */}
+          <section className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#FFB800]/5 rounded-full blur-[100px] -mr-32 -mt-32" />
+            <div className="relative z-10">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-[#FFB800] mb-8 flex items-center gap-2">
+                <div className="w-1 h-4 bg-[#FFB800] rounded-full" />
+                Core Identity
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] pl-1">Handle</label>
+                  <div className="relative group/input">
+                    <AtSign className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within/input:text-[#FFB800] transition-colors" size={20} />
+                    <input 
+                      type="text"
+                      value={profile.username || ''}
+                      onChange={(e) => setProfile({ ...profile, username: e.target.value })}
+                      className="w-full bg-black/40 border border-white/5 rounded-2xl py-5 pl-14 pr-6 outline-none focus:border-[#FFB800]/50 focus:bg-black/60 transition-all font-bold text-base placeholder-gray-800"
+                      placeholder="vibecode"
                     />
-                    <label className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
-                      <Camera className="text-white" size={24} />
-                      <input type="file" className="hidden" accept="image/*" title="Upload Avatar" onChange={(e) => handleImageUpload(e, 'avatar')} />
-                    </label>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-bold">Creator Profile Picture</p>
-                    <p className="text-xs text-gray-500">Square images work best. Max 2MB.</p>
                   </div>
                 </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] pl-1">Display Name</label>
+                  <div className="relative group/input">
+                    <User className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within/input:text-[#FFB800] transition-colors" size={20} />
+                    <input 
+                      type="text"
+                      value={profile.display_name || ''}
+                      onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
+                      className="w-full bg-black/40 border border-white/5 rounded-2xl py-5 pl-14 pr-6 outline-none focus:border-[#FFB800]/50 focus:bg-black/60 transition-all font-bold text-base placeholder-gray-800"
+                      placeholder="Vibe Master"
+                    />
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 space-y-3">
+                  <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] pl-1">Channel Narrative (Bio)</label>
+                  <textarea 
+                    value={profile.bio || ''}
+                    onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                    className="w-full bg-black/40 border border-white/5 rounded-[2rem] p-6 outline-none focus:border-[#FFB800]/50 focus:bg-black/60 transition-all font-bold text-base placeholder-gray-800 resize-none h-40"
+                    placeholder="Tell the world about your unique vibe and content strategy..."
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Branding Bento */}
+          <section className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden group">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-[#FFB800] mb-8 flex items-center gap-2">
+              <div className="w-1 h-4 bg-[#FFB800] rounded-full" />
+              Ecosystem Branding
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+              {/* Profile Pic Card */}
+              <div className="md:col-span-5 bg-black/40 border border-white/5 rounded-[2rem] p-8 flex flex-col items-center justify-center text-center group/avatar">
+                <div className="relative mb-6">
+                  <motion.img 
+                    whileHover={{ scale: 1.05 }}
+                    src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`} 
+                    className="w-32 h-32 rounded-full object-cover border-[6px] border-[#FFB800]/20 shadow-2xl relative z-10"
+                    alt="Avatar"
+                  />
+                  <label className="absolute inset-0 bg-black/80 rounded-full opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center cursor-pointer transition-all z-20 backdrop-blur-sm border-[6px] border-white/10">
+                    <Camera className="text-white" size={32} />
+                    <input type="file" className="hidden" accept="image/*" title="Upload Avatar" onChange={(e) => handleImageUpload(e, 'avatar')} />
+                  </label>
+                  <div className="absolute inset-0 rounded-full bg-[#FFB800]/20 blur-2xl animate-pulse scale-90" />
+                </div>
+                <h4 className="text-sm font-black uppercase tracking-widest mb-1">Avatar</h4>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Square Assets preferred</p>
               </div>
 
-              {/* Banner Upload */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Channel Banner</label>
-                <div className="relative group w-full h-32 rounded-3xl overflow-hidden border border-white/5 bg-[#121212]">
+              {/* Banner / Color Card */}
+              <div className="md:col-span-7 space-y-6">
+                <div className="relative group/banner w-full h-44 rounded-3xl overflow-hidden border border-white/10 bg-black/40 shadow-inner">
                   {profile.banner_url ? (
                     <img src={profile.banner_url} className="w-full h-full object-cover" alt="Banner" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-700 bg-gradient-to-br from-[#121212] to-[#1a1a1a]">
-                      <ImageIcon size={32} />
+                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-800 bg-gradient-to-br from-black/0 to-white/[0.02]">
+                      <ImageIcon size={48} className="opacity-20 mb-3" />
+                      <p className="text-[10px] font-black uppercase tracking-[0.5em] opacity-40">No Banner Set</p>
                     </div>
                   )}
-                  <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity gap-2">
-                    <ImageIcon className="text-white" size={24} />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white">Upload Banner</span>
+                  <label className="absolute inset-0 bg-black/80 opacity-0 group-hover/banner:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-all backdrop-blur-md gap-3">
+                    <div className="bg-white/10 p-4 rounded-2xl">
+                      <ImageIcon className="text-white" size={28} />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Update Cinematic Banner</span>
                     <input type="file" className="hidden" accept="image/*" title="Upload Banner" onChange={(e) => handleImageUpload(e, 'banner')} />
                   </label>
                 </div>
-                <p className="text-[10px] text-gray-600 pl-1 uppercase font-bold tracking-tighter">Recommended: 1500 x 500 pixels</p>
-              </div>
 
-              {/* Channel Color */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Accent Vibe Color</label>
-                <div className="flex items-center gap-4 bg-[#121212] p-4 rounded-2xl border border-white/5">
-                  <input 
-                    type="color" 
-                    title="Choose Accent Vibe Color"
-                    value={profile.channel_color || '#FFB800'}
-                    onChange={(e) => setProfile({ ...profile, channel_color: e.target.value })}
-                    className="w-12 h-12 rounded-xl bg-transparent border-none cursor-pointer p-0 overflow-hidden"
-                  />
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-bold uppercase tracking-widest">Brand Mark</p>
-                    <p className="text-[10px] text-gray-500 font-mono">{profile.channel_color || '#FFB800'}</p>
+                <div className="bg-black/40 border border-white/5 rounded-2xl p-4 flex items-center justify-between group/color">
+                  <div className="flex items-center gap-4">
+                    <div 
+                      className="w-12 h-12 rounded-xl border border-white/10 shadow-lg relative overflow-hidden cursor-pointer"
+                      style={{ backgroundColor: profile.channel_color || '#FFB800' }}
+                    >
+                      <input 
+                        type="color" 
+                        title="Choose Accent Vibe Color"
+                        value={profile.channel_color || '#FFB800'}
+                        onChange={(e) => setProfile({ ...profile, channel_color: e.target.value })}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer scale-[5]"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-widest">Brand Mark</p>
+                      <p className="text-[10px] text-gray-500 font-mono tracking-tighter">{profile.channel_color || '#FFB800'}</p>
+                    </div>
                   </div>
+                  <div className="w-8 h-8 rounded-full bg-white/[0.02] flex items-center justify-center text-gray-700">#</div>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* About Section */}
-          <div className="space-y-6">
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#FFB800] mb-4">About</h3>
-            
-            <div className="space-y-2 h-full flex flex-col">
-              <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest pl-1">Bio</label>
-              <textarea 
-                value={profile.bio || ''}
-                onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                className="w-full bg-[#121212] border border-white/5 rounded-2xl p-4 outline-none focus:border-[#FFB800]/50 transition-all font-bold text-sm resize-none flex-1 min-h-[180px]"
-                placeholder="Tell the world about your vibe..."
-              />
-            </div>
-          </div>
+          </section>
         </div>
 
-        {/* Message Banner */}
-        {message && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className={`p-4 rounded-2xl flex items-center gap-3 font-bold text-sm ${
-              message.type === 'success' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'
-            }`}
-          >
-            {message.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-            {message.text}
-          </motion.div>
-        )}
+        {/* Right Column: Meta & Actions */}
+        <div className="lg:col-span-4 space-y-10">
+          {/* Recommendation Meta */}
+          <section className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-[#FFB800] mb-8">Recommendation Meta</h3>
+            
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">Primary Category</label>
+                <select 
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl py-5 px-6 outline-none focus:border-[#FFB800]/50 transition-all font-black text-xs uppercase cursor-pointer appearance-none"
+                  value={profile.channel_name ? (profile.channel_name.includes('|') ? profile.channel_name.split('|')[1].trim() : '') : ''}
+                  onChange={(e) => {
+                    const baseName = profile.channel_name?.split('|')[0].trim() || profile.username;
+                    setProfile({ ...profile, channel_name: `${baseName} | ${e.target.value}` });
+                  }}
+                  title="Choose Primary Creator Category"
+                >
+                  <option value="">Uncategorized</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Gaming">Gaming</option>
+                  <option value="Education">Education</option>
+                  <option value="Music">Music</option>
+                  <option value="Tech & Hardware">Tech & Hardware</option>
+                  <option value="Life & Vibes">Life & Vibes</option>
+                </select>
+                <p className="text-[9px] text-gray-600 font-bold uppercase tracking-tighter italic">This powers your placement in global trending feeds.</p>
+              </div>
 
-        <div className="pt-8 flex justify-end">
-          <button 
-            type="submit"
-            disabled={saving}
-            className="px-8 py-4 rounded-2xl bg-[#FFB800] hover:bg-[#FFD700] text-black font-black uppercase tracking-widest text-xs transition-all flex items-center gap-2 shadow-[0_10px_30px_rgba(255,184,0,0.15)] disabled:opacity-50"
-          >
-            {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-            {saving ? 'SAVING...' : 'SAVE CHANGES'}
-          </button>
+              <div className="p-5 bg-[#FFB800]/10 border border-[#FFB800]/20 rounded-2xl relative group">
+                <div className="absolute top-0 right-0 p-3 opacity-20"><FileText size={16} /></div>
+                <h5 className="text-[10px] font-black uppercase text-[#FFB800] mb-2 tracking-widest">Discovery Tip</h5>
+                <p className="text-[10px] text-[#FFB800] opacity-80 leading-relaxed font-medium">Verified creators with complete meta profiles see 40% more organic reach.</p>
+              </div>
+            </div>
+          </section>
+
+          {/* Action Hub */}
+          <div className="space-y-4">
+            {message && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className={cn("p-5 rounded-[1.5rem] flex items-center gap-4 font-black text-xs uppercase tracking-widest",
+                  message.type === 'success' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                )}
+              >
+                {message.type === 'success' ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+                {message.text}
+              </motion.div>
+            )}
+
+            <button 
+              type="submit"
+              disabled={saving}
+              className="w-full py-6 rounded-[2rem] bg-[#FFB800] hover:bg-[#FFD700] text-black font-black uppercase tracking-[0.3em] text-[10px] transition-all flex items-center justify-center gap-3 shadow-[0_20px_40px_rgba(255,184,0,0.15)] disabled:opacity-50 group active:scale-95"
+            >
+              {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} className="group-hover:scale-125 transition-transform" />}
+              {saving ? 'SYNCING...' : 'FINALIZE CONFIG'}
+            </button>
+          </div>
         </div>
       </form>
     </div>

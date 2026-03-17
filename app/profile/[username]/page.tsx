@@ -347,37 +347,53 @@ export default function ProfilePage() {
                     ) : activeTab === 'Community' ? (
                         <CommunityTab />
                     ) : activeTab === 'About' ? (
-                        <div className="max-w-2xl space-y-6">
-                            <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6 space-y-4">
-                                <h2 className="font-black text-lg">About</h2>
-                                {profile.bio ? (
-                                    <p className="text-gray-300 text-sm leading-relaxed">{profile.bio}</p>
-                                ) : (
-                                    <p className="text-gray-600 text-sm italic">This creator hasn't added a bio yet.</p>
-                                )}
-                            </div>
-                            <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-6 space-y-3">
-                                <h3 className="font-bold text-sm text-gray-400 uppercase tracking-wider">Channel Stats</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p className="text-xl font-black">{formatCount(profile.follower_count)}</p>
-                                        <p className="text-xs text-gray-500 mt-0.5">Subscribers</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xl font-black">{longVideos.length + shortVideos.length}</p>
-                                        <p className="text-xs text-gray-500 mt-0.5">Total Videos</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xl font-black">{shortVideos.length}</p>
-                                        <p className="text-xs text-gray-500 mt-0.5">Shorts</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xl font-black">
-                                            {profile.created_at ? new Date(profile.created_at).getFullYear() : '—'}
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-0.5">Member Since</p>
+                        <div className="space-y-8">
+                            {/* Bento Grid Header */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                <div className="md:col-span-2 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-3xl p-8 relative overflow-hidden group">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#FFB800]/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-[#FFB800]/20 transition-colors" />
+                                    <h2 className="font-black text-2xl mb-4 flex items-center gap-3">
+                                        <div className="w-1 h-8 rounded-full" style={{ backgroundColor: themeColor }} />
+                                        Channel Story
+                                    </h2>
+                                    {profile.bio ? (
+                                        <p className="text-gray-300 text-base leading-relaxed max-w-xl">{profile.bio}</p>
+                                    ) : (
+                                        <p className="text-gray-500 text-sm italic">This creator hasn't shared their story yet.</p>
+                                    )}
+                                </div>
+
+                                <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-3xl p-8 flex flex-col justify-center items-center text-center relative overflow-hidden group">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-[#FFB800]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <p className="text-gray-500 text-xs font-black uppercase tracking-[0.2em] mb-2">Member Since</p>
+                                    <p className="text-4xl font-black tracking-tighter">
+                                        {profile.created_at ? new Date(profile.created_at).getFullYear() : '2024'}
+                                    </p>
+                                    <div className="mt-4 flex gap-1 justify-center">
+                                       {[1,2,3].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/20" />)}
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Dynamic Stats Bento */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {[
+                                    { label: 'Subscribers', value: formatCount(profile.follower_count), icon: '👥' },
+                                    { label: 'Total Content', value: longVideos.length + shortVideos.length, icon: '🎬' },
+                                    { label: 'Viral Shorts', value: shortVideos.length, icon: '⚡' },
+                                    { label: 'Ecosystem Vibe', value: 'High', icon: '✨' }
+                                ].map((stat, i) => (
+                                    <motion.div 
+                                        key={i}
+                                        whileHover={{ y: -5 }}
+                                        className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 relative group overflow-hidden"
+                                    >
+                                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <div className="text-2xl mb-2">{stat.icon}</div>
+                                        <p className="text-2xl font-black">{stat.value}</p>
+                                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">{stat.label}</p>
+                                    </motion.div>
+                                ))}
                             </div>
                         </div>
                     ) : (

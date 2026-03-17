@@ -4,9 +4,9 @@ import React, { useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { UploadCloud, X, CheckCircle, AlertCircle, FileVideo, Image as ImageIcon, Loader2, Globe, Lock, EyeOff, Check } from 'lucide-react';
+import { UploadCloud, X, CheckCircle, AlertCircle, FileVideo, Image as ImageIcon, Loader2, Globe, Lock, EyeOff, Check, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 
 function cn(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(" ");
@@ -101,6 +101,8 @@ function parseTagInput(raw: string): string[] {
 
 type ToastType = { id: number; message: string; type: 'info' | 'success' | 'error' | 'loading'; progress?: number };
 
+import { TOP_50_TAGS } from '@/lib/tags';
+
 export default function UploadPage() {
     const { user, session, profile, isLoading: authLoading } = useAuth();
     const router = useRouter();
@@ -114,6 +116,7 @@ export default function UploadPage() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [tagInput, setTagInput] = useState('');
+    const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
     const [tags, setTags] = useState<string[]>([]);
     const [category, setCategory] = useState(CATEGORY_LIST[0]);
     const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -281,12 +284,25 @@ export default function UploadPage() {
         }
     };
 
+    const onTagInputChange = (val: string) => {
+        setTagInput(val);
+        if (val.trim()) {
+            const filtered = TOP_50_TAGS.filter(t => 
+                t.toLowerCase().startsWith(val.toLowerCase()) && !tags.includes(t)
+            ).slice(0, 5);
+            setTagSuggestions(filtered);
+        } else {
+            setTagSuggestions([]);
+        }
+    };
+
     const commitTags = (raw: string) => {
         const parsed = parseTagInput(raw);
-        if (!parsed.length) { setTagInput(''); return; }
+        if (!parsed.length) { setTagInput(''); setTagSuggestions([]); return; }
         const next = [...new Set([...tags, ...parsed])];
         setTags(next);
         setTagInput('');
+        setTagSuggestions([]);
         if (touched) setFieldErrors(prev => ({ ...prev, tags: validateForm(title, description, next, videoFile, thumbnailFile, selectedAutoThumb !== null).tags }));
     };
 
@@ -507,6 +523,8 @@ export default function UploadPage() {
             const tagStr = tags.length ? `\n\nTags: ${tags.map(t => `#${t}`).join(' ')}` : '';
             const finalDescriptionWithCategory = `${finalDescription}\n\nCategory: ${category}${tagStr}`;
 
+            const isShort = (height > width) && (duration <= 60.5);
+
             const { error: dbError } = await supabase.from('videos').insert({
                 user_id: user.id,
                 title: title.trim(),
@@ -516,6 +534,7 @@ export default function UploadPage() {
                 duration: duration || '0:00',
                 width,
                 height,
+                is_short: isShort,
                 quality_score: Math.round(qualityScore * 100),
                 allow_clipping: allowClipping,
                 allow_comments: allowComments,
@@ -752,23 +771,48 @@ export default function UploadPage() {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-400 mb-1.5">Tags</label>
-                                        <div className={cn("w-full bg-black/50 border rounded-lg px-3 py-2 text-white focus-within:border-[#FFB800] transition-colors flex flex-wrap gap-1.5 content-start min-h-[44px]", fieldErrors.tags ? "border-red-500" : "border-white/10")} onClick={e => (e.currentTarget.querySelector('input') as HTMLInputElement)?.focus()}>
-                                            {tags.map(tag => (
-                                                <span key={tag} className="inline-flex items-center gap-1 bg-[#FFB800]/20 border border-[#FFB800]/40 text-[#FFB800] font-bold text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full">
-                                                    #{tag}
-                                                    {!isUploading && <button type="button" onClick={() => removeTag(tag)} className="bg-transparent border-none text-[#FFB800] hover:text-white cursor-pointer p-0 ml-1 leading-none">&times;</button>}
-                                                </span>
-                                            ))}
+                                        <div className={cn("w-full bg-black/50 border rounded-lg px-3 py-2 text-white focus-within:border-[#FFB800] transition-colors flex flex-wrap gap-1.5 content-start min-h-[44px] relative", fieldErrors.tags ? "border-red-500" : "border-white/10")} onClick={e => (e.currentTarget.querySelector('input') as HTMLInputElement)?.focus()}>
+                                            <AnimatePresence>
+                                                {tags.map(tag => (
+                                                    <motion.span 
+                                                        key={tag} 
+                                                        initial={{ scale: 0.8, opacity: 0 }}
+                                                        animate={{ scale: 1, opacity: 1 }}
+                                                        exit={{ scale: 0.8, opacity: 0 }}
+                                                        className="inline-flex items-center gap-1 bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] font-black text-[9px] uppercase tracking-[0.15em] px-2.5 py-1 rounded-md"
+                                                    >
+                                                        {tag}
+                                                        {!isUploading && <button type="button" onClick={() => removeTag(tag)} className="bg-transparent border-none text-[#FFB800] hover:text-white cursor-pointer p-0 ml-1 leading-none font-bold">&times;</button>}
+                                                    </motion.span>
+                                                ))}
+                                            </AnimatePresence>
                                             <input
                                                 type="text"
                                                 value={tagInput}
-                                                onChange={(e) => setTagInput(e.target.value)}
+                                                onChange={(e) => onTagInputChange(e.target.value)}
                                                 onKeyDown={onTagInputKeyDown}
-                                                onBlur={() => commitTags(tagInput)}
+                                                onBlur={() => setTimeout(() => setTagSuggestions([]), 200)}
                                                 disabled={isUploading || tags.length >= TAG_MAX_COUNT}
-                                                className="flex-1 min-w-[100px] bg-transparent border-none outline-none text-sm text-white placeholder-gray-600"
-                                                placeholder={tags.length === 0 ? "gaming, tutorial (Enter)" : ""}
+                                                className="flex-1 min-w-[100px] bg-transparent border-none outline-none text-sm text-white placeholder-gray-600 py-1"
+                                                placeholder={tags.length === 0 ? "e.g. gaming, shorts, tech..." : ""}
                                             />
+
+                                            {/* Tag Suggestions Dropdown */}
+                                            {tagSuggestions.length > 0 && (
+                                                <div className="absolute left-0 right-0 top-full mt-2 bg-[#0a0a0a] border border-white/10 rounded-xl shadow-2xl z-[100] overflow-hidden p-1">
+                                                    {tagSuggestions.map(s => (
+                                                        <button
+                                                            key={s}
+                                                            type="button"
+                                                            onClick={() => commitTags(s)}
+                                                            className="w-full text-left px-4 py-2.5 hover:bg-[#FFB800] hover:text-black text-xs font-black uppercase tracking-widest transition-colors rounded-lg flex items-center justify-between group"
+                                                        >
+                                                            <span>#{s}</span>
+                                                            <Plus size={14} className="opacity-0 group-hover:opacity-100" />
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                         {fieldErrors.tags && <p className="text-red-500 text-xs font-bold mt-1.5">{fieldErrors.tags}</p>}
                                     </div>
