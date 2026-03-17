@@ -112,6 +112,43 @@ export default function HomeClient() {
                     </motion.div>
                 )}
 
+                {/* Trending Shorts Section */}
+                {!loading && videos.some(v => v.is_short) && (
+                    <section className="space-y-6">
+                        <div className="flex items-center justify-between px-2 md:px-0">
+                            <div className="flex items-center gap-2">
+                                <span className="p-1.5 bg-[#FFB800] rounded-lg">
+                                    <span className="w-3 h-3 block bg-black rounded-sm" />
+                                </span>
+                                <h2 className="text-xl font-black uppercase tracking-tight">Trending Shorts</h2>
+                            </div>
+                            <Link href="/shorts" className="text-xs font-black uppercase tracking-widest text-[#FFB800] hover:underline">View All</Link>
+                        </div>
+
+                        <div className="flex overflow-x-auto gap-4 pb-4 no-scrollbar scroll-smooth snap-x">
+                            {videos.filter(v => v.is_short).slice(0, 10).map((short) => (
+                                <motion.div 
+                                    key={short.id} 
+                                    className="flex-none w-44 md:w-52 snap-start"
+                                    whileHover={{ scale: 1.02 }}
+                                >
+                                    <Link href={`/shorts?id=${short.id}`} className="block relative aspect-[9/16] rounded-2xl overflow-hidden group">
+                                        <img 
+                                            src={short.thumbnail_url || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=2574&auto=format&fit=crop'} 
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                            alt={short.title}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4">
+                                            <p className="text-white text-sm font-bold line-clamp-2 mb-1">{short.title}</p>
+                                            <p className="text-white/60 text-[10px] font-bold uppercase">{short.view_count || 0} views</p>
+                                        </div>
+                                    </Link>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
                 <div className="space-y-6">
                     <div className="flex items-center justify-between px-2 md:px-0">
                         <h2 className="text-xl font-black uppercase tracking-tight">Recommended for you</h2>

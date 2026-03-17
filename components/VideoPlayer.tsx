@@ -10,6 +10,10 @@ interface VideoPlayerProps {
     title?: string;
 }
 
+function cn(...classes: (string | undefined | null | false)[]) {
+    return classes.filter(Boolean).join(" ");
+}
+
 function formatTime(time: number): string {
     if (isNaN(time)) return '0:00';
     const minutes = Math.floor(time / 60);
@@ -25,11 +29,17 @@ export default function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isTheaterMode, setIsTheaterMode] = useState(false);
+    const [isAmbientMode, setIsAmbientMode] = useState(true);
     const [showControls, setShowControls] = useState(true);
+    const [showSettings, setShowSettings] = useState(false);
     const [buffered, setBuffered] = useState(0);
     const [error, setError] = useState<string | null>(null);
+    const [aspectRatio, setAspectRatio] = useState(16 / 9);
+    const [isVertical, setIsVertical] = useState(false);
 
     const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const controlsTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -98,23 +108,90 @@ export default function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
         }
     };
 
+    useEffect(() => {
+        if (!isAmbientMode || !isPlaying || !videoRef.current || !canvasRef.current) return;
+
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d', { alpha: false });
+        if (!ctx) return;
+
+        let frameId: number;
+        let timeoutId: ReturnType<typeof setTimeout>;
+
+        const updateAmbient = () => {
+            if (video.paused || video.ended) return;
+            
+            // Draw low-res frame for sampling
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            timeoutId = setTimeout(() => {
+                frameId = requestAnimationFrame(updateAmbient);
+            }, 250); // 4 FPS for smoother transitions
+        };
+
+        updateAmbient();
+        return () => {
+            cancelAnimationFrame(frameId);
+            clearTimeout(timeoutId);
+        };
+    }, [isAmbientMode, isPlaying]);
+
+    const toggleTheaterMode = () => {
+        setIsTheaterMode(!isTheaterMode);
+        window.dispatchEvent(new CustomEvent('theaterModeToggle', { detail: { enabled: !isTheaterMode } }));
+    };
+
     return (
         <div
             ref={containerRef}
-            className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl shadow-black/50 group"
+            className={cn(
+                "relative bg-black overflow-hidden shadow-2xl shadow-black/50 group transition-all duration-500 mx-auto aspect-dynamic",
+                isTheaterMode 
+                    ? "w-[120%] -mx-[10%] rounded-none lg:rounded-[40px]" 
+                    : "w-full rounded-2xl"
+            )}
+            style={{ 
+                //@ts-ignore
+                '--player-aspect': aspectRatio,
+                '--player-max-h': isVertical ? '80vh' : 'auto',
+                '--player-max-w': isVertical ? `calc(80vh * ${aspectRatio})` : 'none'
+            } as React.CSSProperties}
             onMouseMove={showControlsTemporarily}
             onMouseLeave={() => isPlaying && setShowControls(false)}
-            onClick={togglePlay}
+            onClick={() => {
+                togglePlay();
+                setShowSettings(false);
+            }}
         >
+            {/* Ambient Background */}
+            {isAmbientMode && (
+                <div className="absolute inset-0 pointer-events-none overflow-hidden origin-center scale-[1.3] opacity-60 select-none">
+                    <canvas
+                        ref={canvasRef}
+                        width={32}
+                        height={Math.round(32 / aspectRatio)}
+                        className="w-full h-full blur-[120px] saturate-[2.2] brightness-90 transition-opacity duration-1000"
+                    />
+                </div>
+            )}
+
             <video
                 ref={videoRef}
                 src={src}
                 poster={poster}
-                className="w-full h-full object-contain cursor-pointer"
+                className="relative w-full h-full object-contain cursor-pointer z-10"
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={() => {
                     setError(null);
-                    if (videoRef.current) setDuration(videoRef.current.duration);
+                    if (videoRef.current) {
+                        setDuration(videoRef.current.duration);
+                        const width = videoRef.current.videoWidth;
+                        const height = videoRef.current.videoHeight;
+                        const ar = width / height;
+                        setAspectRatio(ar);
+                        setIsVertical(ar < 1);
+                    }
                 }}
                 onEnded={() => setIsPlaying(false)}
                 onError={() => {
@@ -135,11 +212,16 @@ export default function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 1.2 }}
-                        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                        className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
                     >
-                        <div className="w-20 h-20 bg-red-600/90 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(220,38,38,0.5)] backdrop-blur-sm">
-                            <Play size={36} className="text-white ml-2" fill="currentColor" />
-                        </div>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+                            className="w-24 h-24 bg-black/40 backdrop-blur-md border border-[#FFB800]/30 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(255,184,0,0.2)] hover:scale-110 hover:bg-black/60 transition-all pointer-events-auto group/play"
+                            title={isPlaying ? "Pause" : "Play"}
+                            aria-label={isPlaying ? "Pause" : "Play"}
+                        >
+                            <Play size={44} className="text-[#FFB800] ml-2 drop-shadow-[0_0_10px_rgba(255,184,0,0.5)] group-hover/play:scale-110 transition-transform" fill="currentColor" />
+                        </button>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -187,23 +269,22 @@ export default function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="px-4 pb-4 pt-12">
-                    {/* Progress bar */}
                     <div
-                        className="w-full h-1.5 bg-white/20 rounded-full mb-4 cursor-pointer relative group/progress"
+                        className="w-full h-1.5 bg-white/10 rounded-full mb-4 cursor-pointer relative group/progress overflow-hidden"
                         onClick={handleProgressClick}
                     >
-                        <div className="absolute top-0 left-0 h-full bg-white/30 rounded-full" style={{ width: `${buffered}%` }} />
-                        <div className="absolute top-0 left-0 h-full bg-red-600 rounded-full" style={{ width: `${progress}%` }} />
+                        <div className="absolute top-0 left-0 h-full bg-white/20" style={{ width: `${buffered}%` }} />
+                        <div className="absolute top-0 left-0 h-full bg-[#FFB800]" style={{ width: `${progress}%` }} />
                         <div
-                            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-red-600 rounded-full opacity-0 group-hover/progress:opacity-100 transition-opacity shadow-[0_0_10px_rgba(220,38,38,0.8)]"
-                            style={{ left: `calc(${progress}% - 6px)` }}
+                            className="absolute top-1/2 -translate-y-1/2 h-full bg-white/40 opacity-0 group-hover/progress:opacity-100 transition-opacity"
+                            style={{ left: `${progress}%`, width: '2px' }}
                         />
                     </div>
 
                     {/* Controls row */}
                     <div className="flex items-center justify-between text-white">
                         <div className="flex items-center gap-4">
-                            <button onClick={togglePlay} className="hover:text-[#9147ff] transition-colors" aria-label={isPlaying ? 'Pause' : 'Play'}>
+                            <button onClick={togglePlay} className="hover:text-[#FFB800] transition-colors" aria-label={isPlaying ? 'Pause' : 'Play'}>
                                 {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}
                             </button>
                             <div className="flex items-center gap-2 group/volume">
@@ -226,10 +307,60 @@ export default function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button className="hover:text-[#9147ff] transition-colors text-white/70 hover:text-white" aria-label="Settings">
-                                <Settings size={20} />
-                            </button>
-                            <button onClick={toggleFullscreen} className="hover:text-[#9147ff] transition-colors text-white/70 hover:text-white" aria-label="Fullscreen">
+                            <div className="relative">
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setShowSettings(!showSettings); }} 
+                                    className="hover:text-[#FFB800] transition-colors text-white/70 hover:text-white" 
+                                    title="Settings"
+                                    aria-label="Settings"
+                                >
+                                    <Settings size={20} className={showSettings ? "text-[#FFB800] rotate-45" : "transition-transform duration-300"} />
+                                </button>
+                                
+                                {/* Settings Menu */}
+                                <AnimatePresence>
+                                    {showSettings && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            className="absolute bottom-full right-0 mb-4 w-56 bg-[#1a1a1a]/95 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-50 p-2"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 px-3 py-2 border-b border-white/5 mb-1">
+                                                Player Settings
+                                            </div>
+                                            <button 
+                                                onClick={() => setIsAmbientMode(!isAmbientMode)}
+                                                className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/5 rounded-lg transition-colors group"
+                                            >
+                                                <span className="text-xs font-bold text-gray-300 group-hover:text-white">Ambient Mode</span>
+                                                <div className={cn(
+                                                    "w-8 h-4 rounded-full transition-colors relative",
+                                                    isAmbientMode ? "bg-[#FFB800]" : "bg-white/10"
+                                                )}>
+                                                    <div className={cn(
+                                                        "absolute top-1 w-2 h-2 bg-white rounded-full transition-all",
+                                                        isAmbientMode ? "right-1" : "left-1"
+                                                    )} />
+                                                </div>
+                                            </button>
+                                            <button 
+                                                onClick={() => { toggleTheaterMode(); setShowSettings(false); }}
+                                                className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/5 rounded-lg transition-colors group"
+                                            >
+                                                <span className="text-xs font-bold text-gray-300 group-hover:text-white">Theater Mode</span>
+                                                <div className={cn(
+                                                    "w-4 h-3 border-2 rounded-sm transition-colors",
+                                                    isTheaterMode ? "border-[#FFB800] bg-[#FFB800]/20" : "border-gray-500"
+                                                )} />
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            <button onClick={toggleFullscreen} className="hover:text-[#FFB800] transition-colors text-white/70 hover:text-white" aria-label="Fullscreen">
                                 {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
                             </button>
                         </div>

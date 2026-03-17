@@ -66,8 +66,14 @@ export default function SubscribeButton({ channelId, channelName, className = ''
         }
 
         setProcessing(true);
+        const prevSubscribed = isSubscribed;
+        
+        // Optimistic UI
+        setIsSubscribed(!prevSubscribed);
+        if (onToggle) onToggle(!prevSubscribed);
+
         try {
-            if (isSubscribed) {
+            if (prevSubscribed) {
                 // Unsubscribe
                 const { error } = await supabase
                     .from('subscriptions')
@@ -76,8 +82,6 @@ export default function SubscribeButton({ channelId, channelName, className = ''
                     .eq('channel_id', channelId);
 
                 if (error) throw error;
-                setIsSubscribed(false);
-                if (onToggle) onToggle(false);
             } else {
                 // Subscribe
                 const { error } = await supabase
@@ -88,11 +92,12 @@ export default function SubscribeButton({ channelId, channelName, className = ''
                     });
 
                 if (error) throw error;
-                setIsSubscribed(true);
-                if (onToggle) onToggle(true);
             }
         } catch (err) {
             console.error('Error toggling subscription:', err);
+            // Rollback
+            setIsSubscribed(prevSubscribed);
+            if (onToggle) onToggle(prevSubscribed);
         } finally {
             setProcessing(false);
         }

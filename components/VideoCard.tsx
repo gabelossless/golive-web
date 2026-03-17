@@ -65,7 +65,7 @@ export default function VideoCard({ video }: VideoCardProps) {
                     </div>
                 )}
                 {video.hype_count && video.hype_count > 0 && (
-                    <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-red-600 text-white px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-tighter shadow-lg flex items-center gap-1 z-10">
+                    <div className="absolute top-2 right-2 bg-gradient-to-r from-[#FFB800] to-orange-500 text-black px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-tighter shadow-lg flex items-center gap-1 z-10">
                         <Flame size={10} fill="currentColor" />
                         Hyped
                     </div>

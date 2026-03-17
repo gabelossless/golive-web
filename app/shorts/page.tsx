@@ -27,18 +27,38 @@ export default function ShortsPage() {
 
     useEffect(() => {
         async function fetchShorts() {
-            const { data } = await supabase
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetId = urlParams.get('id');
+
+            let query = supabase
                 .from('videos')
                 .select('id, title, video_url, view_count, profiles(username, avatar_url)')
-                .eq('is_short', true)
+                .eq('is_short', true);
+            
+            if (targetId) {
+                // If we have a target ID, we might need to fetch it specifically or just sort it to top
+                // For now, let's just fetch all and we'll reorder in memory
+            }
+
+            const { data } = await query
                 .order('created_at', { ascending: false })
-                .limit(20);
+                .limit(40);
 
             if (data) {
-                setShorts(data.map((s: any) => ({
+                let normalized = data.map((s: any) => ({
                     ...s,
                     profiles: Array.isArray(s.profiles) ? s.profiles[0] : s.profiles,
-                })));
+                }));
+
+                if (targetId) {
+                    const idx = normalized.findIndex(s => s.id === targetId);
+                    if (idx > -1) {
+                        const [target] = normalized.splice(idx, 1);
+                        normalized = [target, ...normalized];
+                    }
+                }
+
+                setShorts(normalized);
             }
             setLoading(false);
         }
@@ -140,13 +160,25 @@ export default function ShortsPage() {
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.97 }}
                             transition={{ duration: 0.25 }}
-                            className="absolute inset-0 flex items-center justify-center bg-black"
+                            className="absolute inset-0 flex items-center justify-center bg-black overflow-hidden"
                         >
+                            {/* Background Blur for non-vertical videos */}
+                            <div className="absolute inset-0 opacity-50 scale-125 blur-3xl pointer-events-none">
+                                <video
+                                    src={short.video_url}
+                                    className="w-full h-full object-cover"
+                                    muted
+                                    playsInline
+                                    autoPlay
+                                    loop
+                                />
+                            </div>
+
                             {/* Video */}
                             <video
                                 ref={el => { videoRefs.current[i] = el; }}
                                 src={short.video_url}
-                                className="h-full max-h-full aspect-[9/16] object-cover rounded-none md:rounded-2xl"
+                                className="relative h-full max-h-full aspect-[9/16] object-contain md:rounded-2xl z-10 cursor-pointer"
                                 loop
                                 playsInline
                                 muted={muted}

@@ -56,7 +56,9 @@ function validateForm(
     tags: string[],
     videoFile: File | null,
     thumbnailFile: File | null,
-    hasAutoThumb: boolean
+    hasAutoThumb: boolean,
+    subscriptionTier: string = 'free',
+    videoDuration: number = 0
 ): ValidationErrors {
     const errors: ValidationErrors = {};
 
@@ -72,9 +74,18 @@ function validateForm(
         if (badTag) errors.tags = `Tag "${badTag}" is invalid.`;
     }
 
-    if (!videoFile) errors.videoFile = 'Please select a video file.';
-    else if (!ALLOWED_VIDEO_TYPES.includes(videoFile.type)) errors.videoFile = 'Unsupported video format.';
-    else if (videoFile.size > VIDEO_MAX_MB * 1024 * 1024) errors.videoFile = `Video file must be under ${VIDEO_MAX_MB} MB.`;
+    if (!videoFile) {
+        errors.videoFile = 'Please select a video file.';
+    } else {
+        if (!ALLOWED_VIDEO_TYPES.includes(videoFile.type)) errors.videoFile = 'Unsupported video format.';
+        else if (videoFile.size > VIDEO_MAX_MB * 1024 * 1024) errors.videoFile = `Video file must be under ${VIDEO_MAX_MB} MB.`;
+        
+        // Duration Check
+        const limitSeconds = subscriptionTier === 'premium' ? 1800 : 60; // 30m vs 60s
+        if (videoDuration > limitSeconds) {
+            errors.videoFile = `Upload limit exceeded. ${subscriptionTier === 'premium' ? 'Premium' : 'Free'} users are limited to ${subscriptionTier === 'premium' ? '30 minutes' : '60 seconds'}.`;
+        }
+    }
 
     if (thumbnailFile) {
         if (!ALLOWED_IMAGE_TYPES.includes(thumbnailFile.type)) errors.thumbnailFile = 'Unsupported image format.';
@@ -128,6 +139,12 @@ export default function UploadPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
+    const removeToast = (id: number) => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+    };
+
+    const [videoDuration, setVideoDuration] = useState(0);
+
     const addToast = (msg: string, type: ToastType['type'], progress?: number) => {
         const id = Date.now();
         setToasts(prev => [...prev, { id, message: msg, type, progress }]);
@@ -136,10 +153,6 @@ export default function UploadPage() {
 
     const updateToast = (id: number, updates: Partial<ToastType>) => {
         setToasts(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
-    };
-
-    const removeToast = (id: number) => {
-        setToasts(prev => prev.filter(t => t.id !== id));
     };
 
     const extractFrames = useCallback((file: File) => {
@@ -180,7 +193,7 @@ export default function UploadPage() {
         video.load();
     }, []);
 
-    const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleVideoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         setVideoFile(file);
@@ -189,13 +202,26 @@ export default function UploadPage() {
         setAutoThumbnails([]);
         setSelectedAutoThumb(null);
 
+        // Fetch duration immediately
+        try {
+            const meta = await getVideoMetadata(file);
+            setVideoDuration(meta.duration);
+            if (touched) {
+                setFieldErrors(prev => ({ 
+                    ...prev, 
+                    videoFile: validateForm(title, description, tags, file, null, false, profile?.subscription_tier, meta.duration).videoFile 
+                }));
+            }
+        } catch (err) {
+            console.error('Metadata error:', err);
+        }
+
         extractFrames(file);
 
         if (!title) {
             const defaultTitle = file.name.split('.').slice(0, -1).join('.').replace(/[-_]/g, ' ');
             setTitle(defaultTitle.slice(0, TITLE_MAX));
         }
-        if (touched) setFieldErrors(prev => ({ ...prev, videoFile: validateForm(title, description, tags, file, null, false).videoFile }));
     };
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -236,12 +262,12 @@ export default function UploadPage() {
 
     const onTitleChange = (val: string) => {
         setTitle(val);
-        if (touched) setFieldErrors(prev => ({ ...prev, title: validateForm(val, description, tags, videoFile, thumbnailFile, selectedAutoThumb !== null).title }));
+        if (touched) setFieldErrors(prev => ({ ...prev, title: validateForm(val, description, tags, videoFile, thumbnailFile, selectedAutoThumb !== null, profile?.subscription_tier, videoDuration).title }));
     };
 
     const onDescChange = (val: string) => {
         setDescription(val);
-        if (touched) setFieldErrors(prev => ({ ...prev, description: validateForm(title, val, tags, videoFile, thumbnailFile, selectedAutoThumb !== null).description }));
+        if (touched) setFieldErrors(prev => ({ ...prev, description: validateForm(title, val, tags, videoFile, thumbnailFile, selectedAutoThumb !== null, profile?.subscription_tier, videoDuration).description }));
     };
 
     const onTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -274,7 +300,7 @@ export default function UploadPage() {
         if (e) e.preventDefault();
         setTouched(true);
         const hasAutoThumb = selectedAutoThumb !== null;
-        const errors = validateForm(title, description, tags, videoFile, thumbnailFile, hasAutoThumb);
+        const errors = validateForm(title, description, tags, videoFile, thumbnailFile, hasAutoThumb, profile?.subscription_tier, videoDuration);
         setFieldErrors(errors);
 
         if (Object.keys(errors).length > 0) return;
@@ -569,7 +595,7 @@ export default function UploadPage() {
                             {t.type === 'success' && <CheckCircle size={18} />}
                             {t.type === 'error' && <AlertCircle size={18} />}
                             <span className="flex-1">{t.message}</span>
-                            <button onClick={() => removeToast(t.id)} className="bg-transparent border-none text-white/50 hover:text-white cursor-pointer"><X size={16} /></button>
+                            <button onClick={() => removeToast(t.id)} className="bg-transparent border-none text-white/50 hover:text-white cursor-pointer" title="Dismiss notification"><X size={16} /></button>
                         </div>
                         {t.progress !== undefined && t.progress < 100 && (
                             <div className="h-1 bg-white/20 rounded-full overflow-hidden mt-3">
@@ -613,7 +639,7 @@ export default function UploadPage() {
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
                 >
-                    <input type="file" accept="video/*" className="hidden" ref={fileInputRef} onChange={handleVideoSelect} disabled={isUploading} />
+                    <input type="file" accept="video/*" className="hidden" ref={fileInputRef} onChange={handleVideoSelect} disabled={isUploading} title="Select video file" />
                     <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6">
                         <UploadCloud size={48} className="text-[#FFB800]" />
                     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutGrid, Zap, UserCheck, Bookmark, PlusCircle } from "lucide-react";
+import { LayoutGrid, Zap, UserCheck, User, PlusCircle, PlayCircle } from "lucide-react";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -13,10 +13,10 @@ export default function MobileNav() {
 
     const navItems = [
         { label: "Home", icon: LayoutGrid, path: "/" },
-        { label: "Explore", icon: Zap, path: "/trending" },
+        { label: "Shorts", icon: PlayCircle, path: "/shorts" },
         { label: "Create", icon: PlusCircle, path: "/upload", isAction: true },
         { label: "Following", icon: UserCheck, path: "/subscriptions" },
-        { label: "Saved", icon: Bookmark, path: "/liked" },
+        { label: "You", icon: User, path: "/studio/dashboard" }, // Using dashboard as the 'You' tab
     ];
 
     return (
@@ -41,12 +41,12 @@ export default function MobileNav() {
                         key={item.label}
                         href={item.path}
                         className={cn(
-                            "flex flex-col items-center justify-center p-2 gap-1 transition-all duration-300",
-                            isActive ? "text-[#FFB800] scale-110" : "text-gray-500"
+                            "flex flex-col items-center justify-center p-2 gap-1 transition-all duration-300 min-w-[60px]",
+                            isActive ? "text-[#FFB800]" : "text-gray-500"
                         )}
                     >
-                        <item.icon size={20} fill={isActive && !item.isAction ? "currentColor" : "none"} />
-                        <span className="text-[9px] font-black uppercase tracking-tighter">{item.label}</span>
+                        <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} fill={isActive && !item.isAction ? "currentColor" : "none"} className="transition-transform duration-300" />
+                        <span className={cn("text-[9px] font-black uppercase tracking-tighter", isActive ? "opacity-100" : "opacity-70")}>{item.label}</span>
                     </Link>
                 );
             })}

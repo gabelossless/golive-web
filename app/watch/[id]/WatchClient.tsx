@@ -55,7 +55,7 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                 .select('*')
                 .eq('user_id', currentUser?.id)
                 .eq('video_id', video.id)
-                .single();
+                .maybeSingle();
             if (!error && data) setIsLiked(true);
         } catch (err) {
             console.error('Error checking like status:', err);
@@ -63,7 +63,20 @@ export default function WatchClient({ video: initialVideo, recommendations: init
     };
 
     useEffect(() => {
+        // 1. Growth Boost (Bot Seeding)
         applyGrowthBoost(video.id);
+
+        // 2. Real View Increment (Atomic)
+        const incrementViews = async () => {
+            try {
+                // We add a small delay to avoid incrementing on accidental clicks/page refreshes before content loads
+                await new Promise(res => setTimeout(res, 2000));
+                await supabase.rpc('increment_view_count', { video_id: video.id });
+            } catch (err) {
+                console.error('View increment failed:', err);
+            }
+        };
+        incrementViews();
 
         const fetchRecs = async () => {
             const { data } = await supabase
@@ -102,25 +115,29 @@ export default function WatchClient({ video: initialVideo, recommendations: init
         if (isLiking) return;
 
         setIsLiking(true);
-        const nextLikedState = !isLiked;
-
+        const prevLiked = isLiked;
+        
         // Optimistic UI
-        setIsLiked(nextLikedState);
-        setLikes(prev => nextLikedState ? prev + 1 : prev - 1);
+        setIsLiked(!prevLiked);
+        setLikes(prev => prevLiked ? prev - 1 : prev + 1);
 
         try {
-            if (nextLikedState) {
-                await supabase.from('likes').insert({ user_id: currentUser.id, video_id: video.id });
-                // We could increment a counter on the video table here if we wanted to be super accurate,
-                // but for now we'll rely on the target_likes injection system for the showcase.
-            } else {
-                await supabase.from('likes').delete().eq('user_id', currentUser.id).eq('video_id', video.id);
+            const { data, error } = await supabase.rpc('toggle_like', { 
+                target_video_id: video.id, 
+                target_user_id: currentUser.id 
+            });
+            
+            if (error) throw error;
+            
+            // Sync with actual result if needed
+            if (data && typeof data.liked === 'boolean') {
+                setIsLiked(data.liked);
             }
         } catch (err) {
             console.error('Error toggling like:', err);
             // Rollback on error
-            setIsLiked(!nextLikedState);
-            setLikes(prev => !nextLikedState ? prev + 1 : prev - 1);
+            setIsLiked(prevLiked);
+            setLikes(prev => prevLiked ? prev + 1 : prev - 1);
         } finally {
             setIsLiking(false);
         }
@@ -158,12 +175,13 @@ export default function WatchClient({ video: initialVideo, recommendations: init
             {/* Main Content Area */}
             <div className="flex-1 overflow-y-auto p-4 lg:p-6 scrollbar-hide">
                 <div className="max-w-[1280px] mx-auto space-y-4 pb-20">
-                    {/* Video Player */}
-                    <VideoPlayer
-                        src={video.video_url}
-                        poster={video.thumbnail_url ?? undefined}
-                        title={video.title}
-                    />
+                    <div className="flex justify-center bg-black/20 rounded-3xl overflow-hidden shadow-2xl">
+                        <VideoPlayer
+                            src={video.video_url}
+                            poster={video.thumbnail_url ?? undefined}
+                            title={video.title}
+                        />
+                    </div>
 
                     <div className="space-y-4">
                         <div className="flex flex-col gap-2">
@@ -186,7 +204,7 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                                         className="w-12 h-12 rounded-full object-cover border-2 border-white/5 shadow-lg shadow-black/50"
                                         referrerPolicy="no-referrer"
                                     />
-                                    {video.is_live && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[#0a0a0a] animate-pulse" />}
+                                    {video.is_live && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[#FFB800] rounded-full border-2 border-[#0a0a0a]" />}
                                 </Link>
                                 <div className="flex flex-col min-w-0">
                                     <Link href={`/profile/${username}`} className="font-black text-sm flex items-center gap-1 hover:text-[#FFB800] transition-colors tracking-tight">
@@ -214,7 +232,7 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                                         )}
                                     >
                                         <ThumbsUp size={16} fill={isLiked ? "currentColor" : "none"} />
-                                        {formatViews(likes)}
+                                        {formatViews(video.likes_count || likes)}
                                     </button>
                                     <button className="px-5 py-2.5 hover:bg-white/10 transition-colors text-gray-500" title="Dislike" aria-label="Dislike">
                                         <ThumbsDown size={16} />
@@ -225,7 +243,7 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                                     whileTap={{ scale: 0.95 }}
                                     onClick={handleHype}
                                     disabled={isHyping}
-                                    className="relative flex items-center gap-2 px-6 py-2.5 rounded-full font-black uppercase tracking-widest text-[10px] bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/20 disabled:opacity-50"
+                                    className="relative flex items-center gap-2 px-6 py-2.5 rounded-full font-black uppercase tracking-widest text-[10px] bg-gradient-to-r from-[#FFB800] to-orange-500 text-black shadow-lg shadow-[#FFB800]/20 disabled:opacity-50"
                                 >
                                     <Flame size={16} fill="currentColor" className={isHyping ? "animate-bounce" : ""} />
                                     {formatViews(hypes)} Hype
@@ -265,8 +283,8 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                             className="lg:hidden w-full p-5 bg-white/5 rounded-2xl flex items-center justify-between hover:bg-white/10 transition-colors border border-white/5 mb-6"
                         >
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
-                                    <MessageSquare size={18} className="text-red-500" />
+                                <div className="w-8 h-8 rounded-full bg-[#FFB800]/10 flex items-center justify-center">
+                                    <MessageSquare size={18} className="text-[#FFB800]" />
                                 </div>
                                 <span className="font-black uppercase tracking-widest text-xs">Live Chat</span>
                             </div>
@@ -307,8 +325,8 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                 <div className="hidden lg:flex w-[400px] border-l border-white/5 bg-[#0a0a0a] flex-col h-full shrink-0">
                     <div className="p-6 border-b border-white/5 flex items-center justify-between font-black uppercase tracking-[0.2em] text-[10px]">
                         Stream Chat
-                        <span className="flex items-center gap-1.5 text-red-500">
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                        <span className="flex items-center gap-1.5 text-[#FFB800]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#FFB800] animate-pulse" />
                             LIVE
                         </span>
                     </div>
@@ -340,7 +358,7 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                     >
                         <div className="p-6 border-b border-white/5 flex items-center justify-between">
                             <span className="font-black uppercase tracking-widest text-xs flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> Live Chat
+                                <span className="w-2 h-2 rounded-full bg-[#FFB800] animate-pulse" /> Live Chat
                             </span>
                             <button onClick={() => setShowMobileChat(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
                                 <X size={24} />

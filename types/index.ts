@@ -11,6 +11,7 @@ export interface Profile {
     social_links?: any;
     is_monetized?: boolean;
     target_subs?: number;
+    channel_color?: string;
     subscription_tier?: 'free' | 'premium';
     display_name?: string;
     channel_name?: string;
@@ -42,6 +43,7 @@ export interface Video {
     scheduled_for?: string | null;
     license?: string;
     hype_count?: number;
+    likes_count?: number;
     is_short?: boolean;
 }
 

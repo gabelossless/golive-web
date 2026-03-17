@@ -1,6 +1,6 @@
 'use client';
 
-import { Menu, Search, Zap, Bell, User, Mic, PlusCircle, LogIn, CheckCircle2 } from "lucide-react";
+import { Menu, Search, Zap, Bell, User, Mic, PlusCircle, LogIn, CheckCircle2, Shield } from "lucide-react";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useState } from "react";
@@ -32,12 +32,12 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                 >
                     <Menu size={24} />
                 </button>
-                <Link href="/" className="flex items-center gap-1 group" title="VibeStream Home">
+                <Link href="/" className="flex items-center gap-1 group shrink-0" title="VibeStream Home">
                     <div className="relative">
                         <Zap className="text-[#FFB800] group-hover:scale-110 transition-transform" size={28} fill="currentColor" />
                         <div className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full animate-pulse" />
                     </div>
-                    <span className="text-xl font-black tracking-tighter font-display hidden sm:block">
+                    <span className="text-xl font-black tracking-tighter font-display hidden xs:block sm:block">
                         VIBE<span className="text-[#FFB800]">STREAM</span>
                     </span>
                 </Link>
@@ -67,7 +67,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             </form>
 
             <div className="flex items-center gap-2 sm:gap-4">
-                <button className="p-2 rounded-full hover:bg-white/10 transition-colors md:hidden" title="Search">
+                <button className="p-2 rounded-full hover:bg-white/10 transition-colors md:hidden shrink-0" title="Search">
                     <Search size={22} />
                 </button>
                 <Link href="/upload" className="p-2 rounded-full hover:bg-white/10 transition-colors hidden sm:block" title="Create Video">
@@ -101,6 +101,15 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                                 )}
                             </div>
                         </div>
+                        {profile?.is_admin && (
+                            <Link 
+                                href="/admin/dashboard" 
+                                className="p-2 rounded-full bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+                                title="Admin Panel"
+                            >
+                                <Shield size={18} />
+                            </Link>
+                        )}
                         <Link href="/studio/dashboard" className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FFB800] to-orange-600 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity" title="Creator Studio">
                             {profile?.avatar_url ? (
                                 <img src={profile.avatar_url} className="w-full h-full rounded-full object-cover" alt="" />

@@ -73,7 +73,7 @@ export default function GoLivePage() {
     return (
         <div className="max-w-4xl mx-auto py-8 px-4">
             <div className="flex items-center gap-4 mb-8">
-                <div className="p-3 bg-red-500/10 rounded-full text-red-500">
+                <div className="p-3 bg-[#FFB800]/10 rounded-full text-[#FFB800]">
                     <Radio size={32} />
                 </div>
                 <div>
@@ -98,12 +98,12 @@ export default function GoLivePage() {
                         )}
 
                         <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                            OFFLINE
+                            <div className="w-2 h-2 rounded-full bg-[#FFB800] animate-pulse" />
+                            PREVIEW
                         </div>
                     </div>
-                    <div className="p-4 bg-surface/30 rounded-xl border border-destructive/20">
-                        <h3 className="text-sm font-bold text-destructive flex items-center gap-2 mb-2">
+                    <div className="p-4 bg-[#FFB800]/5 rounded-xl border border-[#FFB800]/20">
+                        <h3 className="text-sm font-bold text-[#FFB800] flex items-center gap-2 mb-2">
                             <Radio size={16} /> Beta Feature
                         </h3>
                         <p className="text-xs text-muted">
@@ -131,6 +131,7 @@ export default function GoLivePage() {
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
                             className="w-full bg-background border border-border rounded-xl px-4 py-3 font-bold focus:border-primary focus:outline-none"
+                            title="Stream Category"
                         >
                             <option>Just Chatting</option>
                             <option>Gaming</option>
@@ -146,7 +147,7 @@ export default function GoLivePage() {
                             disabled={loading || !title}
                             className={`w-full py-4 rounded-xl font-black text-lg flex items-center justify-center gap-3 transition-all ${loading || !title
                                 ? 'bg-surface-hover text-muted cursor-not-allowed'
-                                : 'bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-red-900/20'
+                                : 'bg-[#FFB800] hover:bg-[#FFB800]/90 text-black shadow-lg shadow-[#FFB800]/20'
                                 }`}
                         >
                             {loading ? <Loader2 className="animate-spin" /> : <Radio />}

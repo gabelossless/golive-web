@@ -26,6 +26,8 @@ export default function DashboardClient() {
     const { user, profile } = useAuth();
     const [videos, setVideos] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editTitle, setEditTitle] = useState('');
     const [stats, setStats] = useState({
         totalViews: 0,
         subscribers: 0,
@@ -75,6 +77,22 @@ export default function DashboardClient() {
         } catch (err) {
             console.error('Delete failed:', err);
             alert('Failed to delete video.');
+        }
+    };
+
+    const handleQuickUpdate = async (id: string) => {
+        try {
+            const { error } = await supabase
+                .from('videos')
+                .update({ title: editTitle })
+                .eq('id', id);
+            
+            if (error) throw error;
+            setVideos(prev => prev.map(v => v.id === id ? { ...v, title: editTitle } : v));
+            setEditingId(null);
+        } catch (err) {
+            console.error('Update failed:', err);
+            alert('Failed to update title.');
         }
     };
 
@@ -133,16 +151,16 @@ export default function DashboardClient() {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                <div className="overflow-x-auto scrollbar-hide -mx-8 px-8">
+                    <table className="w-full text-left border-collapse min-w-[800px]">
                         <thead>
                             <tr className="text-[10px] font-black uppercase tracking-widest text-gray-500 bg-white/[0.02]">
-                                <th className="px-8 py-4">Video</th>
-                                <th className="px-6 py-4">Visibility</th>
-                                <th className="px-6 py-4">Date</th>
-                                <th className="px-6 py-4">Views</th>
-                                <th className="px-6 py-4">Hype</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                <th className="px-8 py-5 sticky left-0 bg-[#111111] z-10 w-[300px]">Video</th>
+                                <th className="px-6 py-5">Visibility</th>
+                                <th className="px-6 py-5">Date</th>
+                                <th className="px-6 py-5">Views</th>
+                                <th className="px-6 py-5">Hype</th>
+                                <th className="px-6 py-5 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -157,9 +175,9 @@ export default function DashboardClient() {
                                 </tr>
                             ) : videos.map((video) => (
                                 <tr key={video.id} className="group hover:bg-white/[0.01] transition-colors">
-                                    <td className="px-8 py-4">
+                                    <td className="px-8 py-4 sticky left-0 bg-[#111111]/90 backdrop-blur-md z-10">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-24 aspect-video rounded-xl bg-white/5 overflow-hidden shrink-0 relative">
+                                            <div className="w-28 aspect-video rounded-xl bg-white/5 overflow-hidden shrink-0 relative shadow-lg shadow-black/20">
                                                 {video.thumbnail_url ? (
                                                     <img src={video.thumbnail_url} className="w-full h-full object-cover" alt="" />
                                                 ) : (
@@ -171,8 +189,39 @@ export default function DashboardClient() {
                                                     <div className="absolute top-1 right-1 bg-black/60 px-1.5 py-0.5 rounded text-[8px] font-black uppercase">Short</div>
                                                 )}
                                             </div>
-                                            <div className="min-w-0">
-                                                <h4 className="text-sm font-bold text-gray-200 group-hover:text-white truncate m-0">{video.title}</h4>
+                                            <div className="min-w-0 flex-1">
+                                                {editingId === video.id ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <input 
+                                                            autoFocus
+                                                            value={editTitle}
+                                                            onChange={(e) => setEditTitle(e.target.value)}
+                                                            className="bg-black/60 border border-[#FFB800] rounded px-2 py-1 text-sm text-white outline-none w-full"
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') handleQuickUpdate(video.id);
+                                                                if (e.key === 'Escape') setEditingId(null);
+                                                            }}
+                                                        />
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); handleQuickUpdate(video.id); }}
+                                                            className="p-1.5 bg-[#FFB800] text-black rounded hover:bg-orange-500 transition-colors shrink-0"
+                                                        >
+                                                            Save
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <h4 className="text-sm font-bold text-gray-200 group-hover:text-white truncate m-0 flex items-center gap-2">
+                                                        {video.title}
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); setEditingId(video.id); setEditTitle(video.title); }}
+                                                            className="opacity-0 group-hover:opacity-100 p-1 hover:text-[#FFB800] transition-all"
+                                                            title="Edit title"
+                                                            aria-label="Edit title"
+                                                        >
+                                                            <Edit size={12} />
+                                                        </button>
+                                                    </h4>
+                                                )}
                                                 <p className="text-[10px] text-gray-500 m-0 line-clamp-1">{video.description || 'No description'}</p>
                                             </div>
                                         </div>

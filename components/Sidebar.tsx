@@ -27,9 +27,8 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             // Load subscriptions
             const { data: subs } = await supabase
                 .from('subscriptions')
-                .select('channel_id, profiles!subscriptions_channel_id_fkey(id, username, avatar_url, is_live, channel_name, display_name)')
-                .eq('subscriber_id', user.id)
-                .limit(6);
+                .select('channel_id, profiles!inner(id, username, avatar_url, is_live, channel_name, display_name)')
+                .eq('subscriber_id', user.id);
             if (subs) {
                 setSubscriptions(subs.map((s: any) => ({
                     id: s.profiles?.id,

@@ -33,6 +33,7 @@ export default function ProfilePage() {
     const [activeTab, setActiveTab] = useState('Videos');
     const [searchQuery, setSearchQuery] = useState('');
     const [showSearch, setShowSearch] = useState(false);
+    const [themeColor, setThemeColor] = useState('#FFB800');
 
     const isOwner = currentUser?.id === profile?.id;
     const decodedUsername = typeof username === 'string' ? decodeURIComponent(username) : '';
@@ -63,6 +64,9 @@ export default function ProfilePage() {
                     return;
                 }
                 setProfile(profileData);
+                if (profileData.channel_color) {
+                    setThemeColor(profileData.channel_color);
+                }
 
                 if (profileData) {
                     const { data: videosData } = await supabase
@@ -147,8 +151,8 @@ export default function ProfilePage() {
                             referrerPolicy="no-referrer"
                         />
                         {profile.is_live && (
-                            <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase">
-                                <span className="w-1 h-1 bg-white rounded-full animate-pulse" />LIVE
+                            <div className="absolute bottom-1 right-1 flex items-center gap-1 bg-[#FFB800] text-black text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase shadow-lg border border-black/20">
+                                <span className="w-1 h-1 bg-black rounded-full animate-pulse" />LIVE
                             </div>
                         )}
                     </div>
@@ -160,7 +164,7 @@ export default function ProfilePage() {
                                 <h1 className="text-2xl md:text-3xl font-black tracking-tight flex items-center gap-2">
                                     {profile.display_name || profile.channel_name || profile.username}
                                     {(profile.is_verified || profile.subscription_tier === 'premium') && (
-                                        <CheckCircle2 size={24} className="text-[#FFB800] flex-shrink-0" />
+                                        <CheckCircle2 size={24} className="flex-shrink-0" style={{ color: profile.channel_color || themeColor }} />
                                     )}
                                 </h1>
                                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-gray-400">
@@ -214,17 +218,22 @@ export default function ProfilePage() {
                                 'relative pb-3 px-4 text-sm font-bold uppercase tracking-wider transition-colors whitespace-nowrap border-none bg-transparent cursor-pointer',
                                 activeTab === tab ? 'text-white' : 'text-gray-500 hover:text-gray-300'
                             )}
+                            style={{ color: activeTab === tab ? (profile.channel_color || themeColor) : undefined }}
                         >
                             {tab}
                             {tab === 'Shorts' && shortVideos.length > 0 && (
-                                <span className="ml-1.5 text-[10px] font-black bg-[#FFB800]/20 text-[#FFB800] px-1 py-0 rounded">
+                                <span 
+                                    className="ml-1.5 text-[10px] font-black px-1 py-0 rounded"
+                                    style={{ backgroundColor: `${themeColor}20`, color: themeColor }}
+                                >
                                     {shortVideos.length}
                                 </span>
                             )}
                             {activeTab === tab && (
                                 <motion.div
                                     layoutId="activeTab"
-                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FFB800] rounded-full"
+                                    className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
+                                    style={{ backgroundColor: profile.channel_color || themeColor }}
                                 />
                             )}
                         </button>

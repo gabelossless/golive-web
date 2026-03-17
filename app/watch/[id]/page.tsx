@@ -20,9 +20,9 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
         if (!video) {
             return (
                 <div className="p-20 text-center bg-black min-h-screen text-white">
-                    <h1 className="text-4xl font-black text-red-500 mb-4 tracking-tighter">VIDEO NOT FOUND</h1>
+                    <h1 className="text-4xl font-black text-[#FFB800] mb-4 tracking-tighter uppercase">Video Not Found</h1>
                     <p className="text-gray-400">ID: {id}</p>
-                    <Link href="/" className="mt-8 inline-block text-[#FFB800] underline">Back to Home</Link>
+                    <Link href="/" className="mt-8 inline-block text-[#FFB800]/60 hover:text-[#FFB800] underline transition-colors">Back to Home</Link>
                 </div>
             );
         }

@@ -34,8 +34,20 @@ export default function CommentSection({ videoId }: CommentSectionProps) {
         // Realtime subscription for new comments
         const subscription = supabase
             .channel(`comments:${videoId}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'comments', filter: `video_id=eq.${videoId}` }, () => {
-                fetchComments();
+            .on('postgres_changes', { 
+                event: '*', 
+                schema: 'public', 
+                table: 'comments', 
+                filter: `video_id=eq.${videoId}` 
+            }, (payload) => {
+                if (payload.eventType === 'INSERT') {
+                    // Update profile for the new comment if possible, else refetch
+                    fetchComments(); 
+                } else if (payload.eventType === 'DELETE') {
+                    setComments(prev => prev.filter(c => c.id !== payload.old.id));
+                } else {
+                    fetchComments();
+                }
             })
             .subscribe();
 
@@ -74,13 +86,24 @@ export default function CommentSection({ videoId }: CommentSectionProps) {
         setIsPosting(true);
 
         try {
-            const { error } = await supabase.from('comments').insert({
+            const { data, error } = await supabase.from('comments').insert({
                 video_id: videoId,
                 user_id: user.id,
                 content: newComment
-            });
+            }).select('*, profiles(username, avatar_url)').single();
 
             if (error) throw error;
+            
+            // Optionally update locally immediately for better "stay" feel
+            if (data) {
+                const profileData = Array.isArray(data.profiles) ? data.profiles[0] : data.profiles;
+                const formatted = {
+                    ...data,
+                    profiles: profileData || { username: 'Unknown', avatar_url: '' }
+                };
+                setComments(prev => [formatted, ...prev]);
+            }
+            
             setNewComment('');
         } catch (err) {
             console.error('Error posting comment:', err);

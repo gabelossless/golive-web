@@ -126,7 +126,7 @@ export default function StudioPage() {
             {/* Toast */}
             {toast && (
                 <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl border font-bold text-sm ${
-                    toast.type === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'
+                    toast.type === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-orange-500/10 border-orange-500/30 text-orange-400'
                 }`}>
                     {toast.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
                     {toast.message}
