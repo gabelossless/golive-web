@@ -125,9 +125,12 @@ export default function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
             // Draw low-res frame for sampling
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
+            // Throttle based on mobile/power
+            const delay = window.innerWidth < 768 ? 400 : 250; 
+            
             timeoutId = setTimeout(() => {
                 frameId = requestAnimationFrame(updateAmbient);
-            }, 250); // 4 FPS for smoother transitions
+            }, delay);
         };
 
         updateAmbient();
@@ -270,13 +273,21 @@ export default function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
             >
                 <div className="px-4 pb-4 pt-12">
                     <div
-                        className="w-full h-1.5 bg-white/10 rounded-full mb-4 cursor-pointer relative group/progress overflow-hidden"
+                        className="w-full h-2.5 md:h-1.5 bg-white/10 rounded-full mb-4 cursor-pointer relative group/progress overflow-hidden touch-none"
                         onClick={handleProgressClick}
+                        onTouchMove={(e) => {
+                            if (!videoRef.current) return;
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const touch = e.touches[0];
+                            const pos = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
+                            videoRef.current.currentTime = pos * videoRef.current.duration;
+                            setProgress(pos * 100);
+                        }}
                     >
                         <div className="absolute top-0 left-0 h-full bg-white/20" style={{ width: `${buffered}%` }} />
                         <div className="absolute top-0 left-0 h-full bg-[#FFB800]" style={{ width: `${progress}%` }} />
                         <div
-                            className="absolute top-1/2 -translate-y-1/2 h-full bg-white/40 opacity-0 group-hover/progress:opacity-100 transition-opacity"
+                            className="absolute top-1/2 -translate-y-1/2 h-full bg-white/40 opacity-0 md:group-hover/progress:opacity-100 transition-opacity"
                             style={{ left: `${progress}%`, width: '2px' }}
                         />
                     </div>

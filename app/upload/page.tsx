@@ -523,7 +523,7 @@ export default function UploadPage() {
             const tagStr = tags.length ? `\n\nTags: ${tags.map(t => `#${t}`).join(' ')}` : '';
             const finalDescriptionWithCategory = `${finalDescription}\n\nCategory: ${category}${tagStr}`;
 
-            const isShort = (height > width) && (duration <= 60.5);
+            const isShort = (height > width) || (duration <= 60.5 && height >= width * 1.2);
 
             const { error: dbError } = await supabase.from('videos').insert({
                 user_id: user.id,

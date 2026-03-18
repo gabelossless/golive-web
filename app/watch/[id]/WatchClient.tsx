@@ -195,77 +195,91 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                             </div>
                         </div>
 
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2 border-y border-white/5">
-                            <div className="flex items-center gap-4">
-                                <Link href={`/profile/${username}`} className="flex-shrink-0 relative">
-                                    <img
-                                        src={avatar}
-                                        alt={author}
-                                        className="w-12 h-12 rounded-full object-cover border-2 border-white/5 shadow-lg shadow-black/50"
-                                        referrerPolicy="no-referrer"
-                                    />
-                                    {video.is_live && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[#FFB800] rounded-full border-2 border-[#0a0a0a]" />}
-                                </Link>
-                                <div className="flex flex-col min-w-0">
-                                    <Link href={`/profile/${username}`} className="font-black text-sm flex items-center gap-1 hover:text-[#FFB800] transition-colors tracking-tight">
-                                        {author}
-                                        {(video.profiles?.is_verified || video.profiles?.subscription_tier === 'premium') && (
-                                            <CheckCircle2 size={14} className="text-[#FFB800]" fill="currentColor" />
-                                        )}
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 py-4 border-y border-white/5">
+                                <div className="flex items-center gap-4">
+                                    <Link href={`/profile/${username}`} className="flex-shrink-0 relative">
+                                        <img
+                                            src={avatar}
+                                            alt={author}
+                                            className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-white/5 shadow-lg shadow-black/50"
+                                            referrerPolicy="no-referrer"
+                                        />
+                                        {video.is_live && <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#FFB800] rounded-full border-2 border-[#0a0a0a]" />}
                                     </Link>
-                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-                                        {formatCount(video.profiles?.follower_count || 0)} subscribers
-                                    </span>
+                                    <div className="flex flex-col min-w-0 pr-2">
+                                        <Link href={`/profile/${username}`} className="font-black text-sm md:text-base flex items-center gap-1 hover:text-[#FFB800] transition-colors tracking-tight truncate">
+                                            {author}
+                                            {(video.profiles?.is_verified || video.profiles?.subscription_tier === 'premium') && (
+                                                <CheckCircle2 size={14} className="text-[#FFB800] shrink-0" fill="currentColor" />
+                                            )}
+                                        </Link>
+                                        <span className="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-widest truncate">
+                                            {formatCount(video.profiles?.follower_count || 0)} subscribers
+                                        </span>
+                                    </div>
+                                    <div className="ml-auto md:ml-4">
+                                        <SubscribeButton channelId={video.profiles?.id || ''} />
+                                    </div>
                                 </div>
-                                <div className="ml-4">
-                                    <SubscribeButton channelId={video.profiles?.id || ''} />
-                                </div>
-                            </div>
 
-                            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-                                <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/10">
-                                    <button
-                                        onClick={handleLike}
-                                        className={cn(
-                                            "flex items-center gap-2 px-5 py-2.5 hover:bg-white/10 transition-colors border-r border-white/5 font-black uppercase tracking-widest text-[10px]",
-                                            isLiked ? "text-[#FFB800]" : "text-gray-400"
-                                        )}
+                                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
+                                    <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/10 shrink-0 shadow-lg">
+                                        <button
+                                            onClick={handleLike}
+                                            className={cn(
+                                                "flex items-center gap-2 px-6 py-3 md:px-5 md:py-2.5 hover:bg-white/10 transition-colors border-r border-white/5 font-black uppercase tracking-widest text-[10px]",
+                                                isLiked ? "text-[#FFB800]" : "text-gray-400"
+                                            )}
+                                            title="Like"
+                                        >
+                                            <ThumbsUp size={18} fill={isLiked ? "currentColor" : "none"} />
+                                            <span className="min-w-[2ch]">{formatViews(video.likes_count || likes)}</span>
+                                        </button>
+                                        <button 
+                                            className="px-6 py-3 md:px-5 md:py-2.5 hover:bg-white/10 transition-colors text-gray-500 active:bg-white/10" 
+                                            title="Dislike" 
+                                            aria-label="Dislike"
+                                        >
+                                            <ThumbsDown size={18} />
+                                        </button>
+                                    </div>
+
+                                    <motion.button
+                                        whileTap={{ scale: 0.92 }}
+                                        onClick={handleHype}
+                                        disabled={isHyping}
+                                        className="relative flex items-center gap-2 px-7 py-3 md:px-6 md:py-2.5 rounded-full font-black uppercase tracking-widest text-[10px] bg-gradient-to-r from-[#FFB800] to-orange-500 text-black shadow-lg shadow-[#FFB800]/20 disabled:opacity-50 shrink-0 active:opacity-90"
                                     >
-                                        <ThumbsUp size={16} fill={isLiked ? "currentColor" : "none"} />
-                                        {formatViews(video.likes_count || likes)}
+                                        <Flame size={18} fill="currentColor" className={isHyping ? "animate-bounce" : ""} />
+                                        {formatViews(hypes)} Hype
+                                        <AnimatePresence>
+                                            {showHypeAnimation && (
+                                                <motion.div initial={{ opacity: 0, y: 0 }} animate={{ opacity: 1, y: -25 }} exit={{ opacity: 0 }} className="absolute -top-6 -right-2 text-2xl pointer-events-none">
+                                                    ✨
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </motion.button>
+
+                                    <button 
+                                        onClick={() => { navigator.clipboard.writeText(window.location.href); alert('Link copied!'); }} 
+                                        className="flex items-center gap-2 px-6 py-3 md:px-5 md:py-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5 font-black uppercase tracking-widest text-[10px] shrink-0 shadow-lg" 
+                                        title="Share video" 
+                                        aria-label="Share video"
+                                    >
+                                        <Share2 size={18} />
+                                        Share
                                     </button>
-                                    <button className="px-5 py-2.5 hover:bg-white/10 transition-colors text-gray-500" title="Dislike" aria-label="Dislike">
-                                        <ThumbsDown size={16} />
+                                    
+                                    <button 
+                                        className="p-3 md:p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5 shrink-0 shadow-lg" 
+                                        title="More options" 
+                                        aria-label="More options"
+                                    >
+                                        <MoreHorizontal size={20} />
                                     </button>
                                 </div>
-
-                                <motion.button
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={handleHype}
-                                    disabled={isHyping}
-                                    className="relative flex items-center gap-2 px-6 py-2.5 rounded-full font-black uppercase tracking-widest text-[10px] bg-gradient-to-r from-[#FFB800] to-orange-500 text-black shadow-lg shadow-[#FFB800]/20 disabled:opacity-50"
-                                >
-                                    <Flame size={16} fill="currentColor" className={isHyping ? "animate-bounce" : ""} />
-                                    {formatViews(hypes)} Hype
-                                    <AnimatePresence>
-                                        {showHypeAnimation && (
-                                            <motion.div initial={{ opacity: 0, y: 0 }} animate={{ opacity: 1, y: -20 }} exit={{ opacity: 0 }} className="absolute -top-4 -right-2 text-xl pointer-events-none">
-                                                ✨
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </motion.button>
-
-                                <button onClick={() => { navigator.clipboard.writeText(window.location.href); alert('Link copied!'); }} className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5 font-black uppercase tracking-widest text-[10px]" title="Share video" aria-label="Share video">
-                                    <Share2 size={16} />
-                                    Share
-                                </button>
-                                
-                                <button className="p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5" title="More options" aria-label="More options">
-                                    <MoreHorizontal size={18} />
-                                </button>
                             </div>
-                        </div>
 
                         <div className="bg-[#121212] rounded-3xl p-6 text-sm hover:bg-white/[0.03] transition-colors border border-white/5">
                             <p className="whitespace-pre-wrap text-gray-400 font-medium leading-relaxed">
