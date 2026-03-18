@@ -12,6 +12,7 @@ import SubscribeButton from '@/components/SubscribeButton';
 import VideoPlayer from '@/components/VideoPlayer';
 import CommentSection from '@/components/CommentSection';
 import VideoCard from '@/components/VideoCard';
+import ShareModal from '@/components/ShareModal';
 import Link from 'next/link';
 import { formatViews } from '@/lib/utils';
 import { useAuth } from '@/components/AuthProvider';
@@ -41,6 +42,8 @@ export default function WatchClient({ video: initialVideo, recommendations: init
     const [recommendations, setRecommendations] = useState<Video[]>(initialRecommendations || []);
     const [showMobileChat, setShowMobileChat] = useState(false);
     const [isSubscribed, setIsSubscribed] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
     useEffect(() => {
         if (currentUser && video.id) {
@@ -65,18 +68,6 @@ export default function WatchClient({ video: initialVideo, recommendations: init
     useEffect(() => {
         // 1. Growth Boost (Bot Seeding)
         applyGrowthBoost(video.id);
-
-        // 2. Real View Increment (Atomic)
-        const incrementViews = async () => {
-            try {
-                // We add a small delay to avoid incrementing on accidental clicks/page refreshes before content loads
-                await new Promise(res => setTimeout(res, 2000));
-                await supabase.rpc('increment_view_count', { video_id: video.id });
-            } catch (err) {
-                console.error('View increment failed:', err);
-            }
-        };
-        incrementViews();
 
         const fetchRecs = async () => {
             const { data } = await supabase
@@ -170,6 +161,22 @@ export default function WatchClient({ video: initialVideo, recommendations: init
     const author = video.profiles?.channel_name || video.profiles?.display_name || video.profiles?.username || 'Unknown';
     const avatar = video.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
 
+    // Parse description, category, and tags
+    const rawDesc = video.description?.replace(/\[PRIVATE_VIDEO_FLAG\]/, '').trim() || 'No description provided.';
+    let displayDesc = rawDesc;
+    const catMatch = rawDesc.match(/Category:\s*([^\n]+)/);
+    const tagsMatch = rawDesc.match(/Tags:\s*([^\n]+)/);
+    const category = catMatch ? catMatch[1].trim() : null;
+    let tagsList: string[] = [];
+
+    if (tagsMatch || catMatch) {
+         // Clean description from appending metadata
+         displayDesc = rawDesc.split(/Category:/)[0].trim();
+         if (tagsMatch) {
+             tagsList = tagsMatch[1].split(' ').filter(t => t.startsWith('#'));
+         }
+    }
+
     return (
         <div className="flex flex-col lg:flex-row h-full overflow-hidden w-full bg-[#0a0a0a]">
             {/* Main Content Area */}
@@ -180,6 +187,13 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                             src={video.video_url}
                             poster={video.thumbnail_url ?? undefined}
                             title={video.title}
+                            onActiveWatch={async () => {
+                                try {
+                                    await supabase.rpc('increment_view_count', { video_id: video.id });
+                                } catch (err) {
+                                    console.error('View increment failed:', err);
+                                }
+                            }}
                         />
                     </div>
 
@@ -262,7 +276,7 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                                     </motion.button>
 
                                     <button 
-                                        onClick={() => { navigator.clipboard.writeText(window.location.href); alert('Link copied!'); }} 
+                                        onClick={() => setIsShareModalOpen(true)} 
                                         className="flex items-center gap-2 px-6 py-3 md:px-5 md:py-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5 font-black uppercase tracking-widest text-[10px] shrink-0 shadow-lg" 
                                         title="Share video" 
                                         aria-label="Share video"
@@ -281,10 +295,44 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                                 </div>
                             </div>
 
-                        <div className="bg-[#121212] rounded-3xl p-6 text-sm hover:bg-white/[0.03] transition-colors border border-white/5">
-                            <p className="whitespace-pre-wrap text-gray-400 font-medium leading-relaxed">
-                                {video.description?.replace(/\[PRIVATE_VIDEO_FLAG\]/, '').trim() || 'No description provided.'}
+                        <div className="bg-[#121212] rounded-3xl p-6 text-sm hover:bg-white/[0.03] transition-colors border border-white/5 flex flex-col items-start cursor-pointer" onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}>
+                            <p className={cn(
+                                "whitespace-pre-wrap text-gray-400 font-medium leading-relaxed transition-all",
+                                !isDescriptionExpanded && "line-clamp-2 md:line-clamp-3"
+                            )}>
+                                {displayDesc}
                             </p>
+                            
+                            <AnimatePresence>
+                                {isDescriptionExpanded && (tagsList.length > 0 || category) && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="mt-6 flex flex-col gap-3 w-full"
+                                    >
+                                        {category && (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Category</span>
+                                                <span className="px-3 py-1 bg-white/5 rounded-full text-xs font-black text-gray-300 border border-white/10">{category}</span>
+                                            </div>
+                                        )}
+                                        {tagsList.length > 0 && (
+                                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                                                {tagsList.map(tag => (
+                                                    <span key={tag} className="text-[#FFB800] font-black tracking-widest text-[10px] uppercase bg-[#FFB800]/10 px-2.5 py-1 rounded-md border border-[#FFB800]/20 hover:bg-[#FFB800]/20 transition-colors">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <button className="mt-4 text-xs font-black uppercase tracking-widest text-[#FFB800] hover:text-orange-500 transition-colors bg-transparent border-none p-0">
+                                {isDescriptionExpanded ? 'Show less' : 'Show more'}
+                            </button>
                         </div>
                     </div>
 
@@ -394,6 +442,8 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} video={video} />
         </div>
     );
 }

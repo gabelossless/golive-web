@@ -8,6 +8,7 @@ interface VideoPlayerProps {
     src: string;
     poster?: string;
     title?: string;
+    onActiveWatch?: () => void;
 }
 
 function cn(...classes: (string | undefined | null | false)[]) {
@@ -21,7 +22,8 @@ function formatTime(time: number): string {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-export default function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
+export default function VideoPlayer(props: VideoPlayerProps) {
+    const { src, poster, title, onActiveWatch } = props;
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
@@ -42,6 +44,33 @@ export default function VideoPlayer({ src, poster, title }: VideoPlayerProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const controlsTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    const hasTriggeredWatch = useRef(false);
+    const activeWatchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Strict view counting logic
+    useEffect(() => {
+        if (isPlaying && !hasTriggeredWatch.current) {
+            // Start the 5-second timer for active watch
+            activeWatchTimer.current = setTimeout(() => {
+                hasTriggeredWatch.current = true;
+                if (props.onActiveWatch) {
+                    props.onActiveWatch();
+                }
+            }, 5000);
+        } else {
+            // Cancel timer if paused before 5 seconds
+            if (activeWatchTimer.current) {
+                clearTimeout(activeWatchTimer.current);
+                activeWatchTimer.current = null;
+            }
+        }
+        
+        return () => {
+            if (activeWatchTimer.current) {
+                clearTimeout(activeWatchTimer.current);
+            }
+        };
+    }, [isPlaying, props.onActiveWatch]);
 
     useEffect(() => {
         const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
