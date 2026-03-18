@@ -14,6 +14,7 @@ import CommentSection from '@/components/CommentSection';
 import VideoCard from '@/components/VideoCard';
 import ShareModal from '@/components/ShareModal';
 import Link from 'next/link';
+import { useCallback } from 'react';
 import { formatViews } from '@/lib/utils';
 import { useAuth } from '@/components/AuthProvider';
 import { motion, AnimatePresence } from 'motion/react';
@@ -187,13 +188,13 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                             src={video.video_url}
                             poster={video.thumbnail_url ?? undefined}
                             title={video.title}
-                            onActiveWatch={async () => {
+                            onActiveWatch={useCallback(async () => {
                                 try {
                                     await supabase.rpc('increment_view_count', { video_id: video.id });
                                 } catch (err) {
                                     console.error('View increment failed:', err);
                                 }
-                            }}
+                            }, [video.id])}
                         />
                     </div>
 
@@ -246,7 +247,12 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                                             )}
                                             title="Like"
                                         >
-                                            <ThumbsUp size={18} fill={isLiked ? "currentColor" : "none"} />
+                                            <motion.div
+                                                animate={isLiked ? { scale: [1, 1.4, 1], rotate: [0, -15, 0] } : {}}
+                                                transition={{ duration: 0.45, ease: "easeOut" }}
+                                            >
+                                                <ThumbsUp size={18} fill={isLiked ? "currentColor" : "none"} />
+                                            </motion.div>
                                             <span className="min-w-[2ch]">{formatViews(video.likes_count || likes)}</span>
                                         </button>
                                         <button 
