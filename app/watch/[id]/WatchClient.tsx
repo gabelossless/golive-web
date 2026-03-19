@@ -18,6 +18,7 @@ import { useCallback } from 'react';
 import { formatViews } from '@/lib/utils';
 import { useAuth } from '@/components/AuthProvider';
 import { motion, AnimatePresence } from 'motion/react';
+import TipButton from '@/components/TipButton';
 
 function cn(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(" ");
@@ -220,9 +221,10 @@ export default function WatchClient({ video: initialVideo, recommendations: init
     return (
         <div className="flex flex-col lg:flex-row h-full overflow-hidden w-full bg-[#0a0a0a]">
             {/* Main Content Area */}
-            <div className="flex-1 overflow-y-auto p-4 lg:p-6 scrollbar-hide">
-                <div className="max-w-[1280px] mx-auto space-y-4 pb-20">
-                    <div className="flex justify-center bg-black/20 rounded-3xl overflow-hidden shadow-2xl">
+            <div className="flex-1 overflow-y-auto p-2 lg:p-8 scrollbar-hide">
+                <div className="max-w-[1400px] mx-auto space-y-8 pb-32">
+                    <div className="flex justify-center bg-black/40 rounded-[48px] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)] border border-white/5 relative group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#FFB800]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                         <VideoPlayer
                             src={video.video_url}
                             poster={video.thumbnail_url ?? undefined}
@@ -238,14 +240,15 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                     </div>
 
                     <div className="space-y-4">
-                        <div className="flex flex-col gap-2">
-                            <h1 className="text-xl font-black leading-tight md:text-2xl tracking-tighter">
+                        <div className="flex flex-col gap-4">
+                            <h1 className="text-3xl font-black leading-tight md:text-4xl tracking-tighter italic font-premium text-gradient">
                                 {video.title}
                             </h1>
-                            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 font-bold uppercase tracking-widest">
+                            <div className="flex flex-wrap items-center gap-4 text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] italic">
                                 <span>{formatViews(video.view_count)} views</span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
                                 <span>{new Date(video.created_at).toLocaleDateString()}</span>
-                                <span className="text-[#FFB800]">#VIBESTREAM</span>
+                                <span className="px-3 py-1 bg-white/5 rounded-full border border-white/10 text-[#FFB800]">#VIBESTREAM</span>
                             </div>
                         </div>
 
@@ -276,13 +279,13 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
-                                    <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/10 shrink-0 shadow-lg">
+                                <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
+                                    <div className="flex items-center bg-white/[0.03] rounded-2xl overflow-hidden border border-white/5 shrink-0 shadow-xl self-stretch">
                                         <button
                                             onClick={handleLike}
                                             className={cn(
-                                                "flex items-center gap-2 px-6 py-3 md:px-5 md:py-2.5 hover:bg-white/10 transition-colors border-r border-white/5 font-black uppercase tracking-widest text-[10px]",
-                                                isLiked ? "text-[#FFB800]" : "text-gray-400"
+                                                "flex items-center gap-3 px-6 py-3 hover:bg-white/[0.05] transition-all border-r border-white/5 font-black uppercase tracking-widest text-[10px]",
+                                                isLiked ? "text-[#FFB800] bg-[#FFB800]/5" : "text-zinc-400"
                                             )}
                                             title="Like"
                                         >
@@ -290,12 +293,12 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                                                 animate={isLiked ? { scale: [1, 1.4, 1], rotate: [0, -15, 0] } : {}}
                                                 transition={{ duration: 0.45, ease: "easeOut" }}
                                             >
-                                                <ThumbsUp size={18} fill={isLiked ? "currentColor" : "none"} />
+                                                <ThumbsUp size={18} fill={isLiked ? "currentColor" : "none"} className={isLiked ? "drop-shadow-[0_0_8px_#FFB800]" : ""} />
                                             </motion.div>
                                             <span className="min-w-[2ch]">{formatViews(video.likes_count || likes)}</span>
                                         </button>
                                         <button 
-                                            className="px-6 py-3 md:px-5 md:py-2.5 hover:bg-white/10 transition-colors text-gray-500 active:bg-white/10" 
+                                            className="px-6 py-3 hover:bg-white/[0.05] transition-all text-zinc-500 active:bg-white/10" 
                                             title="Dislike" 
                                             aria-label="Dislike"
                                         >
@@ -304,34 +307,44 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                                     </div>
 
                                     <motion.button
-                                        whileTap={{ scale: 0.92 }}
+                                        whileTap={{ scale: 0.95 }}
                                         onClick={handleHype}
                                         disabled={isHyping}
-                                        className="relative flex items-center gap-2 px-7 py-3 md:px-6 md:py-2.5 rounded-full font-black uppercase tracking-widest text-[10px] bg-gradient-to-r from-[#FFB800] to-orange-500 text-black shadow-lg shadow-[#FFB800]/20 disabled:opacity-50 shrink-0 active:opacity-90"
+                                        className="relative flex items-center gap-3 px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-gradient-to-br from-[#FFB800] to-orange-600 text-black shadow-xl shadow-[#FFB800]/10 disabled:opacity-50 shrink-0 hover:scale-105 transition-all self-stretch group"
                                     >
-                                        <Flame size={18} fill="currentColor" className={isHyping ? "animate-bounce" : ""} />
+                                        <Flame size={18} fill="currentColor" className={cn("transition-transform group-hover:scale-125", isHyping ? "animate-push-pulse" : "")} />
                                         {formatViews(hypes)} Hype
                                         <AnimatePresence>
                                             {showHypeAnimation && (
-                                                <motion.div initial={{ opacity: 0, y: 0 }} animate={{ opacity: 1, y: -25 }} exit={{ opacity: 0 }} className="absolute -top-6 -right-2 text-2xl pointer-events-none">
+                                                <motion.div initial={{ opacity: 0, y: 0 }} animate={{ opacity: 1, y: -40 }} exit={{ opacity: 0 }} className="absolute -top-10 left-1/2 -translate-x-1/2 text-3xl pointer-events-none">
                                                     ✨
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
                                     </motion.button>
 
+                                    <div className="h-full flex items-stretch">
+                                        <TipButton 
+                                            creator={{
+                                                username: video.profiles?.username || 'Creator',
+                                                wallet_address: video.profiles?.wallet_address,
+                                                solana_wallet_address: video.profiles?.solana_wallet_address
+                                            }}
+                                        />
+                                    </div>
+
                                     <button 
                                         onClick={() => setIsShareModalOpen(true)} 
-                                        className="flex items-center gap-2 px-6 py-3 md:px-5 md:py-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5 font-black uppercase tracking-widest text-[10px] shrink-0 shadow-lg" 
+                                        className="flex items-center gap-3 px-8 py-3 bg-white/[0.03] hover:bg-white/[0.05] rounded-2xl transition-all border border-white/5 font-black uppercase tracking-widest text-[10px] shrink-0 shadow-xl self-stretch" 
                                         title="Share video" 
                                         aria-label="Share video"
                                     >
-                                        <Share2 size={18} />
+                                        <Share2 size={18} className="text-zinc-500" />
                                         Share
                                     </button>
                                     
                                     <button 
-                                        className="p-3 md:p-2.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors border border-white/5 shrink-0 shadow-lg" 
+                                        className="px-4 bg-white/[0.03] hover:bg-white/[0.05] rounded-2xl transition-all border border-white/5 shrink-0 shadow-xl self-stretch text-zinc-500 hover:text-white" 
                                         title="More options" 
                                         aria-label="More options"
                                     >
@@ -340,9 +353,10 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                                 </div>
                             </div>
 
-                        <div className="bg-[#121212] rounded-3xl p-6 text-sm hover:bg-white/[0.03] transition-colors border border-white/5 flex flex-col items-start cursor-pointer" onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}>
+                        <div className="glass-deep rounded-[32px] p-8 text-sm hover:bg-white/[0.04] transition-all duration-500 border border-white/5 flex flex-col items-start cursor-pointer group/desc relative overflow-hidden" onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}>
+                            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#FFB800]/20 to-transparent opacity-0 group-hover/desc:opacity-100 transition-opacity" />
                             <p className={cn(
-                                "whitespace-pre-wrap text-gray-400 font-medium leading-relaxed transition-all",
+                                "whitespace-pre-wrap text-zinc-400 font-medium leading-relaxed transition-all",
                                 !isDescriptionExpanded && "line-clamp-2 md:line-clamp-3"
                             )}>
                                 {displayDesc}

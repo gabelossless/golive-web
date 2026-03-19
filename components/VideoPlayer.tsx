@@ -234,8 +234,8 @@ export default function VideoPlayer(props: VideoPlayerProps) {
             // Draw low-res frame for sampling
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            // Throttle based on mobile/power
-            const delay = window.innerWidth < 768 ? 400 : 250; 
+            // Smoother refresh for a liquid feel
+            const delay = window.innerWidth < 768 ? 150 : 60; 
             
             timeoutId = setTimeout(() => {
                 frameId = requestAnimationFrame(updateAmbient);
@@ -258,10 +258,10 @@ export default function VideoPlayer(props: VideoPlayerProps) {
         <div
             ref={containerRef}
             className={cn(
-                "relative bg-black overflow-hidden shadow-2xl shadow-black/50 group transition-all duration-500 mx-auto aspect-dynamic",
+                "relative bg-black overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)] group transition-all duration-700 mx-auto aspect-dynamic border-premium font-premium",
                 isTheaterMode 
-                    ? "w-[120%] -mx-[10%] rounded-none lg:rounded-[40px]" 
-                    : "w-full rounded-2xl"
+                    ? "w-[125%] -mx-[12.5%] rounded-none lg:rounded-[60px]" 
+                    : "w-full rounded-[48px]"
             )}
             style={{ 
                 //@ts-ignore
@@ -278,12 +278,12 @@ export default function VideoPlayer(props: VideoPlayerProps) {
         >
             {/* Ambient Background */}
             {isAmbientMode && (
-                <div className="absolute inset-0 pointer-events-none overflow-hidden origin-center scale-[1.3] opacity-60 select-none">
+                <div className="absolute inset-0 pointer-events-none overflow-hidden origin-center scale-[1.5] opacity-70 select-none transition-opacity duration-1000">
                     <canvas
                         ref={canvasRef}
-                        width={32}
-                        height={Math.round(32 / aspectRatio)}
-                        className="w-full h-full blur-[120px] saturate-[2.2] brightness-90 transition-opacity duration-1000"
+                        width={64}
+                        height={Math.round(64 / aspectRatio)}
+                        className="w-full h-full blur-[140px] saturate-[2.5] brightness-90 transition-opacity duration-1000"
                     />
                 </div>
             )}
@@ -337,11 +337,12 @@ export default function VideoPlayer(props: VideoPlayerProps) {
                     >
                         <button 
                             onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-                            className="w-24 h-24 bg-black/40 backdrop-blur-md border border-[#FFB800]/30 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(255,184,0,0.2)] hover:scale-110 hover:bg-black/60 transition-all pointer-events-auto group/play"
+                            className="w-32 h-32 bg-black/20 backdrop-blur-3xl border border-white/10 rounded-full flex items-center justify-center shadow-[0_0_80px_rgba(255,184,0,0.15)] hover:scale-110 hover:bg-black/40 transition-all pointer-events-auto group/play relative"
                             title={isPlaying ? "Pause" : "Play"}
                             aria-label={isPlaying ? "Pause" : "Play"}
                         >
-                            <Play size={44} className="text-[#FFB800] ml-2 drop-shadow-[0_0_10px_rgba(255,184,0,0.5)] group-hover/play:scale-110 transition-transform" fill="currentColor" />
+                            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FFB800]/20 to-transparent opacity-0 group-hover/play:opacity-100 transition-opacity" />
+                            <Play size={56} className="text-[#FFB800] ml-3 drop-shadow-[0_0_15px_rgba(255,184,0,0.6)] group-hover/play:scale-110 transition-transform relative z-10" fill="currentColor" />
                         </button>
                     </motion.div>
                 )}
@@ -385,13 +386,13 @@ export default function VideoPlayer(props: VideoPlayerProps) {
 
             {/* Controls overlay */}
             <div
-                className={`absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end transition-opacity duration-300 pointer-events-none ${showControls ? 'opacity-100' : 'opacity-0'} z-20`}
+                className={`absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end transition-all duration-700 pointer-events-none ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} z-20`}
                 style={{ pointerEvents: showControls ? 'auto' : 'none' }}
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="px-4 pb-4 pt-12">
+                <div className="px-10 pb-10 pt-20">
                     <div
-                        className="w-full h-2.5 md:h-1.5 bg-white/10 rounded-full mb-4 cursor-pointer relative group/progress overflow-hidden touch-none"
+                        className="w-full h-1.5 bg-white/10 rounded-full mb-6 cursor-pointer relative group/progress overflow-visible touch-none"
                         onClick={handleProgressClick}
                         onTouchMove={(e) => {
                             if (!videoRef.current) return;

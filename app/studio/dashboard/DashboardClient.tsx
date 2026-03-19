@@ -22,7 +22,8 @@ import {
     Search,
     History,
     Calendar,
-    ExternalLink
+    ExternalLink,
+    Rocket
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,6 +45,7 @@ export default function DashboardClient() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editTitle, setEditTitle] = useState('');
     const [revenueData, setRevenueData] = useState<any>(null);
+    const [analyticsData, setAnalyticsData] = useState<any>(null);
     const [stats, setStats] = useState({
         totalViews: 0,
         subscribers: 0,
@@ -75,13 +77,19 @@ export default function DashboardClient() {
                 });
             }
 
-            // Fetch Revenue Data
+            // Fetch Analytics & Revenue Data
             try {
-                const res = await fetch('/api/studio/revenue');
-                const data = await res.json();
-                if (!data.error) setRevenueData(data);
+                const [revRes, anaRes] = await Promise.all([
+                    fetch('/api/studio/revenue'),
+                    fetch('/api/studio/analytics')
+                ]);
+                const revData = await revRes.json();
+                const anaData = await anaRes.json();
+                
+                if (!revData.error) setRevenueData(revData);
+                if (!anaData.error) setAnalyticsData(anaData);
             } catch (err) {
-                console.error('Failed to fetch revenue:', err);
+                console.error('Failed to fetch analytics:', err);
             }
 
             setLoading(false);
@@ -111,6 +119,18 @@ export default function DashboardClient() {
             console.error('Update failed:', err);
         }
     };
+    const handleBoost = async (videoId: string) => {
+        try {
+            const { error } = await supabase.rpc('admin_boost_video', { 
+                target_video_id: videoId,
+                boost_amount: 50
+            });
+            if (error) throw error;
+            setVideos(prev => prev.map(v => v.id === videoId ? { ...v, view_count: (v.view_count || 0) + 50 } : v));
+        } catch (err) {
+            console.error('Boost failed:', err);
+        }
+    };
 
     if (loading) {
         return (
@@ -129,7 +149,7 @@ export default function DashboardClient() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
                 <div className="space-y-2">
-                    <h1 className="text-5xl font-black uppercase tracking-tighter text-white m-0 italic">
+                    <h1 className="text-6xl font-black uppercase tracking-tighter text-white m-0 italic font-premium text-gradient">
                         Creator Studio
                     </h1>
                     <div className="flex items-center gap-2 text-zinc-500 font-bold uppercase tracking-widest text-xs">
@@ -150,33 +170,220 @@ export default function DashboardClient() {
             </div>
 
             {/* Main Tabs Navigation */}
-            <div className="flex items-center gap-1 bg-white/[0.03] p-1.5 rounded-full self-start border border-white/5">
-                {[
-                    { id: 'content', label: 'Channel Content', icon: LayoutDashboard },
-                    { id: 'revenue', label: 'Analytics & Revenue', icon: Wallet },
-                ].map((tab) => {
-                    const isActive = activeTab === tab.id;
-                    const Icon = tab.icon;
-                    return (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as Tab)}
-                            className={cn(
-                                "flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all",
-                                isActive 
-                                    ? "bg-white text-black shadow-lg" 
-                                    : "text-zinc-500 hover:text-white hover:bg-white/5"
-                            )}
-                        >
-                            <Icon size={16} />
-                            {tab.label}
-                        </button>
-                    );
-                })}
+            <div className="flex items-center gap-2 bg-white/[0.03] p-1.5 rounded-2xl self-start border border-white/5 backdrop-blur-3xl shadow-2xl">
+                <button
+                    onClick={() => setActiveTab('content')}
+                    className={cn(
+                        "px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                        activeTab === 'content' 
+                            ? "bg-white text-black shadow-xl shadow-white/10 scale-105" 
+                            : "text-zinc-500 hover:text-white hover:bg-white/5"
+                    )}
+                >
+                    Channel Content
+                </button>
+                <button
+                    onClick={() => setActiveTab('revenue')}
+                    className={cn(
+                        "px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                        activeTab === 'revenue' 
+                            ? "bg-white text-black shadow-xl shadow-white/10 scale-105" 
+                            : "text-zinc-500 hover:text-white hover:bg-white/5"
+                    )}
+                >
+                    Analytics & Revenue
+                </button>
             </div>
 
             <AnimatePresence mode="wait">
-                {activeTab === 'content' ? (
+                {activeTab === 'revenue' ? (
+                    <motion.div 
+                        key="revenue"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="space-y-8"
+                    >
+                        {/* Revenue Overview Stats */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <StatCard 
+                                icon={DollarSign} 
+                                label="Total USDC Revenue" 
+                                value={`$${revenueData?.stats?.totalUSDC?.toFixed(2) || '0.00'}`} 
+                                trend="75% Split Share"
+                                color="text-green-400" 
+                            />
+                            <StatCard 
+                                icon={Wallet} 
+                                label="Base Native (ETH)" 
+                                value={`${revenueData?.stats?.totalNativeBase?.toFixed(4) || '0.0000'} ETH`} 
+                                color="text-blue-400" 
+                            />
+                            <StatCard 
+                                icon={Flame} 
+                                label="Solana Native (SOL)" 
+                                value={`${revenueData?.stats?.totalNativeSolana?.toFixed(2) || '0.00'} SOL`} 
+                                color="text-[#14F195]" 
+                            />
+                            <StatCard 
+                                icon={History} 
+                                label="Total Transactions" 
+                                value={revenueData?.stats?.count || 0} 
+                                color="text-purple-400" 
+                            />
+                        </div>
+
+                        {/* Charts Section */}
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                            {/* Revenue Analytics Chart */}
+                            <div className="glass-deep p-6 md:p-10 rounded-[32px] md:rounded-[48px] border border-white/5 space-y-6 md:space-y-8 shadow-2xl relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-green-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight italic font-premium">Revenue Velocity</h3>
+                                    <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest text-green-400 self-start sm:self-auto">
+                                        <TrendingUp size={14} /> Last 7 Days (USDC)
+                                    </div>
+                                </div>
+                                <div className="h-[250px] md:h-[350px] w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={analyticsData?.chartData || revenueData?.chartData || []}>
+                                            <defs>
+                                                <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                            <XAxis dataKey="date" stroke="#ffffff20" fontSize={9} tickLine={false} axisLine={false} />
+                                            <YAxis hide />
+                                            <Tooltip 
+                                                contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
+                                                itemStyle={{ color: '#10b981', fontWeight: 900, fontSize: '10px', textTransform: 'uppercase' }}
+                                                labelStyle={{ color: '#fff', fontWeight: 900, fontSize: '12px', marginBottom: '4px' }}
+                                                formatter={(value: any) => `$${Number(value || 0).toFixed(2)} USDC`}
+                                            />
+                                            <Area type="monotone" dataKey="revenue" stroke="#10b981" fillOpacity={1} fill="url(#colorRev)" strokeWidth={3} />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            {/* Views Analytics Chart */}
+                            <div className="glass-deep p-6 md:p-10 rounded-[32px] md:rounded-[48px] border border-white/5 space-y-6 md:space-y-8 shadow-2xl relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#FFB800]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight italic font-premium">View Velocity</h3>
+                                    <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#FFB800] self-start sm:self-auto">
+                                        <Eye size={14} /> Global Engagement
+                                    </div>
+                                </div>
+                                <div className="h-[250px] md:h-[350px] w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={analyticsData?.chartData || []}>
+                                            <defs>
+                                                <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#FFB800" stopOpacity={0.3}/>
+                                                    <stop offset="95%" stopColor="#FFB800" stopOpacity={0}/>
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                            <XAxis dataKey="date" stroke="#ffffff20" fontSize={9} tickLine={false} axisLine={false} />
+                                            <YAxis hide />
+                                            <Tooltip 
+                                                contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
+                                                itemStyle={{ color: '#FFB800', fontWeight: 900, fontSize: '10px', textTransform: 'uppercase' }}
+                                                labelStyle={{ color: '#fff', fontWeight: 900, fontSize: '12px', marginBottom: '4px' }}
+                                                formatter={(value: any) => `${value} Views`}
+                                            />
+                                            <Area type="monotone" dataKey="views" stroke="#FFB800" fillOpacity={1} fill="url(#colorViews)" strokeWidth={3} />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Recent Transactions & Payouts */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="lg:col-span-2 bg-[#111111] rounded-[32px] md:rounded-[40px] border border-white/5 overflow-hidden shadow-2xl">
+                                <div className="p-6 md:p-8 border-b border-white/5 flex items-center justify-between">
+                                    <h2 className="text-lg md:text-xl font-black uppercase tracking-tight m-0 italic">Transaction History</h2>
+                                    <div className="flex items-center gap-2 text-zinc-500 font-bold uppercase tracking-widest text-[9px] md:text-[10px]">
+                                        <Calendar size={14} /> Total: {revenueData?.stats?.count || 0}
+                                    </div>
+                                </div>
+                                <div className="overflow-x-auto scrollbar-hide">
+                                    <table className="w-full text-left border-collapse min-w-[700px]">
+                                        <thead>
+                                            <tr className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-600 bg-white/[0.01]">
+                                                <th className="px-6 md:px-8 py-4 md:py-6">Date</th>
+                                                <th className="px-6 py-4 md:py-6">Chain</th>
+                                                <th className="px-6 py-4 md:py-6 text-right">Gross</th>
+                                                <th className="px-6 md:px-8 py-4 md:py-6 text-right">Link</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/5">
+                                            {!revenueData?.recentTips?.length ? (
+                                                <tr>
+                                                    <td colSpan={4} className="px-8 py-16 text-center text-zinc-700 font-black uppercase italic text-xs">
+                                                        No transactions yet
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                revenueData.recentTips.map((tip: any) => (
+                                                    <tr key={tip.id} className="hover:bg-white/[0.01] transition-colors">
+                                                        <td className="px-6 md:px-8 py-4 text-[11px] font-bold text-zinc-500">
+                                                            {format(new Date(tip.created_at), 'MMM d, HH:mm')}
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={cn(
+                                                                "px-2 py-0.5 rounded-full text-[8px] font-black uppercase border",
+                                                                tip.chain === 'base' ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                                            )}>
+                                                                {tip.chain}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right font-black text-white italic text-[11px]">
+                                                            {parseFloat(tip.amount_raw).toFixed(4)} {tip.asset?.toUpperCase()}
+                                                        </td>
+                                                        <td className="px-6 md:px-8 py-4 text-right">
+                                                            {tip.tx_hash && (
+                                                                <a 
+                                                                    href={tip.chain === 'base' ? `https://basescan.org/tx/${tip.tx_hash}` : `https://solscan.io/tx/${tip.tx_hash}`}
+                                                                    target="_blank"
+                                                                    title="View transaction"
+                                                                    className="text-zinc-600 hover:text-[#FFB800] transition-colors"
+                                                                >
+                                                                    <ExternalLink size={14} />
+                                                                </a>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div className="glass-deep p-8 md:p-10 rounded-[32px] md:rounded-[48px] border border-white/5 flex flex-col shadow-2xl relative overflow-hidden group h-fit">
+                                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#FFB800]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight italic font-premium mb-8">Payout Nodes</h3>
+                                <div className="space-y-4">
+                                    <PayoutItem chain="Base" address={profile?.wallet_address} status="Active" color="blue" />
+                                    <PayoutItem chain="Solana" address={profile?.solana_wallet_address} status={profile?.solana_wallet_address ? 'Active' : 'Missing'} color="green" />
+                                </div>
+                                <div className="mt-8 pt-8 border-t border-white/5">
+                                    <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest leading-relaxed">
+                                        All tips are split 75/25 atomically on-chain.
+                                    </p>
+                                    <Link href="/studio/settings" className="mt-4 flex items-center gap-2 text-[#FFB800] text-[10px] font-black uppercase hover:underline">
+                                        Configure Wallets <ArrowUpRight size={14} />
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                ) : (
                     <motion.div 
                         key="content"
                         initial={{ opacity: 0, y: 10 }}
@@ -247,6 +454,7 @@ export default function DashboardClient() {
                                                                         value={editTitle}
                                                                         onChange={(e) => setEditTitle(e.target.value)}
                                                                         onBlur={() => handleQuickUpdate(video.id)}
+                                                                        aria-label="Edit video title"
                                                                         className="bg-zinc-800 border border-[#FFB800] rounded px-3 py-1.5 text-sm text-white w-full outline-none"
                                                                     />
                                                                 ) : (
@@ -281,6 +489,14 @@ export default function DashboardClient() {
                                                                 <Eye size={18} />
                                                             </Link>
                                                             <button 
+                                                                onClick={() => handleBoost(video.id)}
+                                                                className="p-2.5 hover:bg-orange-500/10 rounded-2xl text-zinc-500 hover:text-orange-500 transition-all"
+                                                                title="Boost Engagement"
+                                                                aria-label="Boost Engagement"
+                                                            >
+                                                                <Rocket size={18} />
+                                                            </button>
+                                                            <button 
                                                                 onClick={() => { setEditingId(video.id); setEditTitle(video.title); }}
                                                                 className="p-2.5 hover:bg-white/10 rounded-2xl text-zinc-500 hover:text-white transition-all"
                                                                 title="Edit title"
@@ -306,176 +522,6 @@ export default function DashboardClient() {
                             </div>
                         </div>
                     </motion.div>
-                ) : (
-                    <motion.div 
-                        key="revenue"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="space-y-8"
-                    >
-                        {/* Revenue Overview Stats */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <StatCard 
-                                icon={DollarSign} 
-                                label="Total USDC Revenue" 
-                                value={`$${revenueData?.stats?.totalUSDC?.toFixed(2) || '0.00'}`} 
-                                trend="75% Split Share"
-                                color="text-green-400" 
-                            />
-                            <StatCard 
-                                icon={Wallet} 
-                                label="Base Native (ETH)" 
-                                value={`${revenueData?.stats?.totalNativeBase?.toFixed(4) || '0.0000'} ETH`} 
-                                color="text-blue-400" 
-                            />
-                            <StatCard 
-                                icon={Flame} 
-                                label="Solana Native (SOL)" 
-                                value={`${revenueData?.stats?.totalNativeSolana?.toFixed(2) || '0.00'} SOL`} 
-                                color="text-[#14F195]" 
-                            />
-                            <StatCard 
-                                icon={History} 
-                                label="Total Transactions" 
-                                value={revenueData?.stats?.count || 0} 
-                                color="text-purple-400" 
-                            />
-                        </div>
-
-                        {/* Revenue Analytics Chart */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <div className="lg:col-span-2 bg-[#111111] p-8 rounded-[40px] border border-white/5 space-y-8 shadow-2xl">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-xl font-black uppercase tracking-tight italic">Revenue Velocity</h3>
-                                    <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full text-[10px] font-black uppercase tracking-widest text-[#FFB800]">
-                                        <TrendingUp size={14} /> Last 7 Days (USDC)
-                                    </div>
-                                </div>
-                                <div className="h-[350px] w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={revenueData?.chartData || []}>
-                                            <defs>
-                                                <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#FFB800" stopOpacity={0.3}/>
-                                                    <stop offset="95%" stopColor="#FFB800" stopOpacity={0}/>
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                                            <XAxis 
-                                                dataKey="date" 
-                                                axisLine={false} 
-                                                tickLine={false} 
-                                                tick={{ fill: '#666', fontSize: 10, fontWeight: 900 }} 
-                                                dy={10}
-                                            />
-                                            <YAxis 
-                                                axisLine={false} 
-                                                tickLine={false} 
-                                                tick={{ fill: '#666', fontSize: 10, fontWeight: 900 }} 
-                                            />
-                                            <Tooltip 
-                                                contentStyle={{ backgroundColor: '#111', border: '1px solid #ffffff10', borderRadius: '16px' }}
-                                                itemStyle={{ color: '#FFB800', fontWeight: 900, fontSize: '12px', textTransform: 'uppercase' }}
-                                            />
-                                            <Area 
-                                                type="monotone" 
-                                                dataKey="revenue" 
-                                                stroke="#FFB800" 
-                                                strokeWidth={4}
-                                                fillOpacity={1} 
-                                                fill="url(#colorRev)" 
-                                            />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-
-                            {/* Payout Channels Card */}
-                            <div className="bg-[#111111] p-8 rounded-[40px] border border-white/5 flex flex-col shadow-2xl">
-                                <h3 className="text-xl font-black uppercase tracking-tight italic mb-8">Payout Status</h3>
-                                <div className="space-y-6 flex-1">
-                                    <PayoutItem chain="Base" address={profile?.wallet_address} status="Linked" color="blue" />
-                                    <PayoutItem chain="Solana" address={profile?.solana_wallet_address} status={profile?.solana_wallet_address ? 'Linked' : 'Not Set'} color="green" />
-                                </div>
-                                <div className="mt-8 pt-8 border-t border-white/5">
-                                    <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest leading-relaxed">
-                                        All tips are split 75/25 atomically on-chain. Funds are deposited directly to your non-custodial wallet.
-                                    </p>
-                                    <Link href="/studio/settings" className="mt-4 flex items-center gap-2 text-[#FFB800] text-xs font-black uppercase hover:underline">
-                                        Update Wallets <ArrowUpRight size={14} />
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Recent Transactions */}
-                        <div className="bg-[#111111] rounded-[40px] border border-white/5 overflow-hidden shadow-2xl">
-                            <div className="p-8 border-b border-white/5 flex items-center justify-between">
-                                <h2 className="text-xl font-black uppercase tracking-tight m-0 italic">Transaction History</h2>
-                                <div className="flex items-center gap-2 text-zinc-500 font-bold uppercase tracking-widest text-[10px]">
-                                    <Calendar size={14} /> Total: {revenueData?.stats?.count || 0}
-                                </div>
-                            </div>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse min-w-[800px]">
-                                    <thead>
-                                        <tr className="text-[10px] font-black uppercase tracking-widest text-zinc-600 bg-white/[0.01]">
-                                            <th className="px-8 py-6">Date</th>
-                                            <th className="px-6 py-6">Blockchain</th>
-                                            <th className="px-6 py-6">Asset</th>
-                                            <th className="px-6 py-6 text-right">Amount (Gross)</th>
-                                            <th className="px-8 py-6 text-right">Explorer</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-white/5">
-                                        {!revenueData?.recentTips?.length ? (
-                                            <tr>
-                                                <td colSpan={5} className="px-8 py-24 text-center text-zinc-700 font-black uppercase italic">
-                                                    No transactions yet
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            revenueData.recentTips.map((tip: any) => (
-                                                <tr key={tip.id} className="hover:bg-white/[0.01] transition-colors">
-                                                    <td className="px-8 py-5 text-xs font-bold text-zinc-400">
-                                                        {format(new Date(tip.created_at), 'MMM d, HH:mm')}
-                                                    </td>
-                                                    <td className="px-6 py-5">
-                                                        <span className={cn(
-                                                            "px-2.5 py-1 rounded-full text-[9px] font-black uppercase border",
-                                                            tip.chain === 'base' ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                                                        )}>
-                                                            {tip.chain}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-5">
-                                                        <span className="text-xs font-black text-white italic uppercase tracking-widest">
-                                                            {tip.asset}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-5 text-right font-black text-white italic">
-                                                        {parseFloat(tip.amount_raw).toFixed(4)}
-                                                    </td>
-                                                    <td className="px-8 py-5 text-right">
-                                                        {tip.tx_hash && (
-                                                            <a 
-                                                                href={tip.chain === 'base' ? `https://basescan.org/tx/${tip.tx_hash}` : `https://solscan.io/tx/${tip.tx_hash}`}
-                                                                target="_blank"
-                                                                className="inline-flex items-center gap-1.5 text-zinc-600 hover:text-[#FFB800] transition-colors text-[10px] font-black uppercase"
-                                                            >
-                                                                Receipt <ExternalLink size={14} />
-                                                            </a>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </motion.div>
                 )}
             </AnimatePresence>
         </div>
@@ -486,23 +532,23 @@ export default function DashboardClient() {
 
 function StatCard({ icon: Icon, label, value, trend, color = "text-[#FFB800]" }: any) {
     return (
-        <div className="bg-[#111111] p-8 rounded-[40px] border border-white/5 shadow-xl hover:border-white/10 transition-all group overflow-hidden relative">
-            <div className="flex items-center justify-between mb-4 relative z-10">
-                <div className={cn("w-14 h-14 rounded-2xl bg-white/[0.04] flex items-center justify-center border border-white/5 shadow-inner", color)}>
-                    <Icon size={24} strokeWidth={2.5} />
+        <div className="glass-deep p-8 rounded-[40px] border border-white/5 shadow-xl hover:border-[#FFB800]/20 transition-all duration-500 group overflow-hidden relative">
+            <div className="flex items-center justify-between mb-6 relative z-10">
+                <div className={cn("w-16 h-16 rounded-2xl bg-white/[0.04] flex items-center justify-center border border-white/5 shadow-inner transition-transform group-hover:scale-110 group-hover:rotate-3", color)}>
+                    <Icon size={28} strokeWidth={2.5} className="drop-shadow-[0_0_8px_currentColor]" />
                 </div>
                 {trend && (
-                    <span className="text-[10px] font-black text-green-500 bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20">
+                    <span className="text-[10px] font-black text-[#FFB800] bg-[#FFB800]/5 px-4 py-2 rounded-full border border-[#FFB800]/10 uppercase tracking-widest italic">
                         {trend}
                     </span>
                 )}
             </div>
             <div className="space-y-1 relative z-10">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">{label}</p>
-                <div className="text-4xl font-black tracking-tighter text-white italic">{value}</div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-2 italic">{label}</p>
+                <div className="text-5xl font-black tracking-tighter text-white italic font-display">{value}</div>
             </div>
             {/* Ambient micro-glow */}
-            <div className="absolute -bottom-10 -right-10 w-24 h-24 blur-[80px] bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className={cn("absolute -bottom-10 -right-10 w-32 h-32 blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-1000", color === "text-[#FFB800]" ? "bg-[#FFB800]" : "bg-white")} />
         </div>
     );
 }

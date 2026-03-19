@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from '@/components/AuthProvider';
 import { TOP_50_TAGS } from '@/lib/tags';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 
 interface NavbarProps {
     onMenuClick: () => void;
@@ -23,17 +24,56 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     const { user, profile } = useAuth();
 
     useEffect(() => {
-        if (searchQuery.trim().length > 0) {
-            const filtered = TOP_50_TAGS.filter(tag => 
-                tag.toLowerCase().startsWith(searchQuery.toLowerCase())
-            ).slice(0, 8);
-            setSuggestions(filtered);
-            setShowSuggestions(true);
-        } else {
-            setSuggestions([]);
-            setShowSuggestions(false);
-        }
-        setSelectedIndex(-1);
+        const fetchSuggestions = async () => {
+            if (searchQuery.trim().length > 0) {
+                try {
+                    // Fetch creators and videos matching the query
+                    const [{ data: creators }, { data: videos }] = await Promise.all([
+                        supabase
+                            .from('profiles')
+                            .select('username, display_name, channel_name')
+                            .or(`username.ilike.%${searchQuery}%,display_name.ilike.%${searchQuery}%,channel_name.ilike.%${searchQuery}%`)
+                            .limit(4),
+                        supabase
+                            .from('videos')
+                            .select('title')
+                            .ilike('title', `%${searchQuery}%`)
+                            .limit(4)
+                    ]);
+
+                    const combined = [
+                        ...(creators || []).map((c: any) => c.channel_name || c.display_name || c.username),
+                        ...(videos || []).map((v: any) => v.title)
+                    ];
+                    
+                    const unique = Array.from(new Set(combined));
+                    
+                    // Fallback to tags if we don't have enough results
+                    if (unique.length < 8) {
+                        const tags = TOP_50_TAGS.filter(tag => 
+                            tag.toLowerCase().includes(searchQuery.toLowerCase())
+                        ).slice(0, 8 - unique.length);
+                        setSuggestions([...unique, ...tags].slice(0, 8));
+                    } else {
+                        setSuggestions(unique.slice(0, 8));
+                    }
+                    setShowSuggestions(true);
+                } catch (err) {
+                    console.error('Error fetching suggestions:', err);
+                    const filtered = TOP_50_TAGS.filter(tag => 
+                        tag.toLowerCase().startsWith(searchQuery.toLowerCase())
+                    ).slice(0, 8);
+                    setSuggestions(filtered);
+                }
+            } else {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+            setSelectedIndex(-1);
+        };
+
+        const timer = setTimeout(fetchSuggestions, 300);
+        return () => clearTimeout(timer);
     }, [searchQuery]);
 
     const handleSearch = (e?: React.FormEvent) => {
@@ -65,7 +105,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     };
 
     return (
-        <nav className="sticky top-0 z-50 flex items-center justify-between px-4 py-2 bg-[#0a0a0a] glass h-14 min-h-[56px] shrink-0">
+        <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-2 glass-deep h-16 min-h-[64px] shrink-0 mx-2 mt-2 rounded-3xl border border-white/5">
             <div className="flex items-center gap-4">
                 <button
                     onClick={onMenuClick}
@@ -79,8 +119,8 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                         <Zap className="text-[#FFB800] group-hover:scale-110 transition-transform" size={28} fill="currentColor" />
                         <div className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full animate-pulse" />
                     </div>
-                    <span className="text-xl font-black tracking-tighter font-display hidden xs:block sm:block">
-                        VIBE<span className="text-[#FFB800]">STREAM</span>
+                    <span className="text-xl font-black tracking-tighter font-premium hidden xs:block sm:block uppercase italic">
+                        Vibe<span className="text-[#FFB800] text-gradient">Stream</span>
                     </span>
                 </Link>
             </div>
@@ -96,10 +136,10 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             >
                 <form
                     onSubmit={handleSearch}
-                    className="flex items-center w-full"
+                    className="flex items-center w-full group/search"
                 >
-                    <div className="flex flex-1 items-center bg-[#121212] border border-white/5 rounded-l-full px-4 py-1.5 focus-within:border-[#FFB800]/50 transition-colors">
-                        <Search className="text-gray-400 mr-2" size={18} />
+                    <div className="flex flex-1 items-center bg-white/[0.03] border-premium rounded-2xl px-5 py-2 focus-within:bg-black/40 focus-within:border-[#FFB800]/40 transition-all duration-500 shadow-inner">
+                        <Search className="text-zinc-600 group-focus-within/search:text-[#FFB800] transition-colors" size={18} />
                         <input
                             type="text"
                             placeholder="Search creators, videos, lives..."
@@ -107,14 +147,11 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={handleKeyDown}
                             onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
-                            className="w-full bg-transparent outline-none text-sm placeholder:text-gray-600"
+                            className="w-full bg-transparent outline-none text-sm placeholder:text-zinc-700 ml-3 font-medium text-white"
                             title="Search"
                         />
                     </div>
-                    <button className="bg-[#1a1a1a] border border-l-0 border-white/5 px-5 py-1.5 rounded-r-full hover:bg-[#222222] transition-colors" title="Search">
-                        <Search size={18} />
-                    </button>
-                    <button type="button" className="ml-4 p-2.5 bg-[#121212] rounded-full hover:bg-white/10 transition-colors" title="Search with your voice">
+                    <button type="button" className="ml-4 p-2.5 bg-white/[0.03] border border-white/5 rounded-2xl hover:bg-white/10 hover:border-white/10 transition-all text-zinc-400 hover:text-white" title="Search with your voice">
                         <Mic size={18} />
                     </button>
                 </form>

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { Loader2, Plus, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 interface SubscribeButtonProps {
     channelId: string;
@@ -110,7 +111,10 @@ export default function SubscribeButton({ channelId, channelName, className = ''
             <button
                 onClick={handleToggle}
                 disabled={processing}
-                className={`bg-surface hover:bg-surface-hover hover:text-destructive hover:border-destructive/30 border border-border/50 text-foreground font-bold px-4 py-2 rounded-full transition-all flex items-center gap-2 ${className}`}
+                className={cn(
+                    "bg-white/5 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 border border-white/10 text-zinc-400 font-black px-6 py-2.5 rounded-xl transition-all flex items-center gap-2 uppercase tracking-widest text-[10px] italic shadow-xl group",
+                    className
+                )}
             >
                 {processing ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                 <span className="group-hover:hidden">Subscribed</span>
@@ -123,9 +127,12 @@ export default function SubscribeButton({ channelId, channelName, className = ''
         <button
             onClick={handleToggle}
             disabled={processing}
-            className={`btn btn-primary px-6 py-2 rounded-full font-black shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2 ${className}`}
+            className={cn(
+                "bg-white text-black px-8 py-3 rounded-xl font-black shadow-2xl shadow-white/5 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-widest text-[10px] italic",
+                className
+            )}
         >
-            {processing ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+            {processing ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} strokeWidth={3} />}
             Subscribe
         </button>
     );

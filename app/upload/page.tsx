@@ -4,7 +4,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { UploadCloud, X, CheckCircle, AlertCircle, FileVideo, Image as ImageIcon, Loader2, Globe, Lock, EyeOff, Check, Plus } from 'lucide-react';
+import { UploadCloud, X, CheckCircle, AlertCircle, FileVideo, Image as ImageIcon, Loader2, Globe, Lock, EyeOff, Check, Plus, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -450,37 +450,39 @@ export default function UploadPage() {
                 </motion.div>
             )}
 
-            <h1 className="text-3xl font-bold mb-8">Upload Video</h1>
+            <h1 className="text-4xl md:text-6xl font-black mb-12 italic font-premium text-gradient tracking-tighter uppercase">Publish Content</h1>
 
             {!videoFile ? (
                 <div
-                    className="border-2 border-dashed border-white/20 rounded-2xl p-12 flex flex-col items-center justify-center text-center bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer min-h-[400px]"
+                    className="glass-deep border-2 border-dashed border-white/5 rounded-[40px] p-12 flex flex-col items-center justify-center text-center hover:bg-white/[0.05] transition-all cursor-pointer min-h-[450px] group relative overflow-hidden"
                     onClick={() => fileInputRef.current?.click()}
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
                 >
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#FFB800]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     <input type="file" accept="video/*" className="hidden" ref={fileInputRef} onChange={handleVideoSelect} disabled={isUploading} title="Select video file" />
-                    <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6">
-                        <UploadCloud size={48} className="text-[#FFB800]" />
+                    <div className="w-24 h-24 bg-white/[0.03] rounded-[32px] flex items-center justify-center mb-8 border border-white/5 shadow-2xl group-hover:scale-110 group-hover:rotate-3 transition-transform">
+                        <UploadCloud size={48} className="text-[#FFB800] drop-shadow-[0_0_15px_rgba(255,184,0,0.4)]" />
                     </div>
-                    <h2 className="text-xl font-bold mb-2">Drag and drop video files to upload</h2>
-                    <p className="text-gray-400 mb-6 font-medium text-sm">Your videos will be private until you publish them.</p>
-                    <button className="px-6 py-2.5 bg-[#FFB800] hover:bg-orange-500 text-black rounded-lg font-bold transition-colors border-none cursor-pointer">
-                        Select Files
+                    <h2 className="text-2xl font-black mb-3 italic font-premium tracking-tight">Drop your masterpiece here</h2>
+                    <p className="text-zinc-500 mb-8 font-bold uppercase tracking-widest text-[10px]">High-fidelity 4K & Vertical Shorts supported</p>
+                    <button className="px-10 py-4 bg-white text-black rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-2xl shadow-white/5 hover:scale-105 active:scale-95">
+                        Browse Files
                     </button>
-                    {fieldErrors.videoFile && <p className="text-red-500 text-sm mt-4 font-bold">{fieldErrors.videoFile}</p>}
+                    {fieldErrors.videoFile && <p className="text-red-500 text-xs font-black uppercase tracking-widest mt-6 animate-pulse">{fieldErrors.videoFile}</p>}
                 </div>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Form Section */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-[#1a1a1a] p-6 rounded-2xl border border-white/5">
-                            <h2 className="text-xl font-bold mb-6">Details</h2>
-                            <form onSubmit={handleUpload} className="space-y-6">
+                    <div className="lg:col-span-2 space-y-8">
+                        <div className="glass-deep p-8 md:p-10 rounded-[40px] border border-white/5 shadow-2xl relative overflow-hidden group/form">
+                            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#FFB800]/20 to-transparent opacity-0 group-hover/form:opacity-100 transition-opacity" />
+                            <h2 className="text-2xl font-black mb-8 italic font-premium tracking-tight">Metadata & Intelligence</h2>
+                            <form onSubmit={handleUpload} className="space-y-8">
                                 <div>
-                                    <div className="flex justify-between">
-                                        <label htmlFor="video-title" className="block text-sm font-medium text-gray-400 mb-1.5">Title (required)</label>
-                                        <span className={cn("text-xs font-medium", title.length > TITLE_MAX * 0.9 ? 'text-orange-500' : 'text-gray-500')}>{title.length}/{TITLE_MAX}</span>
+                                    <div className="flex justify-between mb-2">
+                                        <label htmlFor="video-title" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic">Title</label>
+                                        <span className={cn("text-[10px] font-black", title.length > TITLE_MAX * 0.9 ? 'text-orange-500' : 'text-zinc-700')}>{title.length}/{TITLE_MAX}</span>
                                     </div>
                                     <input
                                         id="video-title"
@@ -490,45 +492,53 @@ export default function UploadPage() {
                                         onChange={(e) => onTitleChange(e.target.value)}
                                         required
                                         disabled={isUploading}
-                                        className={cn("w-full bg-black/50 border rounded-lg px-4 py-2.5 text-white focus:outline-none transition-colors", fieldErrors.title ? "border-red-500 focus:border-red-500" : "border-white/10 focus:border-[#FFB800]")}
-                                        placeholder="Add a title that describes your video"
+                                        className={cn("w-full bg-white/[0.03] border rounded-2xl px-6 py-4 text-white font-bold focus:outline-none transition-all", fieldErrors.title ? "border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]" : "border-white/5 focus:border-[#FFB800]/50")}
+                                        placeholder="Name your creation..."
                                         title="Video Title"
                                     />
-                                    {fieldErrors.title && <p className="text-red-500 text-xs font-bold mt-1.5">{fieldErrors.title}</p>}
+                                    {fieldErrors.title && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2">{fieldErrors.title}</p>}
                                 </div>
 
                                 <div>
-                                    <div className="flex justify-between">
-                                        <label htmlFor="video-description" className="block text-sm font-medium text-gray-400 mb-1.5">Description</label>
-                                        <span className={cn("text-xs font-medium", description.length > DESC_MAX * 0.9 ? 'text-orange-500' : 'text-gray-500')}>{description.length}/{DESC_MAX}</span>
+                                    <div className="flex justify-between mb-2">
+                                        <label htmlFor="video-description" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic">Description</label>
+                                        <span className={cn("text-[10px] font-black", description.length > DESC_MAX * 0.9 ? 'text-orange-500' : 'text-zinc-700')}>{description.length}/{DESC_MAX}</span>
                                     </div>
                                     <textarea
                                         id="video-description"
-                                        rows={4}
+                                        rows={6}
                                         value={description}
                                         maxLength={DESC_MAX}
                                         onChange={(e) => onDescChange(e.target.value)}
                                         disabled={isUploading}
-                                        className={cn("w-full bg-black/50 border rounded-lg px-4 py-2.5 text-white focus:outline-none transition-colors resize-none", fieldErrors.description ? "border-red-500 focus:border-red-500" : "border-white/10 focus:border-[#FFB800]")}
-                                        placeholder="Tell viewers about your video"
+                                        className={cn("w-full bg-white/[0.03] border rounded-2xl px-6 py-4 text-white font-medium leading-relaxed focus:outline-none transition-all resize-none", fieldErrors.description ? "border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]" : "border-white/5 focus:border-[#FFB800]/50")}
+                                        placeholder="Add context and tags..."
                                         title="Video Description"
                                     />
-                                    {fieldErrors.description && <p className="text-red-500 text-xs font-bold mt-1.5">{fieldErrors.description}</p>}
+                                    {fieldErrors.description && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2">{fieldErrors.description}</p>}
                                 </div>
 
                                 {/* Thumbnail Selection */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-3">Thumbnail</label>
-                                    <p className="text-xs text-gray-500 mb-3 font-medium">Select or upload a picture that shows what's in your video.</p>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                        <div onClick={() => !isUploading && thumbnailInputRef.current?.click()} className={cn("aspect-video border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors relative overflow-hidden", thumbnailFile ? "border-[#FFB800] bg-[#FFB800]/10" : "border-white/10 hover:bg-white/5")}>
+                                <div className="space-y-4">
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic">Visual Identity (Thumbnail)</label>
+                                        <p className="text-[10px] text-zinc-700 font-bold uppercase tracking-tight">Select a high-impact frame or upload custom art</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <div 
+                                            onClick={() => !isUploading && thumbnailInputRef.current?.click()} 
+                                            className={cn(
+                                                "aspect-video border rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all relative overflow-hidden group/thumb", 
+                                                thumbnailFile ? "border-[#FFB800] bg-[#FFB800]/5" : "border-white/5 bg-white/[0.02] hover:bg-white/[0.05]"
+                                            )}
+                                        >
                                             <input type="file" accept="image/*" className="hidden" ref={thumbnailInputRef} onChange={handleThumbnailSelect} disabled={isUploading} />
                                             {thumbnailPreview ? (
                                                 <img src={thumbnailPreview} alt="Custom" className="w-full h-full object-cover" />
                                             ) : (
                                                 <>
-                                                    <ImageIcon size={20} className="text-gray-500 mb-1" />
-                                                    <span className="text-[10px] text-gray-500 font-bold uppercase">Upload</span>
+                                                    <ImageIcon size={20} className="text-zinc-600 mb-2 group-hover/thumb:text-[#FFB800] transition-colors" />
+                                                    <span className="text-[9px] text-zinc-600 font-black uppercase tracking-widest group-hover/thumb:text-white transition-colors">Upload Custom</span>
                                                 </>
                                             )}
                                         </div>
@@ -537,42 +547,47 @@ export default function UploadPage() {
                                                 key={idx}
                                                 onClick={() => !isUploading && handleAutoThumbSelect(idx)}
                                                 className={cn(
-                                                    "aspect-video rounded-lg overflow-hidden cursor-pointer border-2 transition-all relative",
-                                                    selectedAutoThumb === idx ? "border-[#FFB800] scale-[1.02] shadow-[0_0_15px_rgba(255,184,0,0.3)]" : "border-transparent opacity-60 hover:opacity-100"
+                                                    "aspect-video rounded-2xl overflow-hidden cursor-pointer border transition-all relative group/auto",
+                                                    selectedAutoThumb === idx ? "border-[#FFB800] scale-[1.05] shadow-[0_0_25px_rgba(255,184,0,0.2)] z-10" : "border-white/5 opacity-40 hover:opacity-100 hover:border-white/20"
                                                 )}
                                             >
-                                                <img src={thumb} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                                                <img src={thumb} alt={`Auto frame ${idx + 1}`} className="w-full h-full object-cover" />
                                                 {selectedAutoThumb === idx && (
-                                                    <div className="absolute top-1.5 right-1.5 bg-[#FFB800] rounded-full p-0.5">
-                                                        <Check size={12} className="text-black" />
+                                                    <div className="absolute top-2 right-2 bg-[#FFB800] rounded-full p-1 shadow-lg ring-4 ring-black/20">
+                                                        <Check size={10} className="text-black font-black" />
                                                     </div>
                                                 )}
                                             </div>
                                         ))}
                                     </div>
-                                    {fieldErrors.thumbnailFile && <p className="text-red-500 text-xs font-bold mt-2">{fieldErrors.thumbnailFile}</p>}
+                                    {fieldErrors.thumbnailFile && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2">{fieldErrors.thumbnailFile}</p>}
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div>
-                                        <label htmlFor="video-category" className="block text-sm font-medium text-gray-400 mb-1.5">Category</label>
-                                        <select
-                                            id="video-category"
-                                            value={category}
-                                            onChange={(e) => setCategory(e.target.value)}
-                                            disabled={isUploading}
-                                            className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#FFB800] transition-colors appearance-none cursor-pointer"
-                                            aria-label="Video Category"
-                                            title="Video Category"
-                                        >
-                                            {CATEGORY_LIST.map(cat => (
-                                                <option key={cat} value={cat}>{cat}</option>
-                                            ))}
-                                        </select>
+                                        <label htmlFor="video-category" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic mb-2 block">Content Category</label>
+                                        <div className="relative group/select">
+                                            <select
+                                                id="video-category"
+                                                value={category}
+                                                onChange={(e) => setCategory(e.target.value)}
+                                                disabled={isUploading}
+                                                className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-6 py-4 text-white font-bold focus:outline-none focus:border-[#FFB800]/50 transition-all appearance-none cursor-pointer"
+                                                aria-label="Video Category"
+                                                title="Video Category"
+                                            >
+                                                {CATEGORY_LIST.map(cat => (
+                                                    <option key={cat} value={cat} className="bg-[#0a0a0a] text-white py-4 capitalize">{cat}</option>
+                                                ))}
+                                            </select>
+                                            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-600 group-hover/select:text-[#FFB800] transition-colors">
+                                                <Plus size={16} className="rotate-45" />
+                                            </div>
+                                        </div>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-400 mb-1.5">Tags</label>
-                                        <div className={cn("w-full bg-black/50 border rounded-lg px-3 py-2 text-white focus-within:border-[#FFB800] transition-colors flex flex-wrap gap-1.5 content-start min-h-[44px] relative", fieldErrors.tags ? "border-red-500" : "border-white/10")} onClick={e => (e.currentTarget.querySelector('input') as HTMLInputElement)?.focus()}>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic mb-2 block">Discovery Tags</label>
+                                        <div className={cn("w-full bg-white/[0.03] border rounded-2xl px-4 py-3 text-white focus-within:border-[#FFB800]/50 transition-all flex flex-wrap gap-2 content-start min-h-[58px] relative", fieldErrors.tags ? "border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]" : "border-white/5")} onClick={e => (e.currentTarget.querySelector('input') as HTMLInputElement)?.focus()}>
                                             <AnimatePresence>
                                                 {tags.map(tag => (
                                                     <motion.span 
@@ -580,10 +595,19 @@ export default function UploadPage() {
                                                         initial={{ scale: 0.8, opacity: 0 }}
                                                         animate={{ scale: 1, opacity: 1 }}
                                                         exit={{ scale: 0.8, opacity: 0 }}
-                                                        className="inline-flex items-center gap-1 bg-[#FFB800]/10 border border-[#FFB800]/20 text-[#FFB800] font-black text-[9px] uppercase tracking-[0.15em] px-2.5 py-1 rounded-md"
+                                                        className="inline-flex items-center gap-2 bg-white/[0.05] border border-white/5 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1.5 rounded-xl group/tag hover:border-[#FFB800]/30 transition-colors shadow-lg"
                                                     >
-                                                        {tag}
-                                                        {!isUploading && <button type="button" onClick={() => removeTag(tag)} className="bg-transparent border-none text-[#FFB800] hover:text-white cursor-pointer p-0 ml-1 leading-none font-bold">&times;</button>}
+                                                        #{tag}
+                                                        {!isUploading && (
+                                                            <button 
+                                                                type="button" 
+                                                                onClick={() => removeTag(tag)} 
+                                                                className="bg-transparent border-none text-zinc-600 hover:text-[#FFB800] cursor-pointer p-0 ml-1 leading-none font-bold transition-colors"
+                                                                title={`Remove tag ${tag}`}
+                                                            >
+                                                                <X size={10} />
+                                                            </button>
+                                                        )}
                                                     </motion.span>
                                                 ))}
                                             </AnimatePresence>
@@ -594,8 +618,8 @@ export default function UploadPage() {
                                                 onKeyDown={onTagInputKeyDown}
                                                 onBlur={() => setTimeout(() => setTagSuggestions([]), 200)}
                                                 disabled={isUploading || tags.length >= TAG_MAX_COUNT}
-                                                className="flex-1 min-w-[100px] bg-transparent border-none outline-none text-sm text-white placeholder-gray-600 py-1"
-                                                placeholder={tags.length === 0 ? "e.g. gaming, shorts, tech..." : ""}
+                                                className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-[11px] font-bold text-white placeholder-zinc-700 py-2 px-2"
+                                                placeholder={tags.length === 0 ? "add tags..." : ""}
                                             />
 
                                             {/* Tag Suggestions Dropdown */}
@@ -686,25 +710,37 @@ export default function UploadPage() {
                                     </div>
                                 </div>
 
-                                <div className="pt-6 flex justify-end gap-3 mt-4">
+                                <div className="pt-10 flex flex-col md:flex-row justify-end gap-6 items-center">
                                     {touched && Object.keys(fieldErrors).length > 0 && (
-                                        <p className="text-red-500 text-sm font-bold my-auto mr-auto">Please fix errors above.</p>
+                                        <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mr-auto animate-pulse">Configuration error detected</p>
                                     )}
-                                    <button
-                                        type="button"
-                                        onClick={() => setVideoFile(null)}
-                                        disabled={isUploading}
-                                        className="px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-white/5 transition-colors text-white border-none bg-transparent cursor-pointer disabled:opacity-50"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={isUploading}
-                                        className="px-8 py-2.5 bg-[#FFB800] text-black hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-extrabold transition-all active:scale-95 shadow-[0_4px_15px_rgba(255,184,0,0.3)] border-none"
-                                    >
-                                        {isUploading ? <span className="flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> Processing</span> : 'Publish Video'}
-                                    </button>
+                                    <div className="flex items-center gap-6 w-full md:w-auto">
+                                        <button
+                                            type="button"
+                                            onClick={() => setVideoFile(null)}
+                                            disabled={isUploading}
+                                            className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:text-white transition-all text-zinc-500 border-none bg-transparent cursor-pointer disabled:opacity-50"
+                                        >
+                                            Discard Draft
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={isUploading}
+                                            className="flex-1 md:flex-none px-12 py-5 bg-white text-black hover:bg-[#FFB800] disabled:opacity-50 disabled:cursor-not-allowed rounded-[20px] text-[11px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 shadow-2xl shadow-white/5 border-none group/btn"
+                                        >
+                                            {isUploading ? (
+                                                <span className="flex items-center gap-3">
+                                                    <Loader2 size={16} className="animate-spin" /> 
+                                                    Encrypting Content
+                                                </span>
+                                            ) : (
+                                                <span className="flex items-center gap-3">
+                                                    Broadcast Now
+                                                    <ArrowUpRight size={18} className="translate-y-0.5 group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1 transition-transform" />
+                                                </span>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </div>

@@ -27,7 +27,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             // Load subscriptions
             const { data: subs } = await supabase
                 .from('subscriptions')
-                .select('channel_id, profiles!inner(id, username, avatar_url, is_live, channel_name, display_name)')
+                .select('channel_id, profiles:channel_id!inner(id, username, avatar_url, is_live, channel_name, display_name)')
                 .eq('subscriber_id', user.id);
             if (subs) {
                 setSubscriptions(subs.map((s: any) => ({
@@ -83,20 +83,20 @@ export default function Sidebar({ isOpen }: SidebarProps) {
 
     if (!isOpen) {
         return (
-            <aside className="hidden md:flex w-20 flex-col items-center py-4 gap-6 bg-[#0a0a0a] border-r border-white/5">
+            <aside className="hidden md:flex w-24 flex-col items-center py-6 gap-8 glass-deep border border-white/5 mx-2 my-2 rounded-3xl h-[calc(100vh-16px)]">
                 {menuItems.map((item) => (
                     <Link key={item.label} href={item.path} title={item.label}
-                        className={cn("flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-white/5 transition-all duration-300 w-16", pathname === item.path ? "text-[#FFB800] bg-white/5" : "text-gray-400 group-hover:text-white")}>
-                        <item.icon size={22} strokeWidth={pathname === item.path ? 2.5 : 2} />
-                        <span className="text-[9px] font-bold uppercase tracking-tighter">{item.label}</span>
+                        className={cn("flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-white/5 transition-all duration-300 w-16 group", pathname === item.path ? "text-[#FFB800] bg-white/[0.03] shadow-lg shadow-[#FFB800]/5" : "text-gray-400")}>
+                        <item.icon size={22} className={cn("transition-transform group-hover:scale-110", pathname === item.path ? "stroke-[2.5px]" : "stroke-2")} />
+                        <span className="text-[9px] font-black uppercase tracking-tighter opacity-60 group-hover:opacity-100">{item.label}</span>
                     </Link>
                 ))}
                 <hr className="w-8 border-white/10" />
-                <div className="flex flex-col items-center gap-4">
-                    {subscriptions.slice(0, 3).map(sub => (
-                        <Link key={sub.id} href={`/profile/${sub.username}`} className="relative" title={sub.username}>
-                            <img src={sub.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${sub.username}`} className="w-8 h-8 rounded-full border border-white/10" alt={sub.username} />
-                            {sub.is_live && <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[#FFB800] rounded-full border-2 border-[#0a0a0a]" />}
+                <div className="flex flex-col items-center gap-6">
+                    {subscriptions.slice(0, 4).map(sub => (
+                        <Link key={sub.id} href={`/profile/${sub.username}`} className="relative group" title={sub.username}>
+                            <img src={sub.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${sub.username}`} className="w-10 h-10 rounded-2xl border border-white/10 group-hover:border-[#FFB800]/40 transition-all" alt={sub.username} />
+                            {sub.is_live && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[#FFB800] rounded-full border-2 border-[#111] animate-pulse" />}
                         </Link>
                     ))}
                 </div>
@@ -105,7 +105,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
     }
 
     return (
-        <aside className="hidden md:flex w-64 flex-col py-4 overflow-y-auto scrollbar-hide bg-[#0a0a0a] border-r border-white/5 shrink-0">
+        <aside className="hidden md:flex w-72 flex-col py-6 overflow-y-auto scrollbar-hide glass-deep border border-white/5 mx-2 my-2 rounded-[40px] h-[calc(100vh-100px)] fixed top-20 left-0">
             <div className="px-3 space-y-1">
                 {menuItems.map((item) => (
                     <SidebarItem
@@ -229,14 +229,16 @@ function SidebarItem({ icon: Icon, label, path, isActive, color }: any) {
             href={path}
             title={label}
             className={cn(
-                "flex items-center gap-4 px-3 py-2 rounded-xl transition-all duration-200 group",
-                isActive ? "bg-white/10 font-medium" : "hover:bg-white/5"
+                "flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 group relative overflow-hidden",
+                isActive ? "bg-white/[0.04] shadow-inner" : "hover:bg-white/[0.02]"
             )}
         >
-            <Icon size={20} className={cn(isActive ? "text-[#FFB800]" : "text-gray-400 group-hover:text-white", color)} />
-            <span className={cn("text-sm", isActive ? "text-white" : "text-gray-400 group-hover:text-white")}>
+            {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#FFB800] rounded-r-full shadow-[0_0_10px_#FFB800]" />}
+            <Icon size={20} className={cn("transition-all duration-300 group-hover:scale-110", isActive ? "text-[#FFB800] drop-shadow-[0_0_5px_rgba(255,184,0,0.5)]" : "text-zinc-500 group-hover:text-white", color)} strokeWidth={isActive ? 2.5 : 2} />
+            <span className={cn("text-sm font-bold tracking-tight transition-colors", isActive ? "text-white" : "text-zinc-400 group-hover:text-white")}>
                 {label}
             </span>
+            {isActive && <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-[#FFB800]" />}
         </Link>
     );
 }

@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION increment_view_count(video_id UUID, amount INTEGER DE
 RETURNS VOID AS $$
 BEGIN
   UPDATE videos
-  SET view_count = view_count + amount
+  SET view_count = COALESCE(view_count, 0) + amount
   WHERE id = video_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

@@ -72,14 +72,14 @@ export default function VideoCard({ video }: VideoCardProps) {
     return (
         <motion.div
             ref={cardRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="flex flex-col gap-3 group cursor-pointer"
+            className="flex flex-col gap-3 group cursor-pointer overflow-visible bg-transparent"
         >
-            <Link href={`/watch/${video.id}`} className="relative aspect-video rounded-xl overflow-hidden bg-white/5 shadow-lg group-hover:shadow-[#FFB800]/5 transition-all">
+            <Link href={`/watch/${video.id}`} className="relative aspect-video rounded-xl overflow-hidden bg-white/5 border border-white/5 shadow-lg group-hover:border-[#FFB800]/30 transition-all duration-300">
                 <AnimatePresence>
                     {!previewActive ? (
                         <motion.img
@@ -106,7 +106,7 @@ export default function VideoCard({ video }: VideoCardProps) {
                     )}
                 </AnimatePresence>
                 {video.duration && !isLive && (
-                    <div className="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                    <div className="absolute bottom-3 right-3 glass px-2 py-1 rounded-xl text-[10px] font-black tracking-widest border border-white/5">
                         {formatDuration(video.duration)}
                     </div>
                 )}
@@ -143,21 +143,21 @@ export default function VideoCard({ video }: VideoCardProps) {
                 </Link>
                 <div className="flex flex-col flex-1 min-w-0">
                     <Link href={`/watch/${video.id}`}>
-                        <h3 className="text-sm font-bold line-clamp-2 leading-snug group-hover:text-[#FFB800] transition-colors">
+                        <h3 className="text-sm font-bold line-clamp-2 leading-tight text-zinc-100 group-hover:text-[#FFB800] transition-colors tracking-tight">
                             {video.title || 'Untitled'}
                         </h3>
                     </Link>
                     <div className="flex flex-col mt-1">
                         <Link
                             href={`/profile/${username}`}
-                            className="text-xs text-gray-400 hover:text-[#FFB800] flex items-center gap-1 transition-colors font-medium"
+                            className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition-colors font-medium"
                         >
                             {author}
                             {(video.profiles?.is_verified || video.profiles?.subscription_tier === 'premium') && (
                                 <CheckCircle2 size={12} className="text-[#FFB800]" fill="currentColor" />
                             )}
                         </Link>
-                        <div className="text-[11px] text-gray-500 mt-1 font-bold uppercase tracking-wider">
+                        <div className="text-[11px] text-zinc-500 font-medium mt-1">
                             {formatViews(views)} views • {timeStr}
                         </div>
                     </div>
