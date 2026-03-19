@@ -75,7 +75,7 @@ export default function ShareModal({ isOpen, onClose, video }: ShareModalProps) 
                         >
                             <div className="flex items-center justify-between p-6 border-b border-white/5">
                                 <h3 className="text-lg font-black tracking-tight">Share</h3>
-                                <button onClick={onClose} className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors">
+                                <button onClick={onClose} title="Close Share Modal" aria-label="Close Share Modal" className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors">
                                     <X size={20} />
                                 </button>
                             </div>

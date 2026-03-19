@@ -1,67 +1,63 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/components/AuthProvider';
+import { Loader2, Music2, Compass, Filter } from 'lucide-react';
+import { Video } from '@/types';
 import VideoCard from '@/components/VideoCard';
-import { Compass, Filter } from 'lucide-react';
-
-const subscribedVideos = [
-    {
-        id: 'sub1',
-        title: 'My Setup Tour 2026',
-        thumbnail: 'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?q=80&w=2642&auto=format&fit=crop',
-        author: 'TechHeaven',
-        authorAvatar: 'https://i.pravatar.cc/150?u=tech',
-        views: '120K',
-        timestamp: '1 hour ago',
-        duration: '14:20',
-        isVerified: true
-    },
-    {
-        id: 'sub2',
-        title: 'Speedrun Any% - World Record Pace',
-        thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2670&auto=format&fit=crop',
-        author: 'SpeedQueen',
-        authorAvatar: 'https://i.pravatar.cc/40?u=sq',
-        views: '5.4K',
-        timestamp: 'Live Now',
-        isLive: true,
-        isVerified: true
-    },
-    {
-        id: 'sub3',
-        title: 'Vlog: Day in the Life of a Pro Gamer',
-        thumbnail: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=2665&auto=format&fit=crop',
-        author: 'FragMaster Pro',
-        authorAvatar: 'https://i.pravatar.cc/150?u=frag',
-        views: '45K',
-        timestamp: '3 hours ago',
-        duration: '18:55',
-        isVerified: true
-    },
-    {
-        id: 'sub4',
-        title: 'Cyberpunk 2077: Phantom Liberty - Hidden Secrets',
-        thumbnail: 'https://images.unsplash.com/photo-1605898399783-1820b735e127?q=80&w=2574&auto=format&fit=crop',
-        author: 'NightOwl',
-        authorAvatar: 'https://i.pravatar.cc/150?u=no',
-        views: '12K',
-        timestamp: '5 hours ago',
-        duration: '10:02',
-    },
-    {
-        id: 'sub5',
-        title: 'Making a Game in 48 Hours',
-        thumbnail: 'https://images.unsplash.com/photo-1552824236-07764a7538b2?q=80&w=2671&auto=format&fit=crop',
-        author: 'IndieDev',
-        authorAvatar: 'https://i.pravatar.cc/150?u=indie',
-        views: '89K',
-        timestamp: '1 day ago',
-        duration: '42:15',
-        isVerified: true
-    }
-];
 
 export default function SubscriptionsPage() {
+    const { user } = useAuth();
+    const [videos, setVideos] = useState<Video[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (user) {
+            fetchSubscribedVideos();
+        } else {
+            setLoading(false);
+        }
+    }, [user]);
+
+    const fetchSubscribedVideos = async () => {
+        setLoading(true);
+        try {
+            // 1. Get channel IDs the user follows
+            const { data: subs } = await supabase
+                .from('subscriptions')
+                .select('channel_id')
+                .eq('subscriber_id', user?.id);
+
+            if (!subs || subs.length === 0) {
+                setVideos([]);
+                return;
+            }
+
+            const channelIds = subs.map(s => s.channel_id);
+
+            // 2. Get latest videos from those channels
+            const { data, error } = await supabase
+                .from('videos')
+                .select('*, profiles(id, username, avatar_url, is_verified, display_name, channel_name)')
+                .in('user_id', channelIds)
+                .order('created_at', { ascending: false })
+                .limit(24);
+
+            if (error) throw error;
+
+            const formatted = (data || []).map(v => ({
+                ...v,
+                profiles: Array.isArray(v.profiles) ? v.profiles[0] : v.profiles
+            }));
+
+            setVideos(formatted as any);
+        } catch (err) {
+            console.error('Error fetching subscriptions:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
     return (
         <div>
             {/* Header */}
@@ -75,16 +71,16 @@ export default function SubscriptionsPage() {
 
                 {/* Filters */}
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-foreground text-background rounded-full text-sm font-bold shadow-lg shadow-foreground/10 hover:opacity-90 transition-opacity whitespace-nowrap">
+                    <button className="flex items-center gap-2 px-4 py-2 bg-foreground text-background rounded-full text-sm font-bold shadow-lg shadow-foreground/10 hover:opacity-90 transition-opacity whitespace-nowrap" title="Show all videos from your subscriptions">
                         All Videos
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-surface-hover rounded-full text-sm font-medium border border-border transition-colors whitespace-nowrap">
+                    <button className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-surface-hover rounded-full text-sm font-medium border border-border transition-colors whitespace-nowrap" title="Filter by today">
                         Today
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-surface-hover rounded-full text-sm font-medium border border-border transition-colors whitespace-nowrap">
+                    <button className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-surface-hover rounded-full text-sm font-medium border border-border transition-colors whitespace-nowrap" title="Filter by live now">
                         Live Now
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-surface-hover rounded-full text-sm font-medium border border-border transition-colors whitespace-nowrap">
+                    <button className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-surface-hover rounded-full text-sm font-medium border border-border transition-colors whitespace-nowrap" title="Continue watching">
                         Continue Watching
                     </button>
                     <button className="p-2 hover:bg-surface-hover rounded-full transition-colors ml-2">
@@ -94,23 +90,35 @@ export default function SubscriptionsPage() {
             </div>
 
             {/* Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {subscribedVideos.map((video) => (
-                    <VideoCard
-                        key={video.id}
-                        video={{
-                            id: video.id,
-                            title: video.title,
-                            thumbnail_url: video.thumbnail,
-                            profiles: { username: video.author, avatar_url: video.authorAvatar },
-                        }}
-                    />
-                ))}
-            </div>
+            {loading ? (
+                <div className="flex justify-center py-20 text-[#FFB800]">
+                    <Loader2 size={40} className="animate-spin" />
+                </div>
+            ) : videos.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 bg-surface/30 rounded-[40px] border border-border/50">
+                    <Music2 size={64} className="text-muted mb-4 opacity-20" />
+                    <p className="text-xl font-bold mb-2">No videos yet</p>
+                    <p className="text-muted max-w-xs text-center">Subscribe to your favorite creators to see their latest uploads here.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {videos.map((video) => (
+                        <VideoCard
+                            key={video.id}
+                            video={{
+                                ...video,
+                                thumbnail_url: video.thumbnail_url ?? undefined
+                            } as any}
+                        />
+                    ))}
+                </div>
+            )}
 
-            <div className="mt-12 text-center">
-                <p className="text-muted text-sm">You&apos;re all caught up!</p>
-            </div>
+            {!loading && videos.length > 0 && (
+                <div className="mt-12 text-center">
+                    <p className="text-muted text-sm font-medium uppercase tracking-widest">You&apos;re all caught up!</p>
+                </div>
+            )}
         </div>
     );
 }

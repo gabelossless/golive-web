@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Filter, CheckCircle2, MoreVertical, Search, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { motion } from 'motion/react';
-import { formatViews } from '@/lib/utils';
+import { motion, AnimatePresence } from 'motion/react';
+import { formatViews, timeAgo } from '@/lib/utils';
+import SearchFilters from '@/components/SearchFilters';
 
 function SearchContent() {
     const searchParams = useSearchParams();
@@ -14,6 +15,16 @@ function SearchContent() {
 
     const [videos, setVideos] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
+    const [filters, setFilters] = useState({
+        date: 'all',
+        duration: 'all',
+        sortBy: 'relevance'
+    });
+
+    const handleFilterChange = (key: string, value: string) => {
+        setFilters(prev => ({ ...prev, [key]: value }));
+    };
 
     useEffect(() => {
         if (query) {
@@ -22,24 +33,66 @@ function SearchContent() {
             setLoading(false);
             setVideos([]);
         }
-    }, [query]);
+    }, [query, filters]);
 
     const fetchResults = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            let queryBuilder = supabase
                 .from('videos')
-                .select('*, profiles(username, avatar_url, is_verified)')
-                .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
-                .order('view_count', { ascending: false })
-                .limit(20);
+                .select('*, profiles(username, avatar_url, is_verified, display_name, channel_name)')
+                .or(`title.ilike.%${query}%,description.ilike.%${query}%`);
+
+            // Apply Date Filters
+            if (filters.date !== 'all') {
+                const now = new Date();
+                let filterDate;
+                if (filters.date === 'hour') filterDate = new Date(now.getTime() - 3600000);
+                if (filters.date === 'today') filterDate = new Date(now.setHours(0, 0, 0, 0));
+                if (filters.date === 'week') filterDate = new Date(now.getTime() - 7 * 24 * 3600000);
+                if (filters.date === 'month') filterDate = new Date(now.setMonth(now.getMonth() - 1));
+                if (filters.date === 'year') filterDate = new Date(now.setFullYear(now.getFullYear() - 1));
+                
+                if (filterDate) {
+                    queryBuilder = queryBuilder.gte('created_at', filterDate.toISOString());
+                }
+            }
+
+            // Apply Sort
+            if (filters.sortBy === 'date') {
+                queryBuilder = queryBuilder.order('created_at', { ascending: false });
+            } else if (filters.sortBy === 'views') {
+                queryBuilder = queryBuilder.order('view_count', { ascending: false });
+            } else if (filters.sortBy === 'rating') {
+                queryBuilder = queryBuilder.order('hype_count', { ascending: false });
+            } else {
+                // Default relevance (for now, view_count is a proxy for relevance in this simple setup)
+                queryBuilder = queryBuilder.order('view_count', { ascending: false });
+            }
+
+            const { data, error } = await queryBuilder.limit(40);
 
             if (error) throw error;
 
-            const formatted = (data || []).map(v => ({
+            let formatted = (data || []).map(v => ({
                 ...v,
                 profiles: Array.isArray(v.profiles) ? v.profiles[0] : v.profiles
             }));
+
+            // Client-side Duration Filtering (as we don't have a reliable way to query string H:M:S in Supabase without custom functions)
+            if (filters.duration !== 'all') {
+                formatted = formatted.filter(v => {
+                    const parts = (v.duration || '0:00').split(':').map(Number);
+                    const seconds = parts.length === 3 
+                        ? parts[0] * 3600 + parts[1] * 60 + parts[2]
+                        : parts[0] * 60 + parts[1];
+                    
+                    if (filters.duration === 'short') return seconds < 240;
+                    if (filters.duration === 'medium') return seconds >= 240 && seconds <= 1200;
+                    if (filters.duration === 'long') return seconds > 1200;
+                    return true;
+                });
+            }
 
             // Safe filter
             setVideos(formatted.filter((v: any) => !(v.description || '').includes('[PRIVATE_VIDEO_FLAG]')));
@@ -53,12 +106,28 @@ function SearchContent() {
     return (
         <div className="max-w-[1100px] mx-auto p-4 md:p-6 lg:p-8 w-full">
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold">Search results for "{query}"</h2>
-                <button className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-bold transition-colors border-none cursor-pointer text-white">
+                <h2 className="text-xl font-black tracking-tighter uppercase italic">Search results for "{query}"</h2>
+                <button 
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border border-white/5 cursor-pointer ${
+                        showFilters ? 'bg-white text-black border-white' : 'bg-white/5 text-white hover:bg-white/10'
+                    }`}
+                >
                     <Filter size={18} />
                     Filters
                 </button>
             </div>
+
+            <AnimatePresence>
+                {showFilters && (
+                    <SearchFilters 
+                        isOpen={showFilters} 
+                        onClose={() => setShowFilters(false)} 
+                        filters={filters}
+                        onFilterChange={handleFilterChange}
+                    />
+                )}
+            </AnimatePresence>
 
             <div className="space-y-6">
                 {loading ? (
@@ -107,13 +176,13 @@ function SearchContent() {
                                                 {video.title}
                                             </h3>
                                         </Link>
-                                        <button className="p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/10 rounded-full h-fit text-gray-400 border-none bg-transparent cursor-pointer">
+                                        <button className="p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/10 rounded-full h-fit text-gray-400 border-none bg-transparent cursor-pointer" title="More options">
                                             <MoreVertical size={20} />
                                         </button>
                                     </div>
 
-                                    <div className="text-xs text-gray-400 mt-1">
-                                        {formatViews(video.target_views || video.view_count || 0)} views • {new Date(video.created_at).toLocaleDateString()}
+                                    <div className="text-xs text-gray-500 font-medium mt-1">
+                                        {formatViews(video.target_views || video.view_count || 0)} views • {timeAgo(video.created_at)}
                                     </div>
 
                                     <Link

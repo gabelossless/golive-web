@@ -6,6 +6,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 import { Heart, MessageCircle, Share2, UserPlus, Volume2, VolumeX, ChevronUp, ChevronDown, MoreVertical, Music2 } from 'lucide-react';
+import { formatViews } from '@/lib/utils';
 
 interface Short {
     id: string;
@@ -198,10 +199,11 @@ export default function ShortsPage() {
                                         className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-xl flex items-center justify-center transition-colors shadow-lg"
                                         aria-label="Like"
                                         title="Like"
+                                        onClick={() => {/* Toggle Hype Logic */}}
                                     >
                                         <Heart size={28} className="text-white group-hover:scale-110 transition-transform" />
                                     </motion.button>
-                                    <span className="text-[11px] font-bold text-white tracking-tight drop-shadow-md">{formatCount(short.view_count / 10)}</span>
+                                    <span className="text-[11px] font-bold text-white tracking-tight drop-shadow-md">{formatViews(short.view_count / 10)}</span>
                                 </div>
 
                                 <div className="flex flex-col items-center gap-1 group">
@@ -281,10 +283,8 @@ export default function ShortsPage() {
     );
 }
 
-function formatCount(count: number) {
-    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
-    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
-    return count.toString();
+function formatCountDiscarded(count: number) {
+    return formatViews(count);
 }
 
 function ActionBtn({ icon, label, title }: { icon: React.ReactNode; label: string | number; title: string }) {

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Hls, { HlsConfig } from 'hls.js';
 
 interface VideoPlayerProps {
     src: string;
@@ -41,11 +42,80 @@ export default function VideoPlayer(props: VideoPlayerProps) {
     const [isVertical, setIsVertical] = useState(false);
 
     const videoRef = useRef<HTMLVideoElement>(null);
+    const hlsRef = useRef<Hls | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const controlsTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const hasTriggeredWatch = useRef(false);
     const activeWatchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // HLS.js Configuration (2025-2026 optimized)
+    const hlsConfig: Partial<HlsConfig> = useMemo(() => ({
+        enableWorker: true,
+        lowLatencyMode: true,
+        backBufferLength: 90,
+        maxBufferLength: 30,
+        capLevelToPlayerSize: true,
+        autoStartLoad: true
+    }), []);
+
+    // Cleanup HLS instance
+    const destroyHls = useCallback(() => {
+        if (hlsRef.current) {
+            hlsRef.current.stopLoad();
+            hlsRef.current.detachMedia();
+            hlsRef.current.destroy();
+            hlsRef.current = null;
+        }
+    }, []);
+
+    // Initialize HLS or native playback
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video || !src) return;
+
+        // Reset state for new source
+        setError(null);
+        hasTriggeredWatch.current = false;
+        
+        const isHls = src.includes('.m3u8');
+
+        if (isHls && Hls.isSupported()) {
+            destroyHls();
+            const hls = new Hls(hlsConfig);
+            hlsRef.current = hls;
+
+            hls.on(Hls.Events.ERROR, (event, data) => {
+                if (data.fatal) {
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            console.error('HLS Network Error, attempting recovery...');
+                            hls.startLoad();
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            console.error('HLS Media Error, attempting recovery...');
+                            hls.recoverMediaError();
+                            break;
+                        default:
+                            setError('Fatal HLS Error: ' + data.details);
+                            destroyHls();
+                            break;
+                    }
+                }
+            });
+
+            hls.loadSource(src);
+            hls.attachMedia(video);
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            // Native Safari HLS
+            video.src = src;
+        } else {
+            // Standard MP4 Fallback
+            video.src = src;
+        }
+
+        return () => destroyHls();
+    }, [src, hlsConfig, destroyHls]);
 
     // Strict view counting logic
     useEffect(() => {
@@ -100,8 +170,11 @@ export default function VideoPlayer(props: VideoPlayerProps) {
         if (!videoRef.current) return;
         setCurrentTime(videoRef.current.currentTime);
         setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100 || 0);
+        
+        // Handle buffered progress across multiple buffered ranges (common in HLS)
         if (videoRef.current.buffered.length > 0) {
-            setBuffered((videoRef.current.buffered.end(0) / videoRef.current.duration) * 100 || 0);
+            const bufferedEnd = videoRef.current.buffered.end(videoRef.current.buffered.length - 1);
+            setBuffered((bufferedEnd / videoRef.current.duration) * 100 || 0);
         }
     };
 
@@ -210,7 +283,6 @@ export default function VideoPlayer(props: VideoPlayerProps) {
 
             <video
                 ref={videoRef}
-                src={src}
                 poster={poster}
                 className="relative w-full h-full object-contain cursor-pointer z-10"
                 onTimeUpdate={handleTimeUpdate}
@@ -221,12 +293,22 @@ export default function VideoPlayer(props: VideoPlayerProps) {
                         const width = videoRef.current.videoWidth;
                         const height = videoRef.current.videoHeight;
                         const ar = width / height;
-                        setAspectRatio(ar);
-                        setIsVertical(ar < 1);
+                        if (ar > 0) {
+                            setAspectRatio(ar);
+                            setIsVertical(ar < 1);
+                        }
                     }
                 }}
                 onEnded={() => setIsPlaying(false)}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onVolumeChange={(e) => {
+                    const v = (e.target as HTMLVideoElement).volume;
+                    setVolume(v);
+                    setIsMuted((e.target as HTMLVideoElement).muted || v === 0);
+                }}
                 onError={() => {
+                    if (hlsRef.current) return; // Ignore native errors if HLS.js is handling it
                     const isMov = src?.toLowerCase().endsWith('.mov');
                     if (isMov) {
                         setError('This video is in .MOV format, which might not be supported by your browser. Try using Safari or a different device.');
@@ -265,7 +347,7 @@ export default function VideoPlayer(props: VideoPlayerProps) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm z-10"
+                        className="absolute inset-0 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm z-30"
                     >
                         <div className="text-center max-w-sm">
                             <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
@@ -296,7 +378,7 @@ export default function VideoPlayer(props: VideoPlayerProps) {
 
             {/* Controls overlay */}
             <div
-                className={`absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end transition-opacity duration-300 pointer-events-none ${showControls ? 'opacity-100' : 'opacity-0'}`}
+                className={`absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end transition-opacity duration-300 pointer-events-none ${showControls ? 'opacity-100' : 'opacity-0'} z-20`}
                 style={{ pointerEvents: showControls ? 'auto' : 'none' }}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -338,8 +420,9 @@ export default function VideoPlayer(props: VideoPlayerProps) {
                                     step="0.05"
                                     value={isMuted ? 0 : volume}
                                     onChange={handleVolumeChange}
-                                    className="w-0 opacity-0 group-hover/volume:w-20 group-hover/volume:opacity-100 transition-all duration-300 h-1 cursor-pointer"
-                                    aria-label="Volume"
+                                    className="w-0 opacity-0 group-hover/volume:w-20 group-hover/volume:opacity-100 transition-all duration-300 h-1 cursor-pointer accent-[#FFB800]"
+                                    aria-label="Volume Control"
+                                    title="Volume Control"
                                 />
                             </div>
                             <div className="text-sm font-medium">

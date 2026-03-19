@@ -3,8 +3,10 @@
 import { Menu, Search, Zap, Bell, User, Mic, PlusCircle, LogIn, CheckCircle2, Shield } from "lucide-react";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from '@/components/AuthProvider';
+import { TOP_50_TAGS } from '@/lib/tags';
+import { cn } from '@/lib/utils';
 
 interface NavbarProps {
     onMenuClick: () => void;
@@ -12,13 +14,53 @@ interface NavbarProps {
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
     const [searchQuery, setSearchQuery] = useState("");
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const [selectedIndex, setSelectedIndex] = useState(-1);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const suggestionsRef = useRef<HTMLDivElement>(null);
+    
     const router = useRouter();
     const { user, profile } = useAuth();
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
+    useEffect(() => {
+        if (searchQuery.trim().length > 0) {
+            const filtered = TOP_50_TAGS.filter(tag => 
+                tag.toLowerCase().startsWith(searchQuery.toLowerCase())
+            ).slice(0, 8);
+            setSuggestions(filtered);
+            setShowSuggestions(true);
+        } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+        }
+        setSelectedIndex(-1);
+    }, [searchQuery]);
+
+    const handleSearch = (e?: React.FormEvent) => {
+        e?.preventDefault();
         if (searchQuery.trim()) {
             router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+            setShowSuggestions(false);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (!showSuggestions || suggestions.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setSelectedIndex(prev => (prev + 1) % suggestions.length);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setSelectedIndex(prev => (prev - 1 + suggestions.length) % suggestions.length);
+        } else if (e.key === 'Enter' && selectedIndex >= 0) {
+            e.preventDefault();
+            const selected = suggestions[selectedIndex];
+            setSearchQuery(selected);
+            router.push(`/search?q=${encodeURIComponent(selected)}`);
+            setShowSuggestions(false);
+        } else if (e.key === 'Escape') {
+            setShowSuggestions(false);
         }
     };
 
@@ -43,28 +85,63 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                 </Link>
             </div>
 
-            <form
-                onSubmit={handleSearch}
-                className="flex-1 max-w-2xl mx-4 hidden md:flex items-center"
+            <div
+                className="flex-1 max-w-2xl mx-4 hidden md:flex flex-col relative"
+                onBlur={(e) => {
+                    // Close suggestions after a short delay to allow clicking
+                    if (!e.currentTarget.contains(e.relatedTarget)) {
+                        setTimeout(() => setShowSuggestions(false), 200);
+                    }
+                }}
             >
-                <div className="flex flex-1 items-center bg-[#121212] border border-white/5 rounded-l-full px-4 py-1.5 focus-within:border-[#FFB800]/50 transition-colors">
-                    <Search className="text-gray-400 mr-2" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search creators, videos, lives..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-transparent outline-none text-sm placeholder:text-gray-600"
-                        title="Search"
-                    />
-                </div>
-                <button className="bg-[#1a1a1a] border border-l-0 border-white/5 px-5 py-1.5 rounded-r-full hover:bg-[#222222] transition-colors" title="Search">
-                    <Search size={18} />
-                </button>
-                <button type="button" className="ml-4 p-2.5 bg-[#121212] rounded-full hover:bg-white/10 transition-colors" title="Search with your voice">
-                    <Mic size={18} />
-                </button>
-            </form>
+                <form
+                    onSubmit={handleSearch}
+                    className="flex items-center w-full"
+                >
+                    <div className="flex flex-1 items-center bg-[#121212] border border-white/5 rounded-l-full px-4 py-1.5 focus-within:border-[#FFB800]/50 transition-colors">
+                        <Search className="text-gray-400 mr-2" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Search creators, videos, lives..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
+                            className="w-full bg-transparent outline-none text-sm placeholder:text-gray-600"
+                            title="Search"
+                        />
+                    </div>
+                    <button className="bg-[#1a1a1a] border border-l-0 border-white/5 px-5 py-1.5 rounded-r-full hover:bg-[#222222] transition-colors" title="Search">
+                        <Search size={18} />
+                    </button>
+                    <button type="button" className="ml-4 p-2.5 bg-[#121212] rounded-full hover:bg-white/10 transition-colors" title="Search with your voice">
+                        <Mic size={18} />
+                    </button>
+                </form>
+
+                {/* Autocomplete Suggestions */}
+                {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-14 mt-1 bg-[#121212] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[100] py-2">
+                        {suggestions.map((suggestion, index) => (
+                            <button
+                                key={suggestion}
+                                onClick={() => {
+                                    setSearchQuery(suggestion);
+                                    router.push(`/search?q=${encodeURIComponent(suggestion)}`);
+                                    setShowSuggestions(false);
+                                }}
+                                className={cn(
+                                    "w-full text-left px-4 py-2 text-sm flex items-center gap-3 transition-colors",
+                                    index === selectedIndex ? "bg-white/10 text-[#FFB800]" : "text-gray-400 hover:bg-white/5 hover:text-white"
+                                )}
+                            >
+                                <Search size={14} className={index === selectedIndex ? "text-[#FFB800]" : "text-gray-600"} />
+                                <span className="font-bold">{suggestion}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
 
             <div className="flex items-center gap-2 sm:gap-4">
                 <button className="p-2 rounded-full hover:bg-white/10 transition-colors md:hidden shrink-0" title="Search">

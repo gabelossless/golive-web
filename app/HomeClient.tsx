@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import Link from 'next/link';
 import VideoCard from '@/components/VideoCard';
 import CategoryBar from '@/components/CategoryBar';
+import VideoSkeleton from '@/components/VideoSkeleton';
 import { supabase } from '@/lib/supabase';
 import { rankVideos } from '@/lib/vibe-rank';
-import { motion } from 'motion/react';
-import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 
 export default function HomeClient() {
     const [videos, setVideos] = useState<any[]>([]);
@@ -38,7 +40,8 @@ export default function HomeClient() {
                         is_verified
                     )
                 `)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .limit(48);
 
             if (!error && data) {
                 const normalized = data.map((v: any) => ({
@@ -62,14 +65,14 @@ export default function HomeClient() {
     const handleCategory = (cat: string) => {
         if (cat === 'All') { setFiltered(videos); return; }
         if (cat === 'Recent') {
-            const sorted = [...videos].sort((a, b) => 
+            const sorted = [...videos].sort((a: any, b: any) => 
                 new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
             );
             setFiltered(sorted);
             return;
         }
-        if (cat === 'Live') { setFiltered(videos.filter(v => v.is_live)); return; }
-        setFiltered(videos.filter(v => (v.category || '').toLowerCase() === cat.toLowerCase()));
+        if (cat === 'Live') { setFiltered(videos.filter((v: any) => v.is_live)); return; }
+        setFiltered(videos.filter((v: any) => (v.category || '').toLowerCase() === cat.toLowerCase()));
     };
 
     const featuredVideo = filtered[0]; // Just use latest for now, real app might curate this
@@ -90,7 +93,7 @@ export default function HomeClient() {
                             <img
                                 src={featuredVideo.thumbnail_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2670&auto=format&fit=crop'}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                alt=""
+                                alt={featuredVideo.title || 'Featured video'}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent p-8 flex flex-col justify-end gap-4">
                                 <div className="flex items-center gap-2">
@@ -156,31 +159,71 @@ export default function HomeClient() {
                     </div>
 
                     {loading ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-12">
-                            {Array.from({ length: 12 }).map((_, i) => (
-                                <div key={i} className="animate-pulse">
-                                    <div className="aspect-video bg-white/5 rounded-2xl mb-4" />
-                                    <div className="flex gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-white/5 shrink-0" />
-                                        <div className="flex-1 space-y-3 py-1">
-                                            <div className="h-4 bg-white/5 rounded w-3/4" />
-                                            <div className="h-3 bg-white/5 rounded w-1/2" />
-                                        </div>
-                                    </div>
-                                </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-6 gap-y-10">
+                            {Array.from({ length: 15 }).map((_, i) => (
+                                <VideoSkeleton key={i} />
                             ))}
                         </div>
                     ) : filtered.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-12">
-                            {filtered.map((video, index) => (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-6 gap-y-10">
+                            {/* First row of videos (top 5) */}
+                            {filtered.slice(0, 5).map((video: any, index: number) => (
                                 <motion.div
                                     key={video.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.05 }}
-                                    viewport={{ once: true }}
+                                    whileHover={{ y: -5 }}
+                                    className="transition-transform duration-300"
                                 >
-                                    <VideoCard video={video} />
+                                    <VideoCard video={video as any} />
+                                </motion.div>
+                            ))}
+
+                            {/* Intermixed Shorts Shelf */}
+                            {videos.some(v => v.is_short) && (
+                                <div className="col-span-full py-10 border-y border-white/5 my-6">
+                                    <div className="flex items-center justify-between mb-8 px-2 md:px-0">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-1.5 h-8 bg-[#FFB800] rounded-full" />
+                                            <h2 className="text-2xl font-black tracking-tight uppercase italic">Shorts</h2>
+                                        </div>
+                                        <Link href="/shorts" className="text-sm font-bold text-[#FFB800] hover:text-white transition-colors flex items-center gap-1 group">
+                                            View All <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                        </Link>
+                                    </div>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-6 gap-4">
+                                        {videos.filter((v: any) => v.is_short).slice(0, 6).map((short: any, i: number) => (
+                                            <motion.div
+                                                key={short.id}
+                                                whileHover={{ y: -8 }}
+                                                className="group"
+                                            >
+                                                <Link href={`/shorts?id=${short.id}`} className="block">
+                                                    <div className="aspect-[9/16] rounded-2xl overflow-hidden bg-white/5 relative shadow-2xl border border-white/5 group-hover:border-[#FFB800]/30 transition-all">
+                                                        <img
+                                                            src={short.thumbnail_url || 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=400&q=80'}
+                                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                                                            alt={short.title}
+                                                        />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
+                                                        <div className="absolute bottom-4 left-4 right-4 text-left">
+                                                            <p className="text-sm font-black leading-tight line-clamp-2 drop-shadow-2xl text-white group-hover:text-[#FFB800] transition-colors">{short.title}</p>
+                                                            <p className="text-[10px] text-gray-400 font-bold mt-2 uppercase tracking-widest">{short.view_count || 0} views</p>
+                                                        </div>
+                                                    </div>
+                                                </Link>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Remaining videos */}
+                            {filtered.slice(5).map((video: any, index: number) => (
+                                <motion.div
+                                    key={video.id}
+                                    whileHover={{ y: -5 }}
+                                    className="transition-transform duration-300"
+                                >
+                                    <VideoCard video={video as any} />
                                 </motion.div>
                             ))}
                         </div>

@@ -102,10 +102,12 @@ function parseTagInput(raw: string): string[] {
 type ToastType = { id: number; message: string; type: 'info' | 'success' | 'error' | 'loading'; progress?: number };
 
 import { TOP_50_TAGS } from '@/lib/tags';
+import { useUpload } from '@/components/UploadProvider';
 
 export default function UploadPage() {
     const { user, session, profile, isLoading: authLoading } = useAuth();
     const router = useRouter();
+    const { startUpload } = useUpload();
 
     React.useEffect(() => {
         if (!authLoading && !user) {
@@ -322,240 +324,39 @@ export default function UploadPage() {
         if (Object.keys(errors).length > 0) return;
         if (!user || !videoFile) return;
 
-        setIsUploading(true);
-        setUploadProgress(0);
-
-        const uploadToast = addToast('Preparing media pipeline...', 'loading', 0);
-
-        if (!user) {
-            updateToast(uploadToast, { message: 'You must be logged in to upload.', type: 'error' });
-            setIsUploading(false);
+        if (!session?.access_token) {
+            addToast('Session expired. Please log in again.', 'error');
             return;
         }
 
-        try {
-            const { calculateVibeRank } = await import('@/lib/vibe-rank');
+        const finalDescription = visibility === 'Private' ? `${description}\n\n[PRIVATE_VIDEO_FLAG]` : description;
+        const tagStr = tags.length ? `\n\nTags: ${tags.map(t => `#${t}`).join(' ')}` : '';
+        const finalDescriptionWithCategory = `${finalDescription}\n\nCategory: ${category}${tagStr}`;
 
-            const uploadToR2 = async (file: File, folder: string, onProgress: (p: number) => void): Promise<string> => {
-                const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB minimum required by S3 API
-                
-                // 1. Initialize Multipart Upload
-                const createRes = await fetch('/api/upload/multipart', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${session?.access_token || ''}`
-                    },
-                    body: JSON.stringify({ action: 'create', filename: file.name, contentType: file.type || 'application/octet-stream', folder }),
-                });
-
-                if (!createRes.ok) {
-                    const errorText = await createRes.text();
-                    throw new Error(`Failed to initialize upload: ${errorText}`);
-                }
-
-                const { uploadId, key } = await createRes.json();
-                
-                // 2. Upload Parts in sequence (we can parallelize later, seq is safest for now)
-                const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-                const parts: { ETag: string, PartNumber: number }[] = [];
-                let uploadedBytes = 0;
-
-                for (let i = 0; i < totalChunks; i++) {
-                    const start = i * CHUNK_SIZE;
-                    const end = Math.min(start + CHUNK_SIZE, file.size);
-                    const chunk = file.slice(start, end);
-                    const partNumber = i + 1;
-
-                    // Get presigned URL for this chunk
-                    const signRes = await fetch('/api/upload/multipart', {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${session?.access_token || ''}`
-                        },
-                        body: JSON.stringify({ action: 'sign', uploadId, key, partNumber }),
-                    });
-
-                    if (!signRes.ok) throw new Error(`Failed to sign chunk ${partNumber}`);
-                    
-                    const { url } = await signRes.json();
-
-                    // Perform PUT for chunk
-                    const etag = await new Promise<string>((resolve, reject) => {
-                        const xhr = new XMLHttpRequest();
-                        
-                        xhr.upload.addEventListener('progress', (event) => {
-                            if (event.lengthComputable) {
-                                // Calculate total progress smoothly
-                                const currentTotal = uploadedBytes + event.loaded;
-                                const p = Math.round((currentTotal / file.size) * 100);
-                                onProgress(p > 100 ? 100 : p);
-                            }
-                        });
-
-                        xhr.addEventListener('load', () => {
-                            if (xhr.status >= 200 && xhr.status < 300) {
-                                let eTagHeader = xhr.getResponseHeader('ETag');
-                                if (!eTagHeader) {
-                                    reject(new Error(`No ETag returned for chunk ${partNumber} from generic storage. CORS issue?`));
-                                    return;
-                                }
-                                uploadedBytes += chunk.size;
-                                resolve(eTagHeader.replace(/"/g, '')); // AWS SDK expects quotes wrapped around ETag or strictly stripped depending on implementation - let's keep quotes as SDK completes with raw strings. Actually, SDK CompleteMultipart expects bare or quoted, let's keep exact header value
-                            } else {
-                                reject(new Error(`Chunk upload failed: ${xhr.statusText} (${xhr.status})`));
-                            }
-                        });
-                        
-                        xhr.addEventListener('error', () => reject(new Error(`Network error during chunk ${partNumber} upload.`)));
-                        xhr.addEventListener('abort', () => reject(new Error('Upload aborted.')));
-                        
-                        xhr.open('PUT', url);
-                        // No Cache-Control header here, it's defined in the Create request
-                        xhr.send(chunk);
-                    });
-
-                    parts.push({ ETag: etag, PartNumber: partNumber });
-                }
-
-                // 3. Complete Multipart Upload
-                updateToast(uploadToast, { message: 'Finalizing cloud optimization...', progress: 95 });
-                const completeRes = await fetch('/api/upload/multipart', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${session?.access_token || ''}`
-                    },
-                    body: JSON.stringify({ action: 'complete', uploadId, key, parts }),
-                });
-
-                if (!completeRes.ok) {
-                    const err = await completeRes.text();
-                    throw new Error(`Failed to finalize upload: ${err}`);
-                }
-                
-                const { path } = await completeRes.json();
-                return path;
-            };
-
-            // 1. CLIENT-SIDE ANALYSIS (Bypass Vercel Timeout)
-            updateToast(uploadToast, { message: 'Analyzing video quality...', progress: 5 });
-            let videoMeta = { width: 1280, height: 720, duration: 0 };
+        let finalThumb = thumbnailFile;
+        if (!finalThumb && hasAutoThumb && autoThumbnails[selectedAutoThumb]) {
             try {
-                videoMeta = await getVideoMetadata(videoFile);
-            } catch (e) {
-                console.warn('Metadata analysis failed, using defaults');
-            }
-
-            // 2. PRIMARY UPLOAD (Direct to Videos folder)
-            updateToast(uploadToast, { message: `Uploading video to R2 Edge...`, progress: 10 });
-            const finalPath = await uploadToR2(videoFile, `videos/${user.id}`, (p) => {
-                const combined = Math.floor(p * 0.8) + 10;
-                setUploadProgress(combined);
-                updateToast(uploadToast, { progress: combined });
-            });
-
-            // 3. OPTIONAL BACKEND OPTIMIZATION (Best Effort)
-            let width = videoMeta.width;
-            let height = videoMeta.height;
-            let duration = videoMeta.duration;
-            let videoUrlPath = finalPath;
-
-            // In production, we skip the heavy ffmpeg processing to avoid Vercel 10s timeout
-            // unless we have an external worker. For now, we use the raw file.
-            updateToast(uploadToast, { message: 'Finalizing cloud optimization...', progress: 95 });
-
-            // Calculate Quality Score using client-side metadata
-            const { qualityScore } = calculateVibeRank({ width, height });
-
-            const baseUrl = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '').replace(/\/$/, '');
-            let videoUrl = `${baseUrl}/${videoUrlPath}`;
-
-            // PREMIUM FALLBACK: Use Supabase storage for premium users as requested
-            if (profile?.subscription_tier === 'premium') {
-                updateToast(uploadToast, { message: 'Premium: Securing high-priority storage layer...', progress: 85 });
-                try {
-                    const supaPath = `${user.id}/${Date.now()}_${videoFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-                    const { data: supaData, error: supaErr } = await supabase.storage
-                        .from('premium-videos')
-                        .upload(supaPath, videoFile, {
-                            cacheControl: '3600',
-                            upsert: false
-                        });
-                    
-                    if (!supaErr && supaData) {
-                        const { data: { publicUrl } } = supabase.storage
-                            .from('premium-videos')
-                            .getPublicUrl(supaData.path);
-                        
-                        console.log('Premium video redundant storage OK:', publicUrl);
-                        videoUrl = publicUrl; // Prioritize Supabase for premium users
-                    } else {
-                        console.warn('Premium fallback upload failed, sticking with R2:', supaErr);
-                    }
-                } catch (e) {
-                    console.error('Premium fallback error:', e);
-                }
-            }
-
-            // 3. THUMBNAIL UPLOAD
-            let thumbnailUrl = null;
-            updateToast(uploadToast, { message: 'Uploading thumbnail artwork...', progress: 90 });
-            setUploadProgress(90);
-
-            if (thumbnailFile) {
-                const thumbPath = await uploadToR2(thumbnailFile, `thumbnails/${user.id}`, () => { });
-                thumbnailUrl = `${baseUrl}/${thumbPath}`;
-            } else if (selectedAutoThumb !== null && autoThumbnails[selectedAutoThumb]) {
                 const res = await fetch(autoThumbnails[selectedAutoThumb]);
                 const blob = await res.blob();
-                const autoFile = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' });
-                const thumbPath = await uploadToR2(autoFile, `thumbnails/${user.id}`, () => { });
-                thumbnailUrl = `${baseUrl}/${thumbPath}`;
+                finalThumb = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' });
+            } catch (err) {
+                console.warn('Failed to extract auto thumbnail');
             }
-
-            // 4. DATABASE SYNC
-            updateToast(uploadToast, { message: 'Syncing metadata...', progress: 98 });
-            setUploadProgress(98);
-
-            const finalDescription = visibility === 'Private' ? `${description}\n\n[PRIVATE_VIDEO_FLAG]` : description;
-            const tagStr = tags.length ? `\n\nTags: ${tags.map(t => `#${t}`).join(' ')}` : '';
-            const finalDescriptionWithCategory = `${finalDescription}\n\nCategory: ${category}${tagStr}`;
-
-            const isShort = (height > width) || (duration <= 60.5 && height >= width * 1.2);
-
-            const { error: dbError } = await supabase.from('videos').insert({
-                user_id: user.id,
-                title: title.trim(),
-                description: finalDescriptionWithCategory,
-                video_url: videoUrl,
-                thumbnail_url: thumbnailUrl,
-                duration: duration || '0:00',
-                width,
-                height,
-                is_short: isShort,
-                quality_score: Math.round(qualityScore * 100),
-                allow_clipping: allowClipping,
-                allow_comments: allowComments,
-                visibility: visibility,
-                license: license,
-                scheduled_for: scheduledFor ? new Date(scheduledFor).toISOString() : null
-            });
-
-            if (dbError) throw dbError;
-
-            updateToast(uploadToast, { message: 'Video published successfully!', type: 'success', progress: 100 });
-            setUploadProgress(100);
-            setTimeout(() => removeToast(uploadToast), 4000);
-            setSuccess(true);
-        } catch (err: any) {
-            console.error(err);
-            updateToast(uploadToast, { message: err.message || 'Upload failed.', type: 'error' });
-            setTimeout(() => removeToast(uploadToast), 5000);
-            setIsUploading(false);
-            setUploadProgress(0);
         }
+        
+        // We will do a generic isShort calculation based mostly on duration for immediate fire-and-forget
+        const isShort = videoDuration <= 60;
+
+        startUpload(videoFile, finalThumb, {
+            title: title.trim(),
+            description: finalDescriptionWithCategory,
+            category,
+            isShort,
+            userId: user.id,
+            sessionToken: session.access_token
+        });
+
+        router.push('/studio/dashboard');
     };
 
     if (authLoading) return <div className="flex justify-center items-center min-h-[60vh]"><Loader2 size={32} className="text-[#FFB800] animate-spin" /></div>;

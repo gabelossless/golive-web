@@ -30,16 +30,16 @@ export default function CategoryBar({ onSelect }: { onSelect?: (cat: string) => 
     };
 
     return (
-        <div className="sticky top-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-sm px-2 sm:px-4 py-2 sm:py-3 flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide border-b border-white/5 shrink-0">
+        <div className="sticky top-0 z-40 bg-[#0a0a0a]/90 backdrop-blur-md px-4 py-3 flex gap-3 overflow-x-auto scrollbar-hide border-b border-white/5 shrink-0 transition-all">
             {CATEGORIES.map((cat) => (
                 <button
                     key={cat}
                     onClick={() => handleSelect(cat)}
                     className={cn(
-                        "px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap",
+                        "px-4 py-1.5 rounded-lg text-sm font-bold transition-all duration-200 whitespace-nowrap",
                         active === cat
-                            ? "bg-[#FFB800] text-black shadow-lg shadow-[#FFB800]/20"
-                            : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
+                            ? "bg-white text-black"
+                            : "bg-white/10 text-white hover:bg-white/20"
                     )}
                 >
                     {cat}

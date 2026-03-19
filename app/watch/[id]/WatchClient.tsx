@@ -71,18 +71,49 @@ export default function WatchClient({ video: initialVideo, recommendations: init
         applyGrowthBoost(video.id);
 
         const fetchRecs = async () => {
-            const { data } = await supabase
-                .from('videos')
-                .select('*, profiles(id, username, avatar_url, is_verified)')
-                .neq('id', video.id)
-                .limit(4);
-            if (data) {
-                const mapped = data.map(v => ({
-                    ...v,
-                    profiles: Array.isArray(v.profiles) ? v.profiles[0] : v.profiles,
-                }));
-                // Safe filter
-                setRecommendations(mapped.filter((v: any) => !(v.description || '').includes('[PRIVATE_VIDEO_FLAG]')) as any);
+            try {
+                // Extract category and tags from current video description
+                const rawDesc = video.description || '';
+                const catMatch = rawDesc.match(/Category:\s*([^\n]+)/);
+                const currentCategory = catMatch ? catMatch[1].trim() : null;
+                
+                let queryBuilder = supabase
+                    .from('videos')
+                    .select('*, profiles(id, username, avatar_url, is_verified)')
+                    .neq('id', video.id);
+
+                if (currentCategory) {
+                    // Try to find same category first
+                    queryBuilder = queryBuilder.ilike('description', `%Category: ${currentCategory}%`);
+                }
+
+                const { data, error } = await queryBuilder.limit(6);
+                
+                let results = data || [];
+                
+                // If we don't have enough, fill with others
+                if (results.length < 6) {
+                    const { data: fallbackData } = await supabase
+                        .from('videos')
+                        .select('*, profiles(id, username, avatar_url, is_verified)')
+                        .neq('id', video.id)
+                        .not('id', 'in', `(${results.map(r => r.id).join(',') || '00000000-0000-0000-0000-000000000000'})`)
+                        .order('view_count', { ascending: false })
+                        .limit(6 - results.length);
+                    
+                    if (fallbackData) results = [...results, ...fallbackData];
+                }
+
+                if (results) {
+                    const mapped = results.map(v => ({
+                        ...v,
+                        profiles: Array.isArray(v.profiles) ? v.profiles[0] : v.profiles,
+                    }));
+                    // Safe filter
+                    setRecommendations(mapped.filter((v: any) => !(v.description || '').includes('[PRIVATE_VIDEO_FLAG]')) as any);
+                }
+            } catch (err) {
+                console.error('Error fetching recs:', err);
             }
         };
         fetchRecs();
@@ -178,6 +209,14 @@ export default function WatchClient({ video: initialVideo, recommendations: init
          }
     }
 
+    const handleActiveWatch = useCallback(async () => {
+        try {
+            await supabase.rpc('increment_view_count', { video_id: video.id });
+        } catch (err) {
+            console.error('View increment failed:', err);
+        }
+    }, [video.id]);
+
     return (
         <div className="flex flex-col lg:flex-row h-full overflow-hidden w-full bg-[#0a0a0a]">
             {/* Main Content Area */}
@@ -188,13 +227,7 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                             src={video.video_url}
                             poster={video.thumbnail_url ?? undefined}
                             title={video.title}
-                            onActiveWatch={useCallback(async () => {
-                                try {
-                                    await supabase.rpc('increment_view_count', { video_id: video.id });
-                                } catch (err) {
-                                    console.error('View increment failed:', err);
-                                }
-                            }, [video.id])}
+                            onActiveWatch={handleActiveWatch}
                         />
                     </div>
 

@@ -2,8 +2,61 @@ import React from 'react';
 import { supabase } from '@/lib/supabase';
 import WatchClient from './WatchClient';
 import Link from 'next/link';
+import { Metadata, ResolvingMetadata } from 'next';
 
 export const revalidate = 0;
+
+type Props = {
+    params: Promise<{ id: string }>
+}
+
+export async function generateMetadata(
+    { params }: Props,
+    parent: ResolvingMetadata
+): Promise<Metadata> {
+    const { id } = await params;
+    
+    // fetch data
+    const { data: video } = await supabase
+        .from('videos')
+        .select('*, profiles(username, channel_name)')
+        .eq('id', id)
+        .maybeSingle();
+
+    if (!video) {
+        return {
+            title: 'Video Not Found - VibeStream',
+        }
+    }
+
+    const title = video.title || 'Untitled Video';
+    const description = video.description || 'Watch this video on VibeStream';
+    const defaultImage = 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=1200&q=80';
+    
+    return {
+        title: `${title} - VibeStream`,
+        description: description,
+        openGraph: {
+            title: title,
+            description: description,
+            images: [
+                {
+                    url: video.thumbnail_url || defaultImage,
+                    width: 1280,
+                    height: 720,
+                    alt: title,
+                },
+            ],
+            type: 'video.other',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: title,
+            description: description,
+            images: [video.thumbnail_url || defaultImage],
+        },
+    }
+}
 
 export default async function WatchPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;

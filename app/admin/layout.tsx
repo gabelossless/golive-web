@@ -17,6 +17,7 @@ import {
 const ADMIN_MENU = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: Users, label: 'Users', path: '/admin/users' },
+    { icon: Zap, label: 'Bots', path: '/admin/bots' },
     { icon: Video, label: 'Videos', path: '/admin/videos' },
     { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
     { icon: Settings, label: 'Settings', path: '/admin/settings-admin' },

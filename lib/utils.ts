@@ -102,3 +102,9 @@ export function formatDuration(duration: number | string | undefined): string {
     
     return parts.join(':');
 }
+/**
+ * Simple utility for conditional classes
+ */
+export function cn(...classes: (string | undefined | null | false)[]) {
+    return classes.filter(Boolean).join(" ");
+}

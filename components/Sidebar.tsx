@@ -86,9 +86,9 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             <aside className="hidden md:flex w-20 flex-col items-center py-4 gap-6 bg-[#0a0a0a] border-r border-white/5">
                 {menuItems.map((item) => (
                     <Link key={item.label} href={item.path} title={item.label}
-                        className={cn("flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-white/5 transition-colors", pathname === item.path ? "text-[#FFB800]" : "text-gray-400")}>
-                        <item.icon size={20} />
-                        <span className="text-[10px]">{item.label}</span>
+                        className={cn("flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-white/5 transition-all duration-300 w-16", pathname === item.path ? "text-[#FFB800] bg-white/5" : "text-gray-400 group-hover:text-white")}>
+                        <item.icon size={22} strokeWidth={pathname === item.path ? 2.5 : 2} />
+                        <span className="text-[9px] font-bold uppercase tracking-tighter">{item.label}</span>
                     </Link>
                 ))}
                 <hr className="w-8 border-white/10" />
@@ -137,7 +137,10 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             <hr className="my-4 border-white/10 mx-4" />
 
             <div className="px-3">
-                <h3 className="px-3 mb-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Following</h3>
+                <h3 className="px-4 mb-3 text-[10px] font-black text-white/30 uppercase tracking-[0.3em] flex items-center justify-between">
+                    <span>Following</span>
+                    <div className="w-8 h-[1px] bg-white/10" />
+                </h3>
                 <div className="space-y-1">
                     {subscriptions.length === 0 ? (
                         <p className="px-3 text-xs text-gray-600 py-2">No subscriptions yet.</p>
@@ -192,7 +195,10 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             <hr className="my-4 border-white/10 mx-4" />
 
             <div className="px-3">
-                <h3 className="px-3 mb-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Explore</h3>
+                <h3 className="px-4 mb-3 text-[10px] font-black text-white/30 uppercase tracking-[0.3em] flex items-center justify-between">
+                    <span>Explore</span>
+                    <div className="w-8 h-[1px] bg-white/10" />
+                </h3>
                 <div className="space-y-1">
                     {exploreItems.map((item) => (
                         <SidebarItem key={item.label} {...item} />
@@ -200,10 +206,13 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                 </div>
             </div>
 
-            <hr className="my-4 border-white/10 mx-4" />
+            <hr className="my-4 border-white/10 mx-4 opacity-50" />
 
-            <div className="px-3">
-                <h3 className="px-3 mb-2 text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Library</h3>
+            <div className="px-3 pb-8">
+                <h3 className="px-4 mb-3 text-[10px] font-black text-white/30 uppercase tracking-[0.3em] flex items-center justify-between">
+                    <span>Library</span>
+                    <div className="w-8 h-[1px] bg-white/10" />
+                </h3>
                 <div className="space-y-1">
                     {libraryItems.map((item) => (
                         <SidebarItem key={item.label} {...item} />

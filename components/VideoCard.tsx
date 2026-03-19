@@ -1,8 +1,9 @@
 'use client';
 
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, MoreVertical, Play, Flame } from 'lucide-react';
-import { motion } from 'motion/react';
+import { CheckCircle2, MoreVertical, Play, Flame, Volume2, VolumeX } from 'lucide-react';
+import { motion, AnimatePresence, useInView } from 'motion/react';
 import { formatViews, timeAgo, formatDuration } from '@/lib/utils';
 
 export interface VideoCardProps {
@@ -24,6 +25,7 @@ export interface VideoCardProps {
         duration?: string;
         is_live?: boolean;
         hype_count?: number;
+        video_url?: string;
     };
 }
 
@@ -31,6 +33,11 @@ const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1611162616475-46b635cb
 const FALLBACK_AVATAR = 'https://api.dicebear.com/7.x/avataaars/svg?seed=default';
 
 export default function VideoCard({ video }: VideoCardProps) {
+    const [isHovered, setIsHovered] = useState(false);
+    const [previewActive, setPreviewActive] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
     const username = video.profiles?.username || 'Unknown';
     const author = video.profiles?.channel_name || video.profiles?.display_name || video.profiles?.username || 'Unknown';
     const avatar = video.profiles?.avatar_url || FALLBACK_AVATAR;
@@ -39,20 +46,65 @@ export default function VideoCard({ video }: VideoCardProps) {
     const timeStr = timeAgo(video.created_at || new Date().toISOString());
     const isLive = video.is_live;
 
+    const cardRef = useRef<HTMLDivElement>(null);
+    const isInView = useInView(cardRef, { once: true, margin: "200px" });
+
+    useEffect(() => {
+        if (isHovered) {
+            timeoutRef.current = setTimeout(() => {
+                setPreviewActive(true);
+            }, 600); // Wait 600ms before starting preview
+        } else {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            setPreviewActive(false);
+        }
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
+    }, [isHovered]);
+
+    useEffect(() => {
+        if (previewActive && videoRef.current) {
+            videoRef.current.play().catch(() => {});
+        }
+    }, [previewActive]);
+
     return (
         <motion.div
+            ref={cardRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
             className="flex flex-col gap-3 group cursor-pointer"
         >
-            <Link href={`/watch/${video.id}`} className="relative aspect-video rounded-xl overflow-hidden bg-white/5">
-                <img
-                    src={thumb}
-                    alt={video.title || "Video"}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    referrerPolicy="no-referrer"
-                />
+            <Link href={`/watch/${video.id}`} className="relative aspect-video rounded-xl overflow-hidden bg-white/5 shadow-lg group-hover:shadow-[#FFB800]/5 transition-all">
+                <AnimatePresence>
+                    {!previewActive ? (
+                        <motion.img
+                            key="thumb"
+                            initial={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            src={isInView ? thumb : undefined}
+                            alt={video.title || "Video"}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                            referrerPolicy="no-referrer"
+                        />
+                    ) : (
+                        <motion.video
+                            key="video"
+                            ref={videoRef}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            src={video.video_url}
+                            className="w-full h-full object-cover rounded-xl"
+                            muted
+                            loop
+                            playsInline
+                        />
+                    )}
+                </AnimatePresence>
                 {video.duration && !isLive && (
                     <div className="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-bold">
                         {formatDuration(video.duration)}

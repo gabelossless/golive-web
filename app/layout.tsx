@@ -3,6 +3,7 @@ import { Roboto } from "next/font/google";
 import "./globals.css";
 import Layout from "@/components/Layout";
 import AuthProvider from "@/components/AuthProvider";
+import { UploadProvider } from "@/components/UploadProvider";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -32,7 +33,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={roboto.variable}>
         <AuthProvider>
-          <Layout>{children}</Layout>
+          <UploadProvider>
+            <Layout>{children}</Layout>
+          </UploadProvider>
         </AuthProvider>
         <script
           dangerouslySetInnerHTML={{
