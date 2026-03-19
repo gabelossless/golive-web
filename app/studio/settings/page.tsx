@@ -94,11 +94,10 @@ export default function SettingsPage() {
       const { error } = await supabase
         .from('profiles')
         .update({
-          username: profile.username,
-          display_name: profile.display_name,
-          channel_name: profile.channel_name,
           bio: profile.bio,
           channel_color: profile.channel_color || '#FFB800',
+          wallet_address: profile.wallet_address,
+          solana_wallet_address: profile.solana_wallet_address,
         })
         .eq('id', user?.id);
 
@@ -257,6 +256,46 @@ export default function SettingsPage() {
                   </div>
                   <div className="w-8 h-8 rounded-full bg-white/[0.02] flex items-center justify-center text-gray-700">#</div>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Finance Bento */}
+          <section className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden group">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-[#FFB800] mb-8 flex items-center gap-2">
+              <div className="w-1 h-4 bg-[#FFB800] rounded-full" />
+              Finance & Tipping
+            </h3>
+            
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] pl-1">Polygon/EVM Wallet Address</label>
+                <div className="relative group/input">
+                  <AtSign className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within/input:text-[#FFB800] transition-colors" size={20} />
+                  <input 
+                    type="text"
+                    value={profile.wallet_address || ''}
+                    onChange={(e) => setProfile({ ...profile, wallet_address: e.target.value })}
+                    className="w-full bg-black/40 border border-white/5 rounded-2xl py-5 pl-14 pr-6 outline-none focus:border-[#FFB800]/50 focus:bg-black/60 transition-all font-mono text-sm placeholder-gray-800"
+                    placeholder="0x..."
+                  />
+                </div>
+                <p className="text-[9px] text-gray-600 font-bold uppercase tracking-tighter italic">Receive direct crypto tips from your fans on the Base/EVM network (Base preferred).</p>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] pl-1">Solana Wallet Address</label>
+                <div className="relative group/input">
+                  <AtSign className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within/input:text-[#FFB800] transition-colors" size={20} />
+                  <input 
+                    type="text"
+                    value={profile.solana_wallet_address || ''}
+                    onChange={(e) => setProfile({ ...profile, solana_wallet_address: e.target.value })}
+                    className="w-full bg-black/40 border border-white/5 rounded-2xl py-5 pl-14 pr-6 outline-none focus:border-[#FFB800]/50 focus:bg-black/60 transition-all font-mono text-sm placeholder-gray-800"
+                    placeholder="Solana Address..."
+                  />
+                </div>
+                <p className="text-[9px] text-gray-600 font-bold uppercase tracking-tighter italic">Receive direct crypto tips on the Solana network.</p>
               </div>
             </div>
           </section>

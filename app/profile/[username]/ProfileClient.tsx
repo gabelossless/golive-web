@@ -384,8 +384,8 @@ export default function ProfileClient() {
                                 {[
                                     { label: 'Subscribers', value: formatCount(profile.follower_count), icon: '👥' },
                                     { label: 'Total Content', value: longVideos.length + shortVideos.length, icon: '🎬' },
-                                    { label: 'Viral Shorts', value: shortVideos.length, icon: '⚡' },
-                                    { label: 'Ecosystem Vibe', value: 'High', icon: '✨' }
+                                    { label: 'Base Wallet', value: profile.wallet_address ? `${profile.wallet_address.slice(0, 5)}...${profile.wallet_address.slice(-4)}` : 'Not Set', icon: '🔵' },
+                                    { label: 'Solana Wallet', value: profile.solana_wallet_address ? `${profile.solana_wallet_address.slice(0, 5)}...${profile.solana_wallet_address.slice(-4)}` : 'Not Set', icon: '🟣' }
                                 ].map((stat, i) => (
                                     <motion.div 
                                         key={i}

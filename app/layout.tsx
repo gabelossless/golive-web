@@ -4,6 +4,7 @@ import "./globals.css";
 import Layout from "@/components/Layout";
 import AuthProvider from "@/components/AuthProvider";
 import { UploadProvider } from "@/components/UploadProvider";
+import VibeStreamPrivyProvider from "@/components/VibeStreamPrivyProvider";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -32,11 +33,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#FFB800" />
       </head>
       <body className={roboto.variable}>
-        <AuthProvider>
-          <UploadProvider>
-            <Layout>{children}</Layout>
-          </UploadProvider>
-        </AuthProvider>
+        <VibeStreamPrivyProvider>
+          <AuthProvider>
+            <UploadProvider>
+              <Layout>{children}</Layout>
+            </UploadProvider>
+          </AuthProvider>
+        </VibeStreamPrivyProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `

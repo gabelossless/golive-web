@@ -16,6 +16,8 @@ export interface Profile {
     display_name?: string;
     channel_name?: string;
     follower_count?: number;
+    wallet_address?: string;
+    solana_wallet_address?: string;
 }
 
 export interface Video {

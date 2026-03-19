@@ -79,7 +79,7 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                 
                 let queryBuilder = supabase
                     .from('videos')
-                    .select('*, profiles(id, username, avatar_url, is_verified)')
+                    .select('*, profiles(id, username, avatar_url, is_verified, wallet_address)')
                     .neq('id', video.id);
 
                 if (currentCategory) {
@@ -95,7 +95,7 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                 if (results.length < 6) {
                     const { data: fallbackData } = await supabase
                         .from('videos')
-                        .select('*, profiles(id, username, avatar_url, is_verified)')
+                        .select('*, profiles(id, username, avatar_url, is_verified, wallet_address, solana_wallet_address)')
                         .neq('id', video.id)
                         .not('id', 'in', `(${results.map(r => r.id).join(',') || '00000000-0000-0000-0000-000000000000'})`)
                         .order('view_count', { ascending: false })
@@ -228,6 +228,12 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                             poster={video.thumbnail_url ?? undefined}
                             title={video.title}
                             onActiveWatch={handleActiveWatch}
+                            isLive={video.is_live}
+                            creator={{
+                                username: video.profiles?.username || 'Creator',
+                                wallet_address: video.profiles?.wallet_address,
+                                solana_wallet_address: video.profiles?.solana_wallet_address
+                            }}
                         />
                     </div>
 

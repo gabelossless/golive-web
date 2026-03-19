@@ -16,6 +16,10 @@ export async function GET() {
             ADD COLUMN IF NOT EXISTS allow_comments boolean DEFAULT true,
             ADD COLUMN IF NOT EXISTS scheduled_for timestamp with time zone,
             ADD COLUMN IF NOT EXISTS license text DEFAULT 'Standard';
+
+            ALTER TABLE public.profiles
+            ADD COLUMN IF NOT EXISTS wallet_address text;
+
             NOTIFY pgrst, 'reload schema';
         `;
 

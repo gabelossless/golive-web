@@ -4,12 +4,19 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Hls, { HlsConfig } from 'hls.js';
+import TipButton from './TipButton';
 
 interface VideoPlayerProps {
     src: string;
     poster?: string;
     title?: string;
     onActiveWatch?: () => void;
+    creator?: {
+        username: string;
+        wallet_address?: string;
+        solana_wallet_address?: string;
+    };
+    isLive?: boolean;
 }
 
 function cn(...classes: (string | undefined | null | false)[]) {
@@ -24,7 +31,7 @@ function formatTime(time: number): string {
 }
 
 export default function VideoPlayer(props: VideoPlayerProps) {
-    const { src, poster, title, onActiveWatch } = props;
+    const { src, poster, title, onActiveWatch, creator, isLive } = props;
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
@@ -426,10 +433,22 @@ export default function VideoPlayer(props: VideoPlayerProps) {
                                 />
                             </div>
                             <div className="text-sm font-medium">
-                                {formatTime(currentTime)} / {formatTime(duration)}
+                                {isLive ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
+                                        <span className="font-black uppercase tracking-widest text-[10px]">Live</span>
+                                    </div>
+                                ) : (
+                                    `${formatTime(currentTime)} / ${formatTime(duration)}`
+                                )}
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
+                            {(creator?.wallet_address || creator?.solana_wallet_address) && (
+                                <TipButton 
+                                    creator={creator} 
+                                />
+                            )}
                             <div className="relative">
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); setShowSettings(!showSettings); }} 
