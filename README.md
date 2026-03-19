@@ -9,6 +9,7 @@ VibeStream is a premium, high-fidelity video hosting and discovery platform desi
 - **Database & Auth**: Supabase (PostgreSQL, Row Level Security, Edge Functions)
 - **Media Processing**: FFmpeg (HLS v3/v4 multi-bitrate transcoding, CMAF segments).
 - **Storage**: Cloudflare R2 (Multipart chunked uploads).
+- **Web3 / Payments**: Privy (Embedded Wallets), Viem (Base EVM), Solana Web3.js.
 
 ## Key Features
 - **Cinematic Playback**: High-performance video player with HLS adaptive bitrate support, ambient "Halo" background syncing, and granular quality controls.
@@ -16,6 +17,7 @@ VibeStream is a premium, high-fidelity video hosting and discovery platform desi
 - **Discovery Intelligence**: Advanced tag autocomplete, fast GIN-indexed search arrays, and algorithmic "Similar Video" recommendations.
 - **Dynamic SEO**: Full social media hydration for video and profile pages via dynamic OpenGraph and Twitter Card metadata.
 - **Natural Engagement v2.0**: A proprietary backend system that simulates realistic video growth curves, timezone-aware activity, and personality-driven bot engagement to hydrate the platform and drive creator retention.
+- **Multi-Chain Payments**: Non-custodial 75/25 revenue splitting tipping system on Base and Solana. Auto-generated embedded wallets for creators at signup using Privy.
 - **Admin Management**: Extensive dashboard for user moderation, stimulus injection, and bot workforce control.
 
 ## Getting Started

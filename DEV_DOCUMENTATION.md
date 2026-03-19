@@ -67,3 +67,14 @@ Our backend (Supabase) is more than just a data store; it's a dynamic social eng
 - **Branching**: Use `feature/` or `fix/` prefixes for all branches.
 - **Artifacts**: Keep `task.md` and `walkthrough.md` updated during your session.
 - **Premium UI**: Always use curated color palettes and smooth transitions. Avoid standard "Bootstrap" or basic Tailwind looks.
+
+---
+
+## 7. Payments & Wallet Infrastructure (Phase 32)
+
+VibeStream supports non-custodial multi-chain payments (Base/Solana) with an automated 75/25 creator/platform revenue split.
+
+- **Wallet Generation**: We use [Privy](https://privy.io) (`components/VibeStreamPrivyProvider.tsx`) to auto-generate embedded wallets for users when they sign up. This provides an immediate non-custodial payout address without manual setup.
+- **Smart Contracts (Base)**: We use the `VibeStreamSplitter.sol` contract to atomically split ETH and USDC tip payments. The platform address is updatable via a 48-hour timelock by the owner.
+- **Solana Splitting**: We use client-side atomic transactions with multiple `SystemProgram.transfer` instructions to split SOL and SPL Token transfers. No custom program deployment is required.
+- **Security**: The platform wallet addresses are stored securely in environment variables (`NEXT_PUBLIC_PLATFORM_WALLET_*`) and never hardcoded in the frontend.

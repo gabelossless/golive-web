@@ -51,3 +51,16 @@ To support global scale, VibeStream utilizes an adaptive bitrate streaming archi
 VibeStream is built for viral discoverability.
 - **SSR Metadata**: Every video and profile page serves pre-rendered meta tags, ensuring that links shared on X (Twitter), Discord, or iMessage display high-fidelity previews immediately.
 - **Performance Budgeting**: We utilize IntersectionObserver-based lazy loading to ensure that even feeds with hundreds of videos maintain a 90+ Lighthouse performance score.
+
+---
+
+## 7. Creator Payouts & Autonomous Wallets (Phase 32)
+
+VibeStream features a native, non-custodial multi-chain payout infrastructure.
+
+- **Embedded Wallets**: Every user receives an autonomous Base and Solana wallet upon signup via Privy. This allows for immediate monetization without requiring the user to install external browser extensions.
+- **On-Chain Revenue Sharing**: The system implements an immutable 75/25 split. 75% of every tip goes directly to the creator's wallet, while 25% is routed to the platform treasury.
+- **Security Protocols**:
+    - **No Custody**: The platform never touches private keys. All transactions are signed by the user's embedded wallet.
+    - **Wallet Timelock**: Platform treasury updates require a 48-hour on-chain confirmation via the `VibeStreamSplitter` contract to prevent immediate fund routing attacks.
+    - **Non-Hardcoded**: All sensitive addresses are managed through centralized environment variables, isolating the frontend from address-hijacking vulnerabilities.
