@@ -249,13 +249,18 @@ export default function ShortsPage() {
                             <div className="absolute bottom-6 left-4 right-16 z-20">
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-3">
-                                        <Link href={`/profile/${short.profiles?.username}`} className="flex items-center gap-2 group">
-                                            <img
-                                                src={short.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${short.profiles?.username}`}
-                                                alt={short.profiles?.username || ''}
-                                                className="w-10 h-10 rounded-full border border-white/10 object-cover shadow-lg"
-                                            />
-                                            <span className="font-black text-sm tracking-tight drop-shadow-lg">
+                                        <Link href={`/profile/${short.profiles?.username}`} className="flex items-center gap-2 group/author">
+                                            <div className="relative">
+                                                <img
+                                                    src={short.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${short.profiles?.username}`}
+                                                    alt={short.profiles?.username || ''}
+                                                    className="w-11 h-11 rounded-full border-2 border-white/20 object-cover shadow-2xl group-hover/author:border-[#FFB800] transition-colors"
+                                                />
+                                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#FFB800] rounded-full border-2 border-black flex items-center justify-center">
+                                                    <div className="w-1.5 h-1.5 bg-black rounded-full animate-pulse" />
+                                                </div>
+                                            </div>
+                                            <span className="font-black text-sm tracking-tighter drop-shadow-2xl italic font-premium text-white group-hover/author:text-[#FFB800] transition-colors">
                                                 @{short.profiles?.username || 'unknown'}
                                             </span>
                                         </Link>
@@ -264,13 +269,13 @@ export default function ShortsPage() {
                                         </button>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <p className="text-sm font-bold text-white leading-tight drop-shadow-lg line-clamp-2 max-w-[85%]">
+                                    <div className="space-y-3">
+                                        <p className="text-lg font-bold text-white leading-tight drop-shadow-2xl line-clamp-2 max-w-[90%] tracking-tight">
                                             {short.title}
                                         </p>
-                                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#FFB800] drop-shadow-lg">
+                                        <div className="flex items-center gap-3 px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-full border border-white/10 w-fit text-[10px] font-black uppercase tracking-[0.15em] text-[#FFB800] drop-shadow-lg">
                                             <Music2 size={12} />
-                                            <span>Original Audio • {short.profiles?.username}</span>
+                                            <span>Original Vibe • {short.profiles?.username}</span>
                                         </div>
                                     </div>
                                 </div>

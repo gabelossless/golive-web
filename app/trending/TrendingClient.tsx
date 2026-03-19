@@ -59,13 +59,14 @@ export default function TrendingClient() {
     return (
         <div className="flex flex-col gap-10 p-6 md:p-12 max-w-[1400px] mx-auto w-full">
             {/* Trending Header */}
-            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 py-12 border-b border-white/5 bg-gradient-to-b from-[#FFB800]/5 to-transparent rounded-[48px] px-12">
-                <div className="w-24 h-24 rounded-full bg-[#FFB800]/10 flex items-center justify-center text-[#FFB800] border-2 border-[#FFB800]/20 shadow-2xl shadow-[#FFB800]/20">
-                    <Flame size={48} className="fill-[#FFB800]" />
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 py-12 border-b border-white/5 bg-white/[0.02] backdrop-blur-3xl rounded-[32px] px-12 relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#FFB800]/10 to-transparent opacity-50" />
+                <div className="relative w-24 h-24 rounded-2xl bg-[#FFB800]/10 flex items-center justify-center text-[#FFB800] border border-[#FFB800]/20 shadow-[0_0_50px_rgba(255,184,0,0.15)] group-hover:scale-110 transition-transform duration-700">
+                    <Flame size={48} className="fill-[#FFB800] drop-shadow-[0_0_15px_#FFB800]" />
                 </div>
-                <div className="text-center md:text-left space-y-2">
-                    <h1 className="text-5xl md:text-6xl font-black uppercase tracking-tighter m-0">Trending</h1>
-                    <p className="text-gray-400 font-medium text-lg max-w-xl">The hottest videos on VibeStream right now. Powered by community hype and viral velocity.</p>
+                <div className="relative text-center md:text-left space-y-2">
+                    <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter m-0 italic font-premium text-gradient">Trending</h1>
+                    <p className="text-zinc-400 font-medium text-lg max-w-xl leading-relaxed">The hottest videos on VibeStream right now. Powered by community hype and viral velocity.</p>
                 </div>
             </div>
 
@@ -80,10 +81,10 @@ export default function TrendingClient() {
             {/* Video Grid */}
             <div className="space-y-8">
                 {loading ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-x-6 gap-y-10">
                         {Array.from({ length: 12 }).map((_, i) => (
                             <div key={i} className="animate-pulse space-y-4">
-                                <div className="aspect-video bg-white/5 rounded-3xl" />
+                                <div className="aspect-video bg-white/5 rounded-xl" />
                                 <div className="flex gap-4">
                                     <div className="w-10 h-10 rounded-full bg-white/5" />
                                     <div className="flex-1 space-y-2 py-1">
@@ -95,7 +96,7 @@ export default function TrendingClient() {
                         ))}
                     </div>
                 ) : videos.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-x-6 gap-y-10">
                         {videos.map((video, index) => (
                             <motion.div
                                 key={video.id}
