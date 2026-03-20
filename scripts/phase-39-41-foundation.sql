@@ -46,8 +46,33 @@ CREATE POLICY "users_view_own_points" ON public.vibe_points_log FOR SELECT USING
 DROP POLICY IF EXISTS "admins_manage_points" ON public.vibe_points_log;
 CREATE POLICY "admins_manage_points" ON public.vibe_points_log ALL USING (public.is_admin());
 
--- 5. AUTOMATED REWARDS (Phase 41)
--- Update toggle_like to award points
+-- 5. AUTOMATED REWARDS (Phase 41) - HARDENED AGAINST FARMING
+-- Award points only if not already awarded for this specific video/reason combination
+CREATE OR REPLACE FUNCTION public.award_vibe_points(
+    p_user_id UUID, 
+    p_points INTEGER, 
+    p_reason TEXT, 
+    p_target_id UUID DEFAULT NULL,
+    p_meta JSONB DEFAULT '{}'::jsonb
+)
+RETURNS void AS $$
+BEGIN
+    -- Anti-Farming: Check if user already got points for this specific action on this target
+    IF p_target_id IS NOT NULL AND EXISTS (
+        SELECT 1 FROM public.vibe_points_log 
+        WHERE user_id = p_user_id 
+        AND reason = p_reason 
+        AND (metadata->>'target_id')::UUID = p_target_id
+    ) THEN
+        RETURN; -- Already awarded
+    END IF;
+
+    INSERT INTO public.vibe_points_log (user_id, points, reason, metadata)
+    VALUES (p_user_id, p_points, p_reason, p_meta || jsonb_build_object('target_id', p_target_id));
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Update toggle_like to award points (Hardened)
 CREATE OR REPLACE FUNCTION public.toggle_like(target_video_id UUID)
 RETURNS JSONB AS $$
 DECLARE
@@ -71,15 +96,15 @@ BEGIN
         INSERT INTO public.likes (video_id, user_id) VALUES (target_video_id, v_user_id);
         UPDATE public.videos SET likes_count = COALESCE(likes_count, 0) + 1 WHERE id = target_video_id;
         v_liked := true;
-        -- AWARD POINTS: 5 Vibe Points per verified Like
-        PERFORM public.award_vibe_points(v_user_id, 5, 'like');
+        -- AWARD POINTS: 5 Vibe Points per verified Like (Hardened)
+        PERFORM public.award_vibe_points(v_user_id, 5, 'like', target_video_id);
     END IF;
 
     RETURN jsonb_build_object('success', true, 'liked', v_liked);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- Update increment_hype_count to award points
+-- Update increment_hype_count to award points (Hardened)
 CREATE OR REPLACE FUNCTION public.increment_hype_count(video_id UUID)
 RETURNS JSONB AS $$
 DECLARE
@@ -96,8 +121,9 @@ BEGIN
 
     UPDATE public.videos SET hype_count = COALESCE(hype_count, 0) + 1 WHERE id = video_id;
 
-    -- AWARD POINTS: 10 Vibe Points per verified Hype
-    PERFORM public.award_vibe_points(v_user_id, 10, 'hype');
+    -- AWARD POINTS: 10 Vibe Points per verified Hype (Hardened)
+    -- Note: Creators might WANT users to hype multiple times, but for points we limit it to first time per user/video.
+    PERFORM public.award_vibe_points(v_user_id, 10, 'hype', video_id);
 
     RETURN jsonb_build_object('success', true);
 END;

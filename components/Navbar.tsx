@@ -105,7 +105,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     };
 
     return (
-        <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-2 glass-deep h-16 min-h-[64px] shrink-0 mx-2 mt-2 rounded-3xl border border-white/5">
+        <nav className="sticky top-0 z-[1000] flex items-center justify-between px-6 py-2 glass-deep h-16 min-h-[64px] shrink-0 mx-2 mt-2 rounded-3xl border border-white/5 shadow-2xl">
             <div className="flex items-center gap-4">
                 <button
                     onClick={onMenuClick}
@@ -158,7 +158,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
                 {/* Autocomplete Suggestions */}
                 {showSuggestions && suggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-14 mt-1 bg-[#121212] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[100] py-2">
+                    <div className="absolute top-full left-0 right-14 mt-1 bg-[#121212] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[1001] py-2">
                         {suggestions.map((suggestion, index) => (
                             <button
                                 key={suggestion}
