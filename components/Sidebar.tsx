@@ -105,7 +105,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
     }
 
     return (
-        <aside className="hidden md:flex w-72 flex-col py-6 overflow-y-auto scrollbar-hide glass-deep border border-white/5 mx-2 my-2 rounded-[40px] h-[calc(100vh-100px)] fixed top-20 left-0">
+        <aside className="hidden md:flex w-72 flex-col py-6 overflow-y-auto scrollbar-hide glass-deep border border-white/5 mx-2 my-2 rounded-[40px] h-[calc(100vh-100px)] sticky top-20">
             <div className="px-3 space-y-1">
                 {menuItems.map((item) => (
                     <SidebarItem
