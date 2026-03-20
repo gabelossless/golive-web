@@ -236,45 +236,13 @@ export default function DashboardClient() {
                         {/* Charts Section */}
                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                             {/* Revenue Analytics Chart */}
-                            <div className="glass-deep p-6 md:p-10 rounded-[32px] md:rounded-[48px] border border-white/5 space-y-6 md:space-y-8 shadow-2xl relative overflow-hidden group">
-                                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-green-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight italic font-premium">Revenue Velocity</h3>
-                                    <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest text-green-400 self-start sm:self-auto">
-                                        <TrendingUp size={14} /> Last 7 Days (USDC)
-                                    </div>
-                                </div>
-                                <div className="h-[250px] md:h-[350px] w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={analyticsData?.chartData || revenueData?.chartData || []}>
-                                            <defs>
-                                                <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                                            <XAxis dataKey="date" stroke="#ffffff20" fontSize={9} tickLine={false} axisLine={false} />
-                                            <YAxis hide />
-                                            <Tooltip 
-                                                contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
-                                                itemStyle={{ color: '#10b981', fontWeight: 900, fontSize: '10px', textTransform: 'uppercase' }}
-                                                labelStyle={{ color: '#fff', fontWeight: 900, fontSize: '12px', marginBottom: '4px' }}
-                                                formatter={(value: any) => `$${Number(value || 0).toFixed(2)} USDC`}
-                                            />
-                                            <Area type="monotone" dataKey="revenue" stroke="#10b981" fillOpacity={1} fill="url(#colorRev)" strokeWidth={3} />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-
                             {/* Views Analytics Chart */}
                             <div className="glass-deep p-6 md:p-10 rounded-[32px] md:rounded-[48px] border border-white/5 space-y-6 md:space-y-8 shadow-2xl relative overflow-hidden group">
                                 <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#FFB800]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight italic font-premium">View Velocity</h3>
                                     <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest text-[#FFB800] self-start sm:self-auto">
-                                        <Eye size={14} /> Global Engagement
+                                        <Eye size={14} /> Last 7 Days
                                     </div>
                                 </div>
                                 <div className="h-[250px] md:h-[350px] w-full">
@@ -293,11 +261,63 @@ export default function DashboardClient() {
                                                 contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
                                                 itemStyle={{ color: '#FFB800', fontWeight: 900, fontSize: '10px', textTransform: 'uppercase' }}
                                                 labelStyle={{ color: '#fff', fontWeight: 900, fontSize: '12px', marginBottom: '4px' }}
-                                                formatter={(value: any) => `${value} Views`}
+                                                formatter={(val: any) => `${val} Views`}
                                             />
                                             <Area type="monotone" dataKey="views" stroke="#FFB800" fillOpacity={1} fill="url(#colorViews)" strokeWidth={3} />
                                         </AreaChart>
                                     </ResponsiveContainer>
+                                </div>
+                            </div>
+
+                            {/* Revenue Analytics Chart */}
+                            <div className="glass-deep p-6 md:p-10 rounded-[32px] md:rounded-[48px] border border-white/5 space-y-6 md:space-y-8 shadow-2xl relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-green-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight italic font-premium">Revenue Velocity</h3>
+                                    <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest text-green-400 self-start sm:self-auto">
+                                        <TrendingUp size={14} /> USDC Earnings
+                                    </div>
+                                </div>
+                                <div className="h-[250px] md:h-[350px] w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={analyticsData?.chartData || []}>
+                                            <defs>
+                                                <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                            <XAxis dataKey="date" stroke="#ffffff20" fontSize={9} tickLine={false} axisLine={false} />
+                                            <YAxis hide />
+                                            <Tooltip 
+                                                contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #ffffff10', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
+                                                itemStyle={{ color: '#10b981', fontWeight: 900, fontSize: '10px', textTransform: 'uppercase' }}
+                                                labelStyle={{ color: '#fff', fontWeight: 900, fontSize: '12px', marginBottom: '4px' }}
+                                                formatter={(val: any) => `$${Number(val || 0).toFixed(2)} USDC`}
+                                            />
+                                            <Area type="monotone" dataKey="revenue" stroke="#10b981" fillOpacity={1} fill="url(#colorRev)" strokeWidth={3} />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+ 
+                            {/* Performance Insights Section */}
+                            <div className="glass-deep p-6 md:p-10 rounded-[32px] md:rounded-[48px] border border-white/5 space-y-6 md:space-y-8 shadow-2xl relative overflow-hidden group">
+                                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#FFB800]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight italic font-premium">Vibe Intelligence</h3>
+                                    <Sparkles className="text-[#FFB800] animate-pulse" size={20} />
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="p-5 bg-white/[0.02] border border-white/5 rounded-3xl">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-[#FFB800] mb-1">Growth Forecast</p>
+                                        <p className="text-sm font-bold text-gray-300">Your channel is trending <span className="text-white font-black italic">UP +15%</span> compared to last week. High engagement on Shorts is driving discovery.</p>
+                                    </div>
+                                    <div className="p-5 bg-white/[0.02] border border-white/5 rounded-3xl">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Recommendation</p>
+                                        <p className="text-sm font-bold text-gray-300">Upload more <span className="text-[#FFB800]">Gaming</span> content during peak hours (6PM-9PM) to maximize hype multipliers.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -19,6 +19,7 @@ import { formatViews } from '@/lib/utils';
 import { useAuth } from '@/components/AuthProvider';
 import { motion, AnimatePresence } from 'motion/react';
 import TipButton from '@/components/TipButton';
+import { getAnalyticsSessionId } from '@/lib/analytics-session';
 
 function cn(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(" ");
@@ -147,8 +148,7 @@ export default function WatchClient({ video: initialVideo, recommendations: init
 
         try {
             const { data, error } = await supabase.rpc('toggle_like', { 
-                target_video_id: video.id, 
-                target_user_id: currentUser.id 
+                target_video_id: video.id
             });
             
             if (error) throw error;
@@ -212,7 +212,15 @@ export default function WatchClient({ video: initialVideo, recommendations: init
 
     const handleActiveWatch = useCallback(async () => {
         try {
-            await supabase.rpc('increment_view_count', { video_id: video.id });
+            const sessionId = getAnalyticsSessionId();
+            const response = await fetch('/api/video/track-view', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    videoId: video.id,
+                    sessionId: sessionId
+                })
+            });
         } catch (err) {
             console.error('View increment failed:', err);
         }

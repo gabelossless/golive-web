@@ -12,27 +12,39 @@ export async function GET() {
 
         const userId = session.user.id;
 
-        // 1. Fetch Daily Stats (Last 14 days for more context)
-        const { data: stats, error: statsError } = await supabase
+        // 1. Fetch High-Fidelity Daily Video Stats
+        const { data: videoStats, error: statsError } = await supabase
+            .from('video_daily_stats')
+            .select(`
+                *,
+                videos!inner(user_id)
+            `)
+            .eq('videos.user_id', userId)
+            .order('date', { ascending: true });
+
+        if (statsError) throw statsError;
+
+        // 2. Fetch Global Daily Stats (for Revenue)
+        const { data: globalStats, error: globalStatsError } = await supabase
             .from('daily_stats')
             .select('*')
             .eq('user_id', userId)
             .order('date', { ascending: true })
-            .limit(14);
+            .limit(30);
 
-        if (statsError) throw statsError;
+        if (globalStatsError) throw globalStatsError;
 
-        // 2. Fetch Video Metadata for "Top Content"
+        // 3. Fetch Top Content
         const { data: videos, error: vidsError } = await supabase
             .from('videos')
-            .select('id, title, view_count, hype_count, thumbnail_url')
+            .select('id, title, view_count, hype_count, thumbnail_url, is_short')
             .eq('user_id', userId)
             .order('view_count', { ascending: false })
-            .limit(5);
+            .limit(10);
 
         if (vidsError) throw vidsError;
 
-        // 3. Prepare Chart Data (Fill gaps if necessary)
+        // 4. Prepare Chart Data (Last 7 Days)
         const last7Days = Array.from({ length: 7 }, (_, i) => {
             const d = new Date();
             d.setDate(d.getDate() - i);
@@ -40,25 +52,33 @@ export async function GET() {
         }).reverse();
 
         const chartData = last7Days.map(date => {
-            const dayStat = stats?.find(s => s.date === date);
+            const dayVideoStats = videoStats?.filter(s => s.date === date) || [];
+            const dayGlobalStats = globalStats?.find(s => s.date === date);
+            
+            const totalViews = dayVideoStats.reduce((acc, s) => acc + Number(s.views || 0), 0);
+            const totalRevenue = parseFloat(dayGlobalStats?.revenue_usdc || 0);
+            
             return {
                 date: new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-                views: dayStat?.views || 0,
-                revenue: parseFloat(dayStat?.revenue_usdc || 0),
+                views: totalViews,
+                revenue: totalRevenue,
             };
         });
 
-        // 4. Totals for Header
-        const totalViews = stats?.reduce((acc, s) => acc + (s.views || 0), 0) || 0;
-        const totalRevenue = stats?.reduce((acc, s) => acc + parseFloat(s.revenue_usdc || 0), 0) || 0;
+        // 5. Overall Totals
+        const totalViews = videos?.reduce((acc, v) => acc + (v.view_count || 0), 0) || 0;
+        const totalHypes = videos?.reduce((acc, v) => acc + (v.hype_count || 0), 0) || 0;
+        const totalRevenue = globalStats?.reduce((acc, s) => acc + parseFloat(s.revenue_usdc || 0), 0) || 0;
 
         return NextResponse.json({
             chartData,
             topVideos: videos,
             overallStats: {
                 totalViews,
+                totalHypes,
                 totalRevenue,
-                daysTracked: stats?.length || 0
+                videoCount: videos?.length || 0,
+                daysTracked: globalStats?.length || 0
             }
         });
 
