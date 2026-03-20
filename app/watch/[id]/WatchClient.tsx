@@ -157,6 +157,9 @@ export default function WatchClient({ video: initialVideo, recommendations: init
             if (data && typeof data.liked === 'boolean') {
                 setIsLiked(data.liked);
             }
+            if (data?.status === 'buffered') {
+                // Optionally handle buffered state (e.g., toast or silent success)
+            }
         } catch (err) {
             console.error('Error toggling like:', err);
             // Rollback on error
@@ -176,9 +179,12 @@ export default function WatchClient({ video: initialVideo, recommendations: init
         setHypes(prev => prev + 1);
 
         try {
-            const { error } = await supabase.rpc('increment_hype_count', { video_id: video.id });
+            const { data, error } = await supabase.rpc('increment_hype_count', { video_id: video.id });
             if (error) throw error;
             
+            if (data?.status === 'buffered') {
+                // Vibe Guard buffered this hype (Shadow)
+            }
             // Clean up animation
             setTimeout(() => setShowHypeAnimation(false), 2000);
         } catch (err) {

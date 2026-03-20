@@ -3,7 +3,7 @@ import { NextResponse, NextRequest } from 'next/server';
 
 // Simple in-memory rate limit for demo/production-ready foundation
 const viewRateLimit = new Map<string, number>();
-const RATE_LIMIT_COOLDOWN = 2000; // 2 seconds between views from same IP
+const RATE_LIMIT_COOLDOWN = 1500; // 1.5 seconds between views from same IP (Balanced)
 
 export async function POST(req: NextRequest) {
     try {
@@ -13,41 +13,41 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing Video ID' }, { status: 400 });
         }
 
-        // 1. Server-Side IP Detection (True Trust Boundary)
+        // 1. Server-Side IP Detection
         const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || 
                    req.headers.get('x-real-ip') || 
                    '127.0.0.1';
         
-        // 2. Simple Rate Limiting (Prevent Flood)
+        // 2. Individual Rate Limiting (Flood Prevention)
         const now = Date.now();
         const lastView = viewRateLimit.get(ip) || 0;
         if (now - lastView < RATE_LIMIT_COOLDOWN) {
-            return NextResponse.json({ success: true, message: 'Rate limited', status: 'throttled' });
+            return NextResponse.json({ success: true, message: 'Vibe pulse detected', status: 'throttled' });
         }
         viewRateLimit.set(ip, now);
 
         const supabase = await createClient();
         const userAgent = req.headers.get('user-agent') || 'unknown';
 
-        // 3. SECURE RPC CALL
-        // Note: The RPC handles IP detection internally via request headers if available,
-        // but we can also pass hints or just let it use the trust-hardened logic.
-        const { data, error } = await supabase.rpc('track_video_view', {
+        // 3. UNIFIED VIBE GUARD RPC
+        // This handles scoring, pulse adjustment, and shadow-buffering internally.
+        const { data, error } = await supabase.rpc('process_vibe_event', {
             p_video_id: videoId,
+            p_event_type: 'view',
             p_session_id: sessionId,
-            p_user_agent: userAgent
+            p_metadata: { user_agent: userAgent }
         });
 
         if (error) throw error;
 
         return NextResponse.json({
             success: true,
-            incremented: data?.incremented,
-            message: data?.message
+            status: data?.status || 'verified',
+            message: data?.status === 'buffered' ? 'Vibe recorded for verification' : 'Vibe verified'
         });
 
     } catch (err: any) {
-        console.error('[Track View Error]:', err);
-        return NextResponse.json({ error: 'Internal system error' }, { status: 500 });
+        console.error('[Vibe Guard Error]:', err);
+        return NextResponse.json({ error: 'System busy, please try again' }, { status: 500 });
     }
 }
