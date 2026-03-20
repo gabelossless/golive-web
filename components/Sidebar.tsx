@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutGrid, Zap, UserCheck, Clock, ThumbsUp, History, Bookmark, Film, Flame, Activity, Disc, LayoutDashboard, Sparkles, Plus, User } from "lucide-react";
+import { LayoutGrid, Zap, UserCheck, Clock, ThumbsUp, History, Bookmark, Film, Flame, Activity, Disc, LayoutDashboard, Sparkles, Plus, User, HelpCircle } from "lucide-react";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
@@ -79,6 +79,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         { icon: Activity, label: "Live", path: "/live", color: "text-[#FFB800]" },
         { icon: Flame, label: "Trending", path: "/trending" },
         { icon: Disc, label: "Music", path: "/search?category=Music" },
+        { icon: HelpCircle, label: "Help & FAQ", path: "/help" },
     ];
 
     if (!isOpen) {

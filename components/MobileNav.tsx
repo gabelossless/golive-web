@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutGrid, Zap, UserCheck, User, PlusCircle, PlayCircle } from "lucide-react";
+import { LayoutGrid, Zap, UserCheck, User, PlusCircle, PlayCircle, HelpCircle } from "lucide-react";
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -15,7 +15,7 @@ export default function MobileNav() {
         { label: "Home", icon: LayoutGrid, path: "/" },
         { label: "Shorts", icon: PlayCircle, path: "/shorts" },
         { label: "Create", icon: PlusCircle, path: "/upload", isAction: true },
-        { label: "Following", icon: UserCheck, path: "/subscriptions" },
+        { label: "Help", icon: HelpCircle, path: "/help" },
         { label: "You", icon: User, path: "/studio/dashboard" }, // Using dashboard as the 'You' tab
     ];
 
