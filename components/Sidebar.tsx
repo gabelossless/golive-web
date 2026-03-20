@@ -83,7 +83,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
 
     if (!isOpen) {
         return (
-            <aside className="hidden md:flex w-24 flex-col items-center py-6 gap-8 glass-deep border border-white/5 mx-2 my-2 rounded-3xl h-[calc(100vh-16px)]">
+            <aside className="hidden md:flex w-24 flex-col items-center py-6 gap-8 glass-deep border border-white/5 mx-2 my-2 rounded-3xl h-[calc(100vh-16px)] shrink-0">
                 {menuItems.map((item) => (
                     <Link key={item.label} href={item.path} title={item.label}
                         className={cn("flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-white/5 transition-all duration-300 w-16 group", pathname === item.path ? "text-[#FFB800] bg-white/[0.03] shadow-lg shadow-[#FFB800]/5" : "text-gray-400")}>
@@ -105,7 +105,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
     }
 
     return (
-        <aside className="hidden md:flex w-72 flex-col py-6 overflow-y-auto scrollbar-hide glass-deep border border-white/5 mx-2 my-2 rounded-[40px] h-[calc(100vh-100px)] sticky top-20">
+        <aside className="hidden md:flex w-72 flex-col py-6 overflow-y-auto scrollbar-hide glass-deep border border-white/5 mx-2 my-2 rounded-[40px] h-[calc(100vh-20px)] shrink-0">
             <div className="px-3 space-y-1">
                 {menuItems.map((item) => (
                     <SidebarItem
