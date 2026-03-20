@@ -105,7 +105,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     };
 
     return (
-        <nav className="sticky top-0 z-[1000] flex items-center justify-between px-6 py-2 glass-deep h-16 min-h-[64px] shrink-0 mx-2 mt-2 rounded-3xl border border-white/5 shadow-2xl">
+        <nav className="sticky top-0 z-[1000] flex items-center justify-between px-4 md:px-6 py-2 glass-deep h-16 min-h-[64px] shrink-0 md:mx-2 md:mt-2 md:rounded-3xl border-b md:border border-white/5 shadow-2xl">
             <div className="flex items-center gap-4">
                 <button
                     onClick={onMenuClick}

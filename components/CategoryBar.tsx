@@ -30,7 +30,7 @@ export default function CategoryBar({ onSelect }: { onSelect?: (cat: string) => 
     };
 
     return (
-        <div className="sticky top-[80px] z-40 glass-deep px-6 py-4 flex gap-3 overflow-x-auto scrollbar-hide border-b border-white/5 shrink-0 transition-all mx-2 my-2 rounded-3xl">
+        <div className="sticky top-[80px] z-40 glass-deep px-6 py-4 flex gap-3 overflow-x-auto scrollbar-hide border-b border-white/5 shrink-0 transition-all md:mx-2 md:my-2 md:rounded-3xl">
             {CATEGORIES.map((cat) => (
                 <button
                     key={cat}
