@@ -60,7 +60,25 @@ To address your request for **cheaper storage** as we gain users:
 - **Creator Dashboard Polish**: Added an active `USDC` mock conversion tag next to the Solana Treasury total. Polished mobile container responsiveness so tabs natively horizontal-scroll without squishing.
 - **Diagnostic Optimization Performance**: 
     - **Edge Caching**: The `/help` route now uses **ISR (Incremental Static Regeneration)** with a 1-hour window, bypassing backend load entirely for most users.
-    - **Image Compression**: Swapped 100+ `<img>` tags in Search and `VideoCard` for optimized `next/image`. Average thumbnail payload dropped from 400KB to **~12KB (WebP)**.
+    - **Image Compression**:### Phase 43.4: Diagnostic Agent Optimizations
+Successfully replaced raw `<img>` tags with optimized `next/image` components and enabled ISR for the Help Center.
+
+---
+
+### Phase 43.5: Multipart Upload Hotfix & Decentralized CDN (Current)
+
+**Hotfix: [Multipart Upload Restore]**
+- Resolved a critical regression where large video uploads failed due to missing pre-signed "endpoints" in the API handshake.
+- Patched `app/api/upload/multipart/route.ts` to generate and return all required part-signing URLs upfront.
+- Updated `UploadProvider.tsx` to pass the total `fileSize` during initialization, ensuring accurate chunking.
+
+**Feature: [Global Edge Acceleration]**
+- Created `lib/cdn.ts` to handle decentralized routing for assets.
+- Integrated **Saturn Network** and **Livepeer** logic for future-proofed, censorship-resistant delivery.
+- Added `playback_id` and `is_decentralized` fields to the platform's core video types.
+
+---
+Swapped 100+ `<img>` tags in Search and `VideoCard` for optimized `next/image`. Average thumbnail payload dropped from 400KB to **~12KB (WebP)**.
     - **Zero Technical Debt**: Verified with a local production build. 0 TypeScript errors.
 
 ### Proof of Work

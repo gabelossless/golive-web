@@ -349,6 +349,9 @@
 - [ ] Implement Vibe Guard Appeals Dashboard
 
 # Phase 43: Global Decentralized Infrastructure (Web3)
+- [x] Create `lib/cdn.ts` for Decentralized Gateway Routing
+- [/] Integrate Global Edge Acceleration (Decentralized CDN for thumbnails)
+- [ ] Implement Livepeer Playback ID native support in `VideoPlayer.tsx`
+- [x] **Hotfix**: Patch Multipart Upload "o.length" error in production
 - [ ] Transition storage to **IPFS / Filecoin / Arweave**
-- [ ] Integrate Global Edge Acceleration (Decentralized CDN)
 - [ ] Release VibeStream Developer SDK & Embeds

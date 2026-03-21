@@ -1,0 +1,56 @@
+# Research Report: Multi-Chain Split Payments (Phase 32)
+
+This report outlines the technical and legal framework for implementing a 75/25 revenue split between creators and the VibeStream platform across Solana and Base networks.
+
+## 1. Compliance Model: Technology Provider vs. Money Transmitter
+
+To ensure VibeStream operates as a **Technology Provider** (and not a Money Service Business/Transmitter), the system must adhere to non-custodial principles:
+- **No Custody**: The platform never holds or controls user funds.
+- **On-Chain Splitting**: Transactions are split at the moment of execution by the user's wallet.
+- **Direct Payouts**: Funds flow directly from the fan to the creator and the platform wallet.
+
+## 2. Technical Architecture
+
+### Solana (High Efficiency)
+On Solana, we leverage the **Atomic Transaction** model.
+- **Mechanism**: A single transaction contains multiple `SystemProgram.transfer` instructions (Native SOL) or `spl-token` transfer instructions (USDC).
+- **UX Benefi**t: The user only signs **once**. Both the creator's 75% and the platform's 25% are settled in a single atomic block.
+- **USDC Support**: Requires interacting with the SPL Token program and generating Associated Token Accounts (ATAs).
+
+### Base (EVM / Ease of Integration)
+On Base, we use the `viem` library to orchestrate payouts.
+- **Mechanism A (Sequential)**: The wallet sends two separate transactions. (Simple but requires 2 approvals).
+- **Mechanism B (Splitter Contract)**: A lightweight smart contract that accepts a single payment and distributes it. (Optimal for UX and Compliance).
+- **Decision**: For the current prototype, sequential transfers are used for simplicity, with a Phase 33 recommendation to move to a Splitter Contract.
+
+## 3. Asset & Token Strategy
+
+| Network | Native Asset | Stablecoin (USDC) | Decimals |
+|---|---|---|---|
+| **Base** | ETH | `0x833589fCD6...` | 6 |
+| **Solana** | SOL | `EPjFWdd5Aufq...` | 6 |
+
+### Handling Fees
+- **Calculation**: Fees are calculated on the frontend before signing to ensure the user knows exactly where the funds are going.
+- **Rounding**: All calculations are performed using `BigInt` or `lamports` to avoid floating-point errors.
+
+## 4. UI/UX Strategy: The "Vibe Modal"
+
+The research suggests a "Seamless Gateway" approach:
+1. **Wallet Auto-Detection**: The modal checks for `window.ethereum` and `window.solana`.
+2. **Dynamic Options**: If a creator hasn't set up a Solana wallet, that option is greyed out.
+3. **Preset Vibes**: Research shows that $1, $5, and $20 buttons increase conversion compared to a blank field.
+
+## 5. Prototype Status
+
+A technical feasibility prototype has been developed which implements:
+- **Base (Native/USDC)**: Functional 75/25 splitting via `viem`.
+- **Solana (Native/USDC)**: Functional atomic splitting via `web3.js`.
+- **Integrated Settings**: Payout address management for both chains.
+
+---
+
+### Next Steps Recommendation
+1. **Review Prototype**: Evaluate the current `TipButton.tsx` and `lib/constants.ts` implementation.
+2. **Audit/Security**: Perform a code audit of the transaction signing logic.
+3. **Legal Review**: Confirm the 2-transfer/multi-instruction logic satisfies local P2P tipping regulations.
