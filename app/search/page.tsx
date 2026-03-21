@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Filter, CheckCircle2, MoreVertical, Search, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatViews, timeAgo } from '@/lib/utils';
 import SearchFilters from '@/components/SearchFilters';
@@ -161,7 +162,14 @@ function SearchContent() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {profiles.map(profile => (
                                         <Link href={`/profile/${profile.username}`} key={profile.id} className="flex items-center gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl hover:bg-white/10 transition-colors group">
-                                            <img src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`} className="w-16 h-16 rounded-full object-cover group-hover:scale-105 transition-transform" alt={profile.username} />
+                                            <div className="relative w-16 h-16 rounded-full overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+                                                <Image 
+                                                    src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`} 
+                                                    alt={profile.username}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            </div>
                                             <div className="flex flex-col flex-1 min-w-0">
                                                 <div className="flex items-center gap-1">
                                                     <span className="font-bold text-lg truncate group-hover:text-[#FFB800] transition-colors">{profile.channel_name || profile.display_name || profile.username}</span>
@@ -192,11 +200,11 @@ function SearchContent() {
                                 className="flex flex-col sm:flex-row gap-4 group cursor-pointer"
                             >
                                 <Link href={`/watch/${video.id}`} className="relative flex-shrink-0 w-full sm:w-80 aspect-video rounded-xl overflow-hidden bg-white/5">
-                                    <img
+                                    <Image
                                         src={video.thumbnail_url || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=2574&auto=format&fit=crop'}
                                         alt={video.title}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                        referrerPolicy="no-referrer"
+                                        fill
+                                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
                                     {video.duration && !video.is_live && (
                                         <div className="absolute bottom-2 right-2 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-bold">
@@ -228,12 +236,14 @@ function SearchContent() {
                                         href={`/profile/${author}`}
                                         className="flex items-center gap-2 my-3 hover:text-white transition-colors no-underline w-fit"
                                     >
-                                        <img
-                                            src={avatar}
-                                            alt={author}
-                                            className="w-6 h-6 rounded-full object-cover"
-                                            referrerPolicy="no-referrer"
-                                        />
+                                        <div className="relative w-6 h-6 rounded-full overflow-hidden shrink-0">
+                                            <Image
+                                                src={avatar}
+                                                alt={author}
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        </div>
                                         <span className="text-xs text-gray-400 flex items-center gap-1">
                                             {author}
                                             {(video.profiles as any)?.is_verified && <CheckCircle2 size={12} className="text-[#FFB800]" />}

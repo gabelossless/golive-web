@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { CheckCircle2, MoreVertical, Play, Flame, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence, useInView } from 'motion/react';
 import { formatViews, timeAgo, formatDuration } from '@/lib/utils';
@@ -82,15 +83,20 @@ export default function VideoCard({ video }: VideoCardProps) {
             <Link href={`/watch/${video.id}`} className="relative aspect-video rounded-xl overflow-hidden bg-white/5 border border-white/5 shadow-lg group-hover:border-[#FFB800]/30 transition-all duration-300">
                 <AnimatePresence>
                     {!previewActive ? (
-                        <motion.img
+                        <motion.div
                             key="thumb"
                             initial={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            src={isInView ? thumb : undefined}
-                            alt={video.title || "Video"}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                            referrerPolicy="no-referrer"
-                        />
+                            className="relative w-full h-full"
+                        >
+                            <Image
+                                src={thumb}
+                                alt={video.title || "Video"}
+                                fill
+                                className="object-cover group-hover:scale-105 transition-transform duration-700"
+                                priority={false}
+                            />
+                        </motion.div>
                     ) : (
                         <motion.video
                             key="video"
@@ -129,15 +135,15 @@ export default function VideoCard({ video }: VideoCardProps) {
 
             <div className="flex gap-3">
                 <Link href={`/profile/${username}`} className="flex-shrink-0">
-                    <div className="relative">
-                        <img
+                    <div className="relative w-9 h-9 rounded-full overflow-hidden border border-white/10">
+                        <Image
                             src={avatar}
                             alt={author}
-                            className="w-9 h-9 rounded-full object-cover border border-white/10"
-                            referrerPolicy="no-referrer"
+                            fill
+                            className="object-cover"
                         />
                         {isLive && (
-                            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[#FFB800] rounded-full border-2 border-[#0a0a0a]" />
+                            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[#FFB800] rounded-full border-2 border-[#0a0a0a] z-10" />
                         )}
                     </div>
                 </Link>

@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'api.dicebear.com' },
       { protocol: 'https', hostname: 'test-streams.mux.dev' },
       { protocol: 'https', hostname: '*.supabase.co' }, // Wildcard for any supabase project
+      { protocol: 'https', hostname: 'pub-*.r2.dev' }, // Wildcard for Cloudflare R2 public buckets
     ],
   },
   /* 
