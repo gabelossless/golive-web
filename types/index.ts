@@ -47,6 +47,8 @@ export interface Video {
     hype_count?: number;
     likes_count?: number;
     is_short?: boolean;
+    playback_id?: string;
+    is_decentralized?: boolean;
 }
 
 export interface Comment {

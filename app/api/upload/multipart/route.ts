@@ -78,10 +78,29 @@ export async function POST(request: Request) {
             });
 
             const response = await S3.send(command);
+            const uploadId = response.UploadId;
+
+            // Generate signed URLs for all parts
+            const { fileSize } = body;
+            const chunkSize = 5 * 1024 * 1024;
+            const totalParts = Math.ceil((fileSize || 0) / chunkSize) || 1;
+            
+            const endpoints = [];
+            for (let i = 1; i <= totalParts; i++) {
+                const partCommand = new UploadPartCommand({
+                    Bucket: R2_BUCKET_NAME,
+                    Key: key,
+                    UploadId: uploadId,
+                    PartNumber: i,
+                });
+                const url = await getSignedUrl(S3, partCommand, { expiresIn: 3600 });
+                endpoints.push({ url, partNumber: i });
+            }
             
             return NextResponse.json({ 
-                uploadId: response.UploadId, 
-                key: response.Key 
+                uploadId, 
+                key,
+                endpoints
             }, { headers: corsHeaders });
         }
 

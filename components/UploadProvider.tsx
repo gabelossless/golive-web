@@ -61,7 +61,13 @@ export function UploadProvider({ children }: { children: ReactNode }) {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${meta.sessionToken}`
                     },
-                    body: JSON.stringify({ action: 'create', filename: uniqueFilename, contentType: file.type, folder }),
+                    body: JSON.stringify({ 
+                        action: 'create', 
+                        filename: uniqueFilename, 
+                        contentType: file.type, 
+                        folder,
+                        fileSize: file.size
+                    }),
                 });
 
                 if (!createRes.ok) throw new Error('Failed to initialize upload');
