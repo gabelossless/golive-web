@@ -80,6 +80,22 @@ const FAQ_CATEGORIES = [
                 a: 'Yes. We use Supabase RLS (Row Level Security) and Privy encryption. Your private keys are non-custodial and never touch our servers.'
             }
         ]
+    },
+    {
+        id: 'crypto-offramp',
+        title: 'Crypto & Off-Ramping',
+        icon: Wallet,
+        color: 'from-green-500/20 to-emerald-500/20',
+        questions: [
+            {
+                q: 'How do I off-ramp my crypto earnings to cash (USD)?',
+                a: 'VibeStream uses non-custodial wallets (Solana/Base). To convert your earnings to cash legally and safely, you can transfer your USDC, SOL, or ETH from your embedded Privy wallet over to a centralized exchange (like Coinbase, Kraken, or Binance). From the exchange, you can sell the tokens for USD and withdraw directly to your linked bank account.'
+            },
+            {
+                q: 'Are there taxes on crypto earnings?',
+                a: 'Yes. In most jurisdictions, crypto earnings from content creation are subject to income tax. When you off-ramp or trade tokens, you may also trigger capital gains events. We recommend consulting with a certified tax professional and keeping clear records of your on-chain transactions.'
+            }
+        ]
     }
 ];
 

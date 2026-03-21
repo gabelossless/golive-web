@@ -170,7 +170,7 @@ export default function DashboardClient() {
             </div>
 
             {/* Main Tabs Navigation */}
-            <div className="flex items-center gap-2 bg-white/[0.03] p-1.5 rounded-2xl self-start border border-white/5 backdrop-blur-3xl shadow-2xl">
+            <div className="flex items-center gap-2 bg-white/[0.03] p-1.5 rounded-2xl border border-white/5 backdrop-blur-3xl shadow-2xl overflow-x-auto whitespace-nowrap w-full md:w-auto self-start scrollbar-hide">
                 <button
                     onClick={() => setActiveTab('content')}
                     className={cn(
@@ -223,6 +223,7 @@ export default function DashboardClient() {
                                 icon={Flame} 
                                 label="Solana Native (SOL)" 
                                 value={`${revenueData?.stats?.totalNativeSolana?.toFixed(2) || '0.00'} SOL`} 
+                                trend={`≈ $${((revenueData?.stats?.totalNativeSolana || 0) * 180).toFixed(2)} USDC`}
                                 color="text-[#14F195]" 
                             />
                             <StatCard 
