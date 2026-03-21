@@ -149,6 +149,7 @@ export default function UploadPage() {
     };
 
     const [videoDuration, setVideoDuration] = useState(0);
+    const [videoMeta, setVideoMeta] = useState<{width: number; height: number; duration: number} | null>(null);
 
     const addToast = (msg: string, type: ToastType['type'], progress?: number) => {
         const id = Date.now();
@@ -210,6 +211,7 @@ export default function UploadPage() {
         // Fetch duration immediately
         try {
             const meta = await getVideoMetadata(file);
+            setVideoMeta(meta);
             setVideoDuration(meta.duration);
             if (touched) {
                 setFieldErrors(prev => ({ 
@@ -344,8 +346,9 @@ export default function UploadPage() {
             }
         }
         
-        // We will do a generic isShort calculation based mostly on duration for immediate fire-and-forget
-        const isShort = videoDuration <= 60;
+        // Automatic Vertical Video Intelligence
+        // A short must be strictly vertical (width < height) and <= 60 seconds
+        const isShort = videoDuration <= 60 && (videoMeta ? videoMeta.width < videoMeta.height : false);
 
         startUpload(videoFile, finalThumb, {
             title: title.trim(),

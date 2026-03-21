@@ -7,10 +7,13 @@
  * e.g. 1234 -> "1.2K", 1234567 -> "1.2M"
  */
 export function formatViews(count: number | string): string {
-    const num = typeof count === 'string' ? parseInt(count, 10) : count;
+    const raw = typeof count === 'string' ? parseFloat(count) : count;
+    const num = Math.floor(raw);
+    
     if (isNaN(num)) return '0';
     if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
     if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
+    
     return num.toString();
 }
 

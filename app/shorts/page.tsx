@@ -130,7 +130,7 @@ export default function ShortsPage() {
     );
 
     return (
-        <div ref={containerRef} className="relative h-[calc(100vh-64px)] overflow-hidden bg-black select-none">
+        <div ref={containerRef} className="relative h-[calc(100vh-64px)] overflow-hidden bg-black select-none touch-none">
             {/* Navigation Arrows - Desktop */}
             <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20 hidden md:flex flex-col gap-2">
                 <button onClick={() => navigate('up')} disabled={currentIndex === 0}
