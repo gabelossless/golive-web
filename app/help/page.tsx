@@ -9,17 +9,12 @@ import {
     Shield, 
     Wallet, 
     Video, 
-    TrendingUp, 
     ChevronDown, 
     Search, 
     MessageCircle, 
-    ExternalLink,
     Activity,
     Users
 } from 'lucide-react';
-import Navbar from '@/components/Navbar';
-import Sidebar from '@/components/Sidebar';
-import MobileNav from '@/components/MobileNav';
 
 const FAQ_CATEGORIES = [
     {
@@ -101,15 +96,9 @@ export default function HelpPage() {
     })).filter(cat => cat.questions.length > 0);
 
     return (
-        <div className="flex flex-col h-screen overflow-hidden bg-[#050505] text-white">
-            <Navbar onMenuClick={() => {}} />
-
-            <div className="flex flex-1 overflow-hidden">
-                <Sidebar isOpen={true} />
-
-                <main className="flex-1 overflow-y-auto scrollbar-hide px-4 md:px-8 py-10 relative">
-                    {/* Background Glow */}
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FFB800]/5 blur-[120px] -z-10" />
+        <div className="relative w-full px-4 md:px-8 py-10 min-h-screen">
+            {/* Background Glow */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FFB800]/5 blur-[120px] -z-10 pointer-events-none" />
                     
                     {/* Header */}
                     <div className="max-w-4xl mx-auto mb-16 text-center">
@@ -146,6 +135,9 @@ export default function HelpPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.1 }}
+                                onClick={() => {
+                                    document.getElementById(`category-${cat.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }}
                                 className={`p-8 rounded-[40px] bg-gradient-to-br ${cat.color} border border-white/5 group hover:border-white/10 transition-all cursor-pointer`}
                             >
                                 <div className="w-14 h-14 rounded-2xl bg-black/40 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-xl">
@@ -160,7 +152,7 @@ export default function HelpPage() {
                     {/* FAQ List */}
                     <div className="max-w-4xl mx-auto space-y-4 pb-20">
                         {filteredCategories.map((cat) => (
-                            <div key={cat.id} className="space-y-4">
+                            <div key={cat.id} id={`category-${cat.id}`} className="space-y-4 scroll-mt-24">
                                 <h2 className="text-xs font-black uppercase tracking-[0.3em] text-gray-500 pt-8 pb-4 border-b border-white/5 ml-4">
                                     {cat.title}
                                 </h2>
@@ -216,10 +208,6 @@ export default function HelpPage() {
                             </button>
                         </div>
                     </div>
-                </main>
-            </div>
-
-            <MobileNav />
         </div>
     );
 }

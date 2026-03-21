@@ -14,6 +14,7 @@ function SearchContent() {
     const query = searchParams.get('q') || '';
 
     const [videos, setVideos] = useState<any[]>([]);
+    const [profiles, setProfiles] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [filters, setFilters] = useState({
@@ -32,6 +33,7 @@ function SearchContent() {
         } else {
             setLoading(false);
             setVideos([]);
+            setProfiles([]);
         }
     }, [query, filters]);
 
@@ -70,11 +72,19 @@ function SearchContent() {
                 queryBuilder = queryBuilder.order('view_count', { ascending: false });
             }
 
-            const { data, error } = await queryBuilder.limit(40);
+            // Fetch videos and profiles in parallel
+            const [videoRes, profileRes] = await Promise.all([
+                queryBuilder.limit(40),
+                supabase
+                    .from('profiles')
+                    .select('id, username, display_name, channel_name, avatar_url, is_verified, bio')
+                    .or(`username.ilike.%${query}%,display_name.ilike.%${query}%,channel_name.ilike.%${query}%`)
+                    .limit(4)
+            ]);
 
-            if (error) throw error;
+            if (videoRes.error) throw videoRes.error;
 
-            let formatted = (data || []).map(v => ({
+            let formatted = (videoRes.data || []).map(v => ({
                 ...v,
                 profiles: Array.isArray(v.profiles) ? v.profiles[0] : v.profiles
             }));
@@ -96,6 +106,10 @@ function SearchContent() {
 
             // Safe filter
             setVideos(formatted.filter((v: any) => !(v.description || '').includes('[PRIVATE_VIDEO_FLAG]')));
+
+            if (profileRes.data) {
+                setProfiles(profileRes.data);
+            }
         } catch (err) {
             console.error('Error searching:', err);
         } finally {
@@ -134,18 +148,43 @@ function SearchContent() {
                     <div className="flex justify-center py-20 text-[#FFB800]">
                         <Loader2 size={40} className="animate-spin" />
                     </div>
-                ) : videos.length === 0 ? (
+                ) : videos.length === 0 && profiles.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                         <Search size={48} className="mb-4 opacity-20" />
                         <p>No results found for "{query}"</p>
                     </div>
                 ) : (
-                    videos.map((video, index) => {
-                        const author = video.profiles?.username || 'Unknown';
-                        const avatar = video.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author}`;
+                    <>
+                        {profiles.length > 0 && (
+                            <div className="mb-10 space-y-4">
+                                <h3 className="text-sm font-black uppercase tracking-widest text-gray-500 mb-4 border-b border-white/5 pb-2">Creators</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {profiles.map(profile => (
+                                        <Link href={`/profile/${profile.username}`} key={profile.id} className="flex items-center gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl hover:bg-white/10 transition-colors group">
+                                            <img src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`} className="w-16 h-16 rounded-full object-cover group-hover:scale-105 transition-transform" alt={profile.username} />
+                                            <div className="flex flex-col flex-1 min-w-0">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="font-bold text-lg truncate group-hover:text-[#FFB800] transition-colors">{profile.channel_name || profile.display_name || profile.username}</span>
+                                                    {profile.is_verified && <CheckCircle2 size={16} className="text-[#FFB800]" />}
+                                                </div>
+                                                <span className="text-sm text-gray-500">@{profile.username}</span>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
-                        return (
-                            <motion.div
+                        {videos.length > 0 && (
+                            <div className="space-y-6">
+                                <h3 className="text-sm font-black uppercase tracking-widest text-gray-500 mb-4 border-b border-white/5 pb-2">Videos</h3>
+                                <div className="space-y-6">
+                                    {videos.map((video, index) => {
+                                        const author = video.profiles?.username || 'Unknown';
+                                        const avatar = video.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author}`;
+
+                                        return (
+                                            <motion.div
                                 key={video.id}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -213,9 +252,13 @@ function SearchContent() {
                                         </div>
                                     )}
                                 </div>
-                            </motion.div>
-                        );
-                    })
+                                            </motion.div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>
