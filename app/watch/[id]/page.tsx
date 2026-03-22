@@ -25,16 +25,16 @@ export async function generateMetadata(
 
     if (!video) {
         return {
-            title: 'Video Not Found - VibeStream',
+            title: 'Video Not Found - Zenith',
         }
     }
 
     const title = video.title || 'Untitled Video';
-    const description = video.description || 'Watch this video on VibeStream';
+    const description = video.description || 'Watch this video on Zenith';
     const defaultImage = 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=1200&q=80';
     
     return {
-        title: `${title} - VibeStream`,
+        title: `${title} - Zenith`,
         description: description,
         openGraph: {
             title: title,

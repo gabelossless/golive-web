@@ -1,7 +1,7 @@
 // Platform wallet addresses — sourced from environment variables (NOT hardcoded)
 // These are set in .env.local for dev and Vercel env vars for production.
 // SECURITY: These are public on-chain addresses. Reading them exposes no funds.
-//           Wallet changes require the 48h timelock on VibeStreamSplitter.sol.
+//           Wallet changes require the 48h timelock on ZenithSplitter.sol.
 
 export const PLATFORM_WALLET_EVM =
     process.env.NEXT_PUBLIC_PLATFORM_WALLET_EVM ||
@@ -12,7 +12,8 @@ export const PLATFORM_WALLET_SOLANA =
     '11111111111111111111111111111111'; // Solana system program = safe fallback
 
 // Deployed Splitter contract on Base (set after deployment to Base Sepolia/Mainnet)
-export const VIBESTREAM_SPLITTER_CONTRACT =
+export const ZENITH_SPLITTER_CONTRACT =
+    process.env.NEXT_PUBLIC_ZENITH_SPLITTER_CONTRACT || 
     process.env.NEXT_PUBLIC_VIBESTREAM_SPLITTER_CONTRACT || '';
 
 // Revenue split percentages (must sum to 100)

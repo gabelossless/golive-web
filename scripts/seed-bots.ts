@@ -56,7 +56,7 @@ async function seedBots() {
         const { error: profileError } = await supabase.from('profiles').upsert({
             id: user.id,
             username,
-            avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
+            avatar_url: null,
             bio: 'Just here for the highlights! 🎮'
         });
 

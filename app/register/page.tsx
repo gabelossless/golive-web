@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2, CheckCircle2, Play, Mail, Lock, User } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { getGhostAvatar } from '@/lib/image-utils';
 
 export default function RegisterPage() {
     const [email, setEmail] = useState('');
@@ -36,7 +37,7 @@ export default function RegisterPage() {
                     id: data.user.id,
                     username,
                     email,
-                    avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
+                    avatar_url: getGhostAvatar(),
                 });
                 setSuccessEmail(email);
                 setSuccess(true);

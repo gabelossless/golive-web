@@ -66,7 +66,7 @@ export default function TrendingClient() {
                 </div>
                 <div className="relative text-center md:text-left space-y-2">
                     <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter m-0 italic font-premium text-gradient">Trending</h1>
-                    <p className="text-zinc-400 font-medium text-lg max-w-xl leading-relaxed">The hottest videos on VibeStream right now. Powered by community hype and viral velocity.</p>
+                    <p className="text-zinc-400 font-medium text-lg max-w-xl leading-relaxed">The hottest videos on Zenith right now. Powered by community hype and viral velocity.</p>
                 </div>
             </div>
 

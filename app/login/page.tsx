@@ -124,7 +124,7 @@ export default function LoginPage() {
                         </button>
 
                         <p className="text-center text-sm text-gray-400 mt-6 font-medium">
-                            New to VibeStream?{' '}
+                            New to Zenith?{' '}
                             <Link href="/register" className="text-[#FFB800] hover:underline">Create account</Link>
                         </p>
                     </form>

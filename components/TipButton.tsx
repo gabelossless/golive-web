@@ -15,7 +15,7 @@ import * as web3 from '@solana/web3.js';
 import {
     PLATFORM_WALLET_EVM,
     PLATFORM_WALLET_SOLANA,
-    VIBESTREAM_SPLITTER_CONTRACT,
+    ZENITH_SPLITTER_CONTRACT,
     TIPS_PLATFORM_FEE_PERCENT,
     TIPS_CREATOR_SHARE_PERCENT,
     USDC_BASE_ADDRESS,
@@ -26,6 +26,7 @@ import {
 
 interface TipButtonProps {
     creator: {
+        id: string;
         username: string;
         wallet_address?: string;
         solana_wallet_address?: string;
@@ -98,7 +99,7 @@ export default function TipButton({ creator }: TipButtonProps) {
 
     // ─── Base (EVM) tip via VibeStreamSplitter contract ──────────────────────
 
-    const handleBaseTip = async () => {
+    const handleBaseTip = async (): Promise<string> => {
         const eth = (window as any).ethereum;
         if (!eth) throw new Error('No EVM wallet found. Install MetaMask or Coinbase Wallet.');
 
@@ -110,71 +111,59 @@ export default function TipButton({ creator }: TipButtonProps) {
         });
 
         const creatorAddr = creator.wallet_address as `0x${string}`;
-        const hasContract = !!VIBESTREAM_SPLITTER_CONTRACT;
+        const hasContract = !!ZENITH_SPLITTER_CONTRACT;
+        let hash: `0x${string}`;
 
         if (selectedAsset === 'native') {
             const totalWei = parseEther(amount);
 
             if (hasContract) {
-                // ✅ Use on-chain splitter contract — single tx, atomic
-                const hash = await (walletClient as any).writeContract({
-                    address: VIBESTREAM_SPLITTER_CONTRACT as `0x${string}`,
+                hash = await (walletClient as any).writeContract({
+                    address: ZENITH_SPLITTER_CONTRACT as `0x${string}`,
                     abi: SPLITTER_ABI,
                     functionName: 'tipETH',
                     args: [creatorAddr],
                     value: totalWei,
                 });
-                setTxHash(hash);
             } else {
-                // Fallback: manual split (2 txs) until contract is deployed
                 const platformCut = (totalWei * BigInt(TIPS_PLATFORM_FEE_PERCENT)) / BigInt(100);
                 const creatorCut  = totalWei - platformCut;
-
                 await walletClient.sendTransaction({ account, to: creatorAddr, value: creatorCut });
-                await walletClient.sendTransaction({ account, to: PLATFORM_WALLET_EVM as `0x${string}`, value: platformCut });
+                hash = await walletClient.sendTransaction({ account, to: PLATFORM_WALLET_EVM as `0x${string}`, value: platformCut });
             }
         } else {
-            // USDC: approve splitter then call tipUSDC (single tx)
             const total6 = parseUnits(amount, 6);
-
             if (hasContract) {
-                // Step 1: Approve splitter to move USDC
                 await (walletClient as any).writeContract({
                     address: USDC_BASE_ADDRESS as `0x${string}`,
                     abi: ERC20_ABI,
                     functionName: 'approve',
-                    args: [VIBESTREAM_SPLITTER_CONTRACT as `0x${string}`, total6],
+                    args: [ZENITH_SPLITTER_CONTRACT as `0x${string}`, total6],
                 });
-                // Step 2: Call tipUSDC — contract does the split
-                const hash = await (walletClient as any).writeContract({
-                    address: VIBESTREAM_SPLITTER_CONTRACT as `0x${string}`,
+                hash = await (walletClient as any).writeContract({
+                    address: ZENITH_SPLITTER_CONTRACT as `0x${string}`,
                     abi: SPLITTER_ABI,
                     functionName: 'tipUSDC',
                     args: [creatorAddr, total6],
                 });
-                setTxHash(hash);
             } else {
-                // Fallback manual split
                 const platformCut = (total6 * BigInt(TIPS_PLATFORM_FEE_PERCENT)) / BigInt(100);
                 const creatorCut  = total6 - platformCut;
                 const abi = [{ name: 'transfer', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'to', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [{ name: '', type: 'bool' }] }] as const;
                 await (walletClient as any).writeContract({ address: USDC_BASE_ADDRESS as `0x${string}`, abi, functionName: 'transfer', args: [creatorAddr, creatorCut] });
-                await (walletClient as any).writeContract({ address: USDC_BASE_ADDRESS as `0x${string}`, abi, functionName: 'transfer', args: [PLATFORM_WALLET_EVM as `0x${string}`, platformCut] });
+                hash = await (walletClient as any).writeContract({ address: USDC_BASE_ADDRESS as `0x${string}`, abi, functionName: 'transfer', args: [PLATFORM_WALLET_EVM as `0x${string}`, platformCut] });
             }
         }
+        setTxHash(hash);
+        return hash;
     };
 
-    // ─── Solana tip (atomic multi-instruction transaction) ───────────────────
-
-    const handleSolanaTip = async () => {
+    const handleSolanaTip = async (): Promise<string> => {
         const provider = (window as any).solana ?? (window as any).phantom?.solana;
         if (!provider) throw new Error('Phantom wallet not found. Install Phantom.');
 
         await provider.connect();
-        const connection = new web3.Connection(
-            web3.clusterApiUrl('mainnet-beta'),
-            'confirmed'
-        );
+        const connection = new web3.Connection(web3.clusterApiUrl('mainnet-beta'), 'confirmed');
         const publicKey: web3.PublicKey = provider.publicKey;
         const tx = new web3.Transaction();
 
@@ -184,25 +173,15 @@ export default function TipButton({ creator }: TipButtonProps) {
             const creatorLamps   = Math.floor(totalLamports - platformLamps);
 
             tx.add(
-                web3.SystemProgram.transfer({
-                    fromPubkey: publicKey,
-                    toPubkey:   new web3.PublicKey(creator.solana_wallet_address!),
-                    lamports:   creatorLamps,
-                }),
-                web3.SystemProgram.transfer({
-                    fromPubkey: publicKey,
-                    toPubkey:   new web3.PublicKey(PLATFORM_WALLET_SOLANA),
-                    lamports:   platformLamps,
-                })
+                web3.SystemProgram.transfer({ fromPubkey: publicKey, toPubkey: new web3.PublicKey(creator.solana_wallet_address!), lamports: creatorLamps }),
+                web3.SystemProgram.transfer({ fromPubkey: publicKey, toPubkey: new web3.PublicKey(PLATFORM_WALLET_SOLANA), lamports: platformLamps })
             );
         } else {
-            // USDC (SPL Token) — atomic split
-            const { getAssociatedTokenAddress, createTransferInstruction } =
-                await import('@solana/spl-token');
-            const mint       = new web3.PublicKey(USDC_SOLANA_ADDRESS);
-            const total6     = Math.floor(parseFloat(amount) * 1_000_000);
-            const platform6  = Math.floor((total6 * TIPS_PLATFORM_FEE_PERCENT) / 100);
-            const creator6   = total6 - platform6;
+            const { getAssociatedTokenAddress, createTransferInstruction } = await import('@solana/spl-token');
+            const mint = new web3.PublicKey(USDC_SOLANA_ADDRESS);
+            const total6 = Math.floor(parseFloat(amount) * 1_000_000);
+            const platform6 = Math.floor((total6 * TIPS_PLATFORM_FEE_PERCENT) / 100);
+            const creator6 = total6 - platform6;
 
             const [userATA, creatorATA, platformATA] = await Promise.all([
                 getAssociatedTokenAddress(mint, publicKey),
@@ -218,15 +197,14 @@ export default function TipButton({ creator }: TipButtonProps) {
 
         const { blockhash } = await connection.getLatestBlockhash();
         tx.recentBlockhash = blockhash;
-        tx.feePayer        = publicKey;
+        tx.feePayer = publicKey;
 
-        const signed    = await provider.signTransaction(tx);
+        const signed = await provider.signTransaction(tx);
         const signature = await connection.sendRawTransaction(signed.serialize());
         await connection.confirmTransaction(signature, 'confirmed');
         setTxHash(signature);
+        return signature;
     };
-
-    // ─── Unified tip handler ──────────────────────────────────────────────────
 
     const processTip = async () => {
         if (!amount || parseFloat(amount) <= 0) {
@@ -237,8 +215,21 @@ export default function TipButton({ creator }: TipButtonProps) {
         setError(null);
         setTxHash(null);
         try {
-            if (selectedChain === 'base') await handleBaseTip();
-            else                           await handleSolanaTip();
+            const hash = selectedChain === 'base' ? await handleBaseTip() : await handleSolanaTip();
+            
+            // Register tip in DB for verified indexing
+            await fetch('/api/tips/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    txHash: hash,
+                    chain: selectedChain,
+                    asset: selectedAsset,
+                    amount: amount,
+                    creatorId: creator.id,
+                })
+            });
+
             setStatus('success');
             setTimeout(() => { setIsOpen(false); setStatus('idle'); }, 4000);
         } catch (err: any) {
@@ -313,7 +304,7 @@ export default function TipButton({ creator }: TipButtonProps) {
                             <div className="p-7 border-b border-white/5 flex items-center justify-between">
                                 <div>
                                     <h2 className="text-xl font-black tracking-tighter uppercase italic">
-                                        Send Good Vibes
+                                        Send Zenith Credits
                                     </h2>
                                     <p className="text-xs text-zinc-500 font-bold uppercase tracking-wider mt-0.5">
                                         Supporting {creator.username}

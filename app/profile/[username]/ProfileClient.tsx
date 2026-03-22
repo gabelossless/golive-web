@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { CheckCircle2, Search, Video as VideoIcon, Film, Settings2, Play, LayoutDashboard } from 'lucide-react';
+import { CheckCircle2, Search, Video as VideoIcon, Film, Settings2, Play, LayoutDashboard, Globe, ArrowUpRight, Wallet } from 'lucide-react';
 import CommunityTab from '@/components/CommunityTab';
 import VideoCard from '@/components/VideoCard';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import SubscribeButton from '@/components/SubscribeButton';
 import { motion } from 'motion/react';
+import { getGhostAvatar } from '@/lib/image-utils';
 
 function cn(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(' ');
@@ -118,26 +119,35 @@ export default function ProfileClient() {
         );
     }
 
-    const avatar = profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`;
+    const avatar = profile.avatar_url || getGhostAvatar();
     const hasBanner = !!profile.banner_url;
 
     return (
         <div className="flex flex-col min-h-full">
             {/* ── Banner ─────────────────────────────────────────────────── */}
-            <div className="h-40 md:h-56 relative overflow-hidden shrink-0">
+            <div className="h-40 md:h-64 relative overflow-hidden shrink-0 group/banner">
                 {hasBanner ? (
                     <img src={profile.banner_url} alt="Channel banner" className="w-full h-full object-cover" />
                 ) : (
-                    // Gradient placeholder — no external random images
+                    // Cinematic Dynamic Gradient placeholder
                     <div
-                        className="w-full h-full"
+                        className="w-full h-full relative"
                         style={{
-                            background: `linear-gradient(135deg, hsl(${profile.username.charCodeAt(0) * 5 % 360}, 60%, 20%), hsl(${(profile.username.charCodeAt(0) * 5 + 120) % 360}, 60%, 10%))`
+                            background: `linear-gradient(135deg, hsl(${profile.username.charCodeAt(0) * 5 % 360}, 60%, 15%), #0a0a0a)`
                         }}
-                    />
+                    >
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#0a0a0a_100%)] opacity-60" />
+                        <div className="absolute inset-0 flex items-center justify-center opacity-5">
+                            <span className="text-[15vw] font-black uppercase tracking-tighter opacity-10 select-none">
+                                {profile.username}
+                            </span>
+                        </div>
+                    </div>
                 )}
-                {/* Subtle bottom fade to page bg */}
-                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#0a0a0a] to-transparent" />
+                {/* Premium Cinematic Overlays */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a]/40 via-transparent to-[#0a0a0a]/40" />
+                <div className="absolute bottom-0 left-0 right-0 h-px bg-white/10" />
             </div>
 
             {/* ── Profile Info ───────────────────────────────────────────── */}
@@ -375,6 +385,58 @@ export default function ProfileClient() {
                                     </p>
                                     <div className="mt-4 flex gap-1 justify-center">
                                        {[1,2,3].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/20" />)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Social Presence & Wallets */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8">
+                                    <h3 className="font-black text-xl mb-4 uppercase tracking-tight italic flex items-center gap-2">
+                                        <Globe size={18} className="text-[#FFB800]" /> Social Presence
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {profile.social_links?.website ? (
+                                            <a 
+                                                href={profile.social_links.website.startsWith('http') ? profile.social_links.website : `https://${profile.social_links.website}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-3 p-4 bg-white/[0.03] hover:bg-white/[0.06] rounded-2xl transition-all border border-white/5 group"
+                                            >
+                                                <div className="w-8 h-8 rounded-full bg-[#FFB800]/10 flex items-center justify-center text-[#FFB800]">
+                                                    <Globe size={14} />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Official Website</p>
+                                                    <p className="text-sm font-bold truncate group-hover:text-white">{profile.social_links.website}</p>
+                                                </div>
+                                                <ArrowUpRight size={14} className="text-zinc-600 group-hover:text-[#FFB800]" />
+                                            </a>
+                                        ) : (
+                                            <p className="text-zinc-600 text-xs italic font-medium">No links provided yet.</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8">
+                                    <h3 className="font-black text-xl mb-4 uppercase tracking-tight italic flex items-center gap-2">
+                                        <Wallet size={18} className="text-[#FFB800]" /> Payout Nodes
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {[
+                                            { label: 'Base Mainnet', address: profile.wallet_address, icon: '🔵' },
+                                            { label: 'Solana Network', address: profile.solana_wallet_address, icon: '🟣' }
+                                        ].map((w, i) => (
+                                            <div key={i} className="flex items-center gap-3 p-4 bg-white/[0.03] rounded-2xl border border-white/5">
+                                                <div className="text-lg">{w.icon}</div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest">{w.label}</p>
+                                                    <p className="text-[11px] font-mono text-zinc-400 truncate">
+                                                        {w.address || 'Not Configured'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>

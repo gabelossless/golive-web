@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         const newBots = [];
 
         for (const name of BOT_USERNAMES) {
-            const email = `${name.toLowerCase()}@vibestream.bot`;
+            const email = `${name.toLowerCase()}@zenith.bot`;
             const username = name;
 
             // 1. Create Auth User

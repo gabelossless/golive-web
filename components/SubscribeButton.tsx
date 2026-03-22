@@ -112,11 +112,11 @@ export default function SubscribeButton({ channelId, channelName, className = ''
                 onClick={handleToggle}
                 disabled={processing}
                 className={cn(
-                    "bg-white/5 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 border border-white/10 text-zinc-400 font-black px-6 py-2.5 rounded-xl transition-all flex items-center gap-2 uppercase tracking-widest text-[10px] italic shadow-xl group",
+                    "glass-deep hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 border border-white/10 text-zinc-500 font-black px-6 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 uppercase tracking-[0.2em] text-[10px] italic shadow-2xl group",
                     className
                 )}
             >
-                {processing ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                {processing ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} className="text-[#FFB800]" />}
                 <span className="group-hover:hidden">Subscribed</span>
                 <span className="hidden group-hover:inline">Unsubscribe</span>
             </button>
@@ -128,11 +128,11 @@ export default function SubscribeButton({ channelId, channelName, className = ''
             onClick={handleToggle}
             disabled={processing}
             className={cn(
-                "bg-white text-black px-8 py-3 rounded-xl font-black shadow-2xl shadow-white/5 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-widest text-[10px] italic",
+                "bg-white text-black px-8 py-3 rounded-xl font-black shadow-[0_10px_30px_rgba(255,255,255,0.2)] hover:shadow-[0_15px_40px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 transition-all duration-500 flex items-center gap-2 uppercase tracking-[0.2em] text-[10px] italic border-t border-white/50",
                 className
             )}
         >
-            {processing ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} strokeWidth={3} />}
+            {processing ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} strokeWidth={4} />}
             Subscribe
         </button>
     );

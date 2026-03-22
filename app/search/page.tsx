@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatViews, timeAgo } from '@/lib/utils';
 import SearchFilters from '@/components/SearchFilters';
+import { getGhostAvatar } from '@/lib/image-utils';
 
 function SearchContent() {
     const searchParams = useSearchParams();
@@ -164,7 +165,7 @@ function SearchContent() {
                                         <Link href={`/profile/${profile.username}`} key={profile.id} className="flex items-center gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl hover:bg-white/10 transition-colors group">
                                             <div className="relative w-16 h-16 rounded-full overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
                                                 <Image 
-                                                    src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`} 
+                                                    src={profile.avatar_url || getGhostAvatar()} 
                                                     alt={profile.username}
                                                     fill
                                                     className="object-cover"
@@ -189,7 +190,7 @@ function SearchContent() {
                                 <div className="space-y-6">
                                     {videos.map((video, index) => {
                                         const author = video.profiles?.username || 'Unknown';
-                                        const avatar = video.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author}`;
+                                        const avatar = video.profiles?.avatar_url || getGhostAvatar();
 
                                         return (
                                             <motion.div

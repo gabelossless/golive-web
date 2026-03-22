@@ -5,6 +5,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { Loader2, SendHorizontal, SortDesc, Trash2, ThumbsUp, ThumbsDown } from 'lucide-react';
 import Link from 'next/link';
+import { getGhostAvatar } from '@/lib/image-utils';
 
 interface Comment {
     id: string;
@@ -181,7 +182,7 @@ export default function CommentSection({ videoId }: CommentSectionProps) {
                         <div key={comment.id} className="flex gap-3 items-start animate-in fade-in slide-in-from-bottom-2 group">
                             <Link href={`/profile/${comment.profiles?.username}`} className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 cursor-pointer hover:ring-2 ring-primary transition-all">
                                 <img
-                                    src={comment.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.profiles?.username}`}
+                                    src={comment.profiles?.avatar_url || getGhostAvatar()}
                                     alt={comment.profiles?.username}
                                     className="w-full h-full object-cover"
                                 />

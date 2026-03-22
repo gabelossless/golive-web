@@ -24,8 +24,8 @@ const FAQ_CATEGORIES = [
         color: 'from-blue-500/20 to-indigo-500/20',
         questions: [
             {
-                q: 'What is VibeStream?',
-                a: 'VibeStream is a premium, high-density video platform built for the modern creator economy. We focus on high-fidelity playback, organic-simulated growth, and multi-chain crypto integration.'
+                q: 'What is Zenith?',
+                a: 'Zenith is a premium, high-density video platform built for the modern creator economy. We focus on high-fidelity playback, organic-simulated growth, and multi-chain crypto integration.'
             },
             {
                 q: 'How do I create an account?',
@@ -34,18 +34,18 @@ const FAQ_CATEGORIES = [
         ]
     },
     {
-        id: 'vibe-points',
-        title: 'Vibe Points & Rewards',
+        id: 'zenith-credits',
+        title: 'Zenith Credits & Global Tips',
         icon: Zap,
         color: 'from-yellow-500/20 to-orange-500/20',
         questions: [
             {
-                q: 'How do I earn Vibe Points?',
-                a: 'You earn points by being a "Good Vibe" user: Watching videos (minimum 5s), Liking content, and Hyping creators. Our Vibe Guard system ensures points are awarded fairly.'
+                q: 'How do I earn Zenith Credits?',
+                a: 'You earn through global tips from your fans! Fans can tip using Base (EVM) or Solana. Our smart contract splits the funds 75/25 instantly on-chain, ensuring you get paid immediately.'
             },
             {
-                q: 'What can I do with Vibe Points?',
-                a: 'Points determine your rank on the Global Leaderboards and unlock exclusive platform perks, such as "Verified" badges and early access to creator drops.'
+                q: 'What is Crypto 101?',
+                a: 'New to crypto? Zenith uses stablecoins like USDC for global payments. You need a wallet (MetaMask or Phantom) to receive funds. Once received, you can "Off-board" to any Centralized Exchange (CEX) like Coinbase to withdraw to your bank.'
             }
         ]
     },
@@ -61,7 +61,7 @@ const FAQ_CATEGORIES = [
             },
             {
                 q: 'How do I get paid?',
-                a: 'VibeStream uses a non-custodial 75/25 revenue split. Tips from fans go directly to your embedded Solana or Base wallet. You can set your payout addresses in Studio Settings.'
+                a: 'Zenith uses a non-custodial 75/25 revenue split. Tips from fans go directly to your embedded Solana or Base wallet. You can set your payout addresses in Studio Settings.'
             }
         ]
     },
@@ -89,7 +89,7 @@ const FAQ_CATEGORIES = [
         questions: [
             {
                 q: 'How do I off-ramp my crypto earnings to cash (USD)?',
-                a: 'VibeStream uses non-custodial wallets (Solana/Base). To convert your earnings to cash legally and safely, you can transfer your USDC, SOL, or ETH from your embedded Privy wallet over to a centralized exchange (like Coinbase, Kraken, or Binance). From the exchange, you can sell the tokens for USD and withdraw directly to your linked bank account.'
+                a: 'Zenith uses non-custodial wallets (Solana/Base). To convert your earnings to cash legally and safely, you can transfer your USDC, SOL, or ETH from your embedded Privy wallet over to a centralized exchange (like Coinbase, Kraken, or Binance). From the exchange, you can sell the tokens for USD and withdraw directly to your linked bank account.'
             },
             {
                 q: 'Are there taxes on crypto earnings?',
@@ -135,7 +135,7 @@ export default function HelpClient() {
                             <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
                             <input 
                                 type="text"
-                                placeholder="Search the VibeStream FAQ..."
+                                placeholder="Search the Zenith FAQ..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full h-16 bg-white/5 border border-white/10 rounded-3xl pl-16 pr-6 text-lg focus:outline-none focus:border-[#FFB800]/50 transition-all font-medium placeholder:text-gray-600"

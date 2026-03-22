@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 import { Heart, MessageCircle, Share2, UserPlus, Volume2, VolumeX, ChevronUp, ChevronDown, MoreVertical, Music2 } from 'lucide-react';
 import { formatViews } from '@/lib/utils';
+import { getGhostAvatar } from '@/lib/image-utils';
 
 interface Short {
     id: string;
@@ -241,7 +242,7 @@ export default function ShortsPage() {
                                     transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                                     className="w-10 h-10 mt-4 rounded-xl overflow-hidden border-2 border-white/20 shadow-2xl bg-black"
                                 >
-                                    <img src={short.profiles?.avatar_url || ''} className="w-full h-full object-cover" alt="Audio track" />
+                                    <img src={short.profiles?.avatar_url || getGhostAvatar()} className="w-full h-full object-cover" alt="Audio track" />
                                 </motion.div>
                             </div>
 
@@ -252,7 +253,7 @@ export default function ShortsPage() {
                                         <Link href={`/profile/${short.profiles?.username}`} className="flex items-center gap-2 group/author">
                                             <div className="relative">
                                                 <img
-                                                    src={short.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${short.profiles?.username}`}
+                                                    src={short.profiles?.avatar_url || getGhostAvatar()}
                                                     alt={short.profiles?.username || ''}
                                                     className="w-11 h-11 rounded-full border-2 border-white/20 object-cover shadow-2xl group-hover/author:border-[#FFB800] transition-colors"
                                                 />

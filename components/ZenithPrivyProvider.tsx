@@ -11,7 +11,7 @@ import { base } from 'viem/chains';
  * Important: Set NEXT_PUBLIC_PRIVY_APP_ID in Vercel env vars and .env.local.
  * Get your App ID at https://dashboard.privy.io
  */
-export default function VibeStreamPrivyProvider({ children }: { children: React.ReactNode }) {
+export default function ZenithPrivyProvider({ children }: { children: React.ReactNode }) {
     const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID || '';
 
     if (!appId) {

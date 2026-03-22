@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { Camera, Save, User as UserIcon, Mail, Bell, Shield, Globe, LayoutDashboard, CheckCircle2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { getGhostAvatar, compressImage, uploadToR2 } from '@/lib/image-utils';
 
 function cn(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(" ");
@@ -12,6 +14,7 @@ function cn(...classes: (string | undefined | null | false)[]) {
 
 export default function StudioPage() {
     const { user, profile } = useAuth();
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState("Profile");
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -75,29 +78,55 @@ export default function StudioPage() {
         }
     };
 
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user) return;
+
+        // Visual feedback
+        showToast('success', 'Processing avatar...');
+
+        try {
+            // Compress and convert (HEIC -> JPEG)
+            const compressedBlob = await compressImage(file, { maxWidth: 800, maxHeight: 800, quality: 0.8 });
+            const processedFile = new File([compressedBlob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg' });
+
+            const publicUrl = await uploadToR2(processedFile, processedFile.name, `avatars/${user.id}`);
+            
+            // Update profile in DB immediately for better UX
+            const { error } = await supabase
+                .from('profiles')
+                .update({ avatar_url: publicUrl })
+                .eq('id', user.id);
+
+            if (error) throw error;
+            
+            showToast('success', 'Avatar updated!');
+            router.refresh();
+        } catch (err: any) {
+            console.error('Avatar upload failed:', err);
+            showToast('error', 'Avatar upload failed: ' + err.message);
+        }
+    };
+
     const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !user) return;
 
+        showToast('success', 'Optimizing banner...');
+
         try {
-            const formData = new FormData();
-            const filename = `banner_${user.id}_${Date.now()}.${file.name.split('.').pop()}`;
+            // YouTube-style banner optimization (2560x1440 max)
+            const compressedBlob = await compressImage(file, { maxWidth: 2560, maxHeight: 1440, quality: 0.85 });
+            const processedFile = new File([compressedBlob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: 'image/jpeg' });
 
-            // Re-use upload API or implement direct to R2/Supabase
-            // For now, let's assume we use the /api/upload we built
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ filename, contentType: file.type, folder: `banners/${user.id}` }),
-            });
-            const { url, path } = await res.json();
-
-            await fetch(url, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
-
-            const baseUrl = (process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '').replace(/\/$/, '');
-            setBannerUrl(`${baseUrl}/${path}`);
-        } catch (err) {
+            const publicUrl = await uploadToR2(processedFile, processedFile.name, `banners/${user.id}`);
+            setBannerUrl(publicUrl);
+            
+            // Note: Banner is saved with the main "Save Changes" button in this UI
+            showToast('success', 'Banner ready! Click Save Changes to apply.');
+        } catch (err: any) {
             console.error('Banner upload failed:', err);
+            showToast('error', 'Banner upload failed: ' + err.message);
         }
     };
 
@@ -119,7 +148,7 @@ export default function StudioPage() {
 
     const sidebarDisplayName = profile?.username || user?.email?.split('@')[0] || 'User';
     const sidebarHandle = sidebarDisplayName.toLowerCase().replace(/\s/g, '');
-    const avatar = profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.email}&backgroundColor=FFB800`;
+    const avatar = profile?.avatar_url || getGhostAvatar();
 
     return (
         <div className="max-w-6xl mx-auto p-4 md:p-8 flex-1 w-full">
@@ -175,11 +204,14 @@ export default function StudioPage() {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-3">Profile Picture</label>
                                     <div className="flex items-center gap-6">
-                                        <div className="relative group cursor-pointer" title="Change Profile Picture">
+                                        <div className="relative group cursor-pointer" 
+                                            title="Change Profile Picture"
+                                            onClick={() => (document.getElementById('avatar-input') as HTMLInputElement)?.click()}>
+                                            <input type="file" id="avatar-input" className="hidden" accept="image/*" onChange={handleAvatarUpload} aria-label="Upload Profile Picture" />
                                             <img
                                                 src={avatar}
                                                 alt={`${sidebarDisplayName}'s Avatar`}
-                                                className="w-24 h-24 rounded-full object-cover border-2 border-white/10 group-hover:opacity-50 transition-opacity bg-black"
+                                                className="w-24 h-24 rounded-full object-cover border-2 border-white/10 group-hover:opacity-50 transition-opacity bg-black shadow-2xl"
                                                 referrerPolicy="no-referrer"
                                             />
                                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -188,12 +220,13 @@ export default function StudioPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <button
-                                                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors text-white border-none cursor-pointer"
+                                                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-black uppercase tracking-widest transition-colors text-white border-none cursor-pointer"
                                                 aria-label="Change Profile Picture"
+                                                onClick={() => (document.getElementById('avatar-input') as HTMLInputElement)?.click()}
                                             >
                                                 Change Picture
                                             </button>
-                                            <p className="text-xs text-gray-500 m-0">Recommended: 800x800px. Max 2MB.</p>
+                                            <p className="text-[10px] uppercase font-black text-gray-500 m-0 tracking-tighter">Recommended: 800x800px. Supports HEIC/PNG/JPG.</p>
                                         </div>
                                     </div>
                                 </div>

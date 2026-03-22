@@ -44,7 +44,7 @@ export function useAutoSaveWallet() {
                 .update({ wallet_address: walletAddress })
                 .eq('id', session.user.id);
 
-            console.log('[VibeStream] Auto-saved Privy wallet:', walletAddress);
+            console.log('[Zenith] Auto-saved Privy wallet:', walletAddress);
         };
 
         save();

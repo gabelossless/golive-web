@@ -4,7 +4,7 @@ import "./globals.css";
 import Layout from "@/components/Layout";
 import AuthProvider from "@/components/AuthProvider";
 import { UploadProvider } from "@/components/UploadProvider";
-import VibeStreamPrivyProvider from "@/components/VibeStreamPrivyProvider";
+import ZenithPrivyProvider from "@/components/ZenithPrivyProvider";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -14,13 +14,13 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "VibeStream — Watch, Create & Go Viral",
-  description: "The next-generation video platform for creators. Upload, go live, and build your audience.",
-  keywords: ["streaming", "video", "shorts", "creators", "live", "VibeStream"],
+  title: "Zenith — Watch, Create & Go Viral",
+  description: "The global platform for media, viral shorts, and crypto-native creators. Reach billions with Zenith.",
+  keywords: ["streaming", "video", "shorts", "creators", "live", "Zenith"],
   manifest: "/manifest.json",
   openGraph: {
-    title: "VibeStream — Watch, Create & Go Viral",
-    description: "The next-generation video platform for creators.",
+    title: "Zenith — Watch, Create & Go Viral",
+    description: "The global platform for media and creators.",
     type: "website",
   },
 };
@@ -33,13 +33,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#FFB800" />
       </head>
       <body className={roboto.variable}>
-        <VibeStreamPrivyProvider>
+        <ZenithPrivyProvider>
           <AuthProvider>
             <UploadProvider>
               <Layout>{children}</Layout>
             </UploadProvider>
           </AuthProvider>
-        </VibeStreamPrivyProvider>
+        </ZenithPrivyProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `

@@ -1,6 +1,6 @@
 'use client';
 
-import { Menu, Search, Zap, Bell, User, Mic, PlusCircle, LogIn, CheckCircle2, Shield } from "lucide-react";
+import { Menu, Search, Zap, Bell, User, Mic, PlusCircle, LogIn, CheckCircle2, Shield, Flame } from "lucide-react";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect, useRef } from "react";
@@ -105,7 +105,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     };
 
     return (
-        <nav className="sticky top-0 z-[1000] flex items-center justify-between px-4 md:px-6 py-2 glass-deep h-16 min-h-[64px] shrink-0 md:mx-2 md:mt-2 md:rounded-3xl border-b md:border border-white/5 shadow-2xl">
+        <nav className="sticky top-0 z-[1000] flex items-center justify-between px-4 md:px-8 py-3 glass-floating h-20 min-h-[80px] shrink-0 md:mx-6 md:mt-4 md:rounded-[32px] border border-white/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.8)] backdrop-blur-3xl transition-all duration-500">
             <div className="flex items-center gap-4">
                 <button
                     onClick={onMenuClick}
@@ -114,13 +114,14 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                 >
                     <Menu size={24} />
                 </button>
-                <Link href="/" className="flex items-center gap-1 group shrink-0" title="VibeStream Home">
+                <Link href="/" className="flex items-center gap-2 group shrink-0" title="Zenith Home">
                     <div className="relative">
-                        <Zap className="text-[#FFB800] group-hover:scale-110 transition-transform" size={28} fill="currentColor" />
-                        <div className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full animate-pulse" />
+                        <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#FFB800] to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-600/20 group-hover:scale-110 transition-transform">
+                            <Flame size={24} className="text-black" fill="currentColor" />
+                        </div>
                     </div>
                     <span className="text-xl font-black tracking-tighter font-premium hidden xs:block sm:block uppercase italic">
-                        Vibe<span className="text-[#FFB800] text-gradient">Stream</span>
+                        Zenith
                     </span>
                 </Link>
             </div>
@@ -138,8 +139,8 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                     onSubmit={handleSearch}
                     className="flex items-center w-full group/search"
                 >
-                    <div className="flex flex-1 items-center bg-white/[0.03] border-premium rounded-2xl px-5 py-2 focus-within:bg-black/40 focus-within:border-[#FFB800]/40 transition-all duration-500 shadow-inner">
-                        <Search className="text-zinc-600 group-focus-within/search:text-[#FFB800] transition-colors" size={18} />
+                    <div className="flex flex-1 items-center bg-white/[0.04] border-premium rounded-2xl px-6 py-3 focus-within:bg-black/80 focus-within:border-[#FFB800]/60 focus-within:ring-4 focus-within:ring-[#FFB800]/5 transition-all duration-700 shadow-[inner_0_2px_4px_rgba(0,0,0,0.4)]">
+                        <Search className="text-zinc-500 group-focus-within/search:text-[#FFB800] group-focus-within/search:scale-110 transition-all duration-500" size={20} />
                         <input
                             type="text"
                             placeholder="Search creators, videos, lives..."
@@ -147,12 +148,12 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyDown={handleKeyDown}
                             onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
-                            className="w-full bg-transparent outline-none text-sm placeholder:text-zinc-700 ml-3 font-medium text-white"
+                            className="w-full bg-transparent outline-none text-base placeholder:text-zinc-600 ml-4 font-bold text-white tracking-tight"
                             title="Search"
                         />
                     </div>
-                    <button type="button" className="ml-4 p-2.5 bg-white/[0.03] border border-white/5 rounded-2xl hover:bg-white/10 hover:border-white/10 transition-all text-zinc-400 hover:text-white" title="Search with your voice">
-                        <Mic size={18} />
+                    <button type="button" className="ml-5 p-3.5 bg-white/[0.04] border border-white/5 rounded-2xl hover:bg-[#FFB800] hover:text-black hover:scale-110 transition-all duration-500 shadow-lg" title="Search with your voice">
+                        <Mic size={20} />
                     </button>
                 </form>
 
@@ -187,34 +188,32 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                 <Link href="/upload" className="p-2 rounded-full hover:bg-white/10 transition-colors hidden sm:block" title="Create Video">
                     <PlusCircle size={22} />
                 </Link>
-                {user && (
-                    <Link 
-                        href="/premium" 
-                        className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#FFB800] to-orange-600 text-black font-black uppercase text-[10px] tracking-widest hover:scale-105 transition-all hidden lg:flex items-center gap-1"
-                        title="Get Premium"
-                    >
-                        <CheckCircle2 size={12} />
-                        Get Premium
-                    </Link>
-                )}
-                <button className="p-2 rounded-full hover:bg-white/10 transition-colors hidden sm:block" title="View Notifications">
-                    <Bell size={22} />
-                </button>
-                {user ? (
-                    <div className="flex items-center gap-3">
-                        <div className="hidden sm:flex flex-col items-end mr-1">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-[#FFB800] leading-none mb-0.5">
-                                {profile?.subscription_tier === 'premium' ? 'Premium' : 'Creator'}
-                            </span>
-                            <div className="flex items-center gap-1">
-                                <span className="text-xs font-bold text-white max-w-[120px] truncate">
-                                    {profile?.channel_name || profile?.display_name || profile?.username}
-                                </span>
-                                {(profile?.is_verified || profile?.subscription_tier === 'premium') && (
-                                    <CheckCircle2 size={12} className="text-[#FFB800]" fill="currentColor" />
-                                )}
-                            </div>
-                        </div>
+                        {user && (
+                            <Link 
+                                href="/premium" 
+                                className="px-6 py-2 rounded-2xl bg-gradient-to-br from-[#FFB800] via-[#FF8A00] to-orange-700 text-black font-black uppercase text-[11px] tracking-[0.2em] hover:scale-105 hover:shadow-[0_10px_20px_rgba(255,184,0,0.3)] transition-all hidden lg:flex items-center gap-2 border border-white/10"
+                                title="Get Premium"
+                            >
+                                <Zap size={14} fill="currentColor" />
+                                Premium
+                            </Link>
+                        )}
+                        <button className="relative p-3 rounded-2xl bg-white/[0.04] border border-white/5 hover:bg-white/10 transition-all group" title="View Notifications">
+                            <Bell size={22} className="group-hover:rotate-12 transition-transform" />
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-[#FFB800] rounded-full shadow-[0_0_10px_#FFB800]" />
+                        </button>
+                        {user ? (
+                            <div className="flex items-center gap-4">
+                                <div className="hidden sm:flex flex-col items-end mr-1">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FFB800] leading-none mb-1 opacity-80">
+                                        {profile?.subscription_tier === 'premium' ? '👑 ELITE' : 'ZENITH CREATOR'}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-black text-white max-w-[140px] truncate font-premium">
+                                            {profile?.channel_name || profile?.display_name || profile?.username}
+                                        </span>
+                                    </div>
+                                </div>
                         {profile?.is_admin && (
                             <Link 
                                 href="/admin/dashboard" 
@@ -224,13 +223,17 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
                                 <Shield size={18} />
                             </Link>
                         )}
-                        <Link href="/studio/dashboard" className="w-8 h-8 rounded-full bg-gradient-to-br from-[#FFB800] to-orange-600 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity" title="Creator Studio">
-                            {profile?.avatar_url ? (
-                                <img src={profile.avatar_url} className="w-full h-full rounded-full object-cover" alt="" />
-                            ) : (
-                                <User size={18} className="text-black" />
-                            )}
-                        </Link>
+                                <Link href="/studio/dashboard" className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FFB800] to-orange-600 p-[2px] cursor-pointer hover:scale-110 transition-transform shadow-xl overflow-hidden" title="Creator Studio">
+                                    <div className="w-full h-full rounded-2xl bg-[#0a0a0a] overflow-hidden">
+                                        {profile?.avatar_url ? (
+                                            <img src={profile.avatar_url} className="w-full h-full object-cover" alt="" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-[#FFB800]">
+                                                <User size={24} />
+                                            </div>
+                                        )}
+                                    </div>
+                                </Link>
                     </div>
                 ) : (
                     <Link href="/login" className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#FFB800]/40 text-[#FFB800] hover:bg-[#FFB800]/10 transition-colors font-medium text-sm">

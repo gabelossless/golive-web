@@ -5,6 +5,7 @@ import { User, Bell, Shield, Eye, Moon, Monitor, LogOut, Loader2, Save, CheckCir
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
+import { getGhostAvatar } from '@/lib/image-utils';
 
 export default function SettingsPage() {
     const { user, signOut } = useAuth();
@@ -127,7 +128,7 @@ export default function SettingsPage() {
                             <div className="flex items-center gap-6">
                                 <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-surface relative group cursor-pointer">
                                     <img
-                                        src={formData.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.username}`}
+                                        src={formData.avatar_url || getGhostAvatar()}
                                         alt="Avatar"
                                         className="w-full h-full object-cover"
                                     />

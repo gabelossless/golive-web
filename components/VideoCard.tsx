@@ -7,6 +7,7 @@ import { CheckCircle2, MoreVertical, Play, Flame, Volume2, VolumeX } from 'lucid
 import { motion, AnimatePresence, useInView } from 'motion/react';
 import { formatViews, timeAgo, formatDuration } from '@/lib/utils';
 import { getDecentralizedUrl } from '@/lib/cdn';
+import { getGhostAvatar } from '@/lib/image-utils';
 
 export interface VideoCardProps {
     video: {
@@ -32,7 +33,7 @@ export interface VideoCardProps {
 }
 
 const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=800&q=80';
-const FALLBACK_AVATAR = 'https://api.dicebear.com/7.x/avataaars/svg?seed=default';
+const FALLBACK_AVATAR = getGhostAvatar();
 
 const normalizeUrl = (url: string | undefined | null, fallback: string) => {
     if (!url) return fallback;
@@ -80,14 +81,28 @@ export default function VideoCard({ video }: VideoCardProps) {
     return (
         <motion.div
             ref={cardRef}
-            initial={{ opacity: 0, scale: 0.98 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="flex flex-col gap-3 group cursor-pointer overflow-visible bg-transparent"
+            whileHover={{ y: -8, scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="flex flex-col gap-4 group cursor-pointer overflow-visible bg-transparent relative"
         >
-            <Link href={`/watch/${video.id}`} className="relative aspect-video rounded-xl overflow-hidden bg-white/5 border border-white/5 shadow-lg group-hover:border-[#FFB800]/30 transition-all duration-300">
+            {/* Ambient Shadow Glow on Hover */}
+            <AnimatePresence>
+                {isHovered && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 0.4 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute -inset-8 bg-[#FFB800]/10 blur-[100px] rounded-full pointer-events-none z-[-1]"
+                    />
+                )}
+            </AnimatePresence>
+
+            <Link href={`/watch/${video.id}`} className="relative aspect-video rounded-[24px] overflow-hidden bg-white/5 border border-white/5 shadow-2xl group-hover:border-[#FFB800]/40 transition-all duration-500 ring-0 group-hover:ring-4 group-hover:ring-[#FFB800]/5">
                 <AnimatePresence>
                     {!previewActive ? (
                         <motion.div
@@ -123,20 +138,20 @@ export default function VideoCard({ video }: VideoCardProps) {
                         {formatDuration(video.duration)}
                     </div>
                 )}
-                {isLive && (
-                    <div className="absolute top-2 left-2 live-badge flex items-center gap-1">
+                    <div className="absolute top-3 left-3 live-badge flex items-center gap-2 border border-black/20 shadow-[0_4px_10px_rgba(255,184,0,0.4)]">
                         <span className="w-1.5 h-1.5 bg-black rounded-full animate-pulse" />
                         Live
                     </div>
-                )}
                 {video.hype_count && video.hype_count > 0 && (
                     <div className="absolute top-2 right-2 bg-gradient-to-r from-[#FFB800] to-orange-500 text-black px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-tighter shadow-lg flex items-center gap-1 z-10">
                         <Flame size={10} fill="currentColor" />
                         Hyped
                     </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                    <div className="text-xs font-bold text-white uppercase tracking-widest">Watch Now</div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-5">
+                    <div className="text-xs font-black text-white uppercase tracking-[0.3em] bg-[#FFB800] text-black px-4 py-1.5 rounded-full shadow-[0_10px_20px_rgba(255,184,0,0.4)] transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                        Watch Now
+                    </div>
                 </div>
             </Link>
 
@@ -156,21 +171,21 @@ export default function VideoCard({ video }: VideoCardProps) {
                 </Link>
                 <div className="flex flex-col flex-1 min-w-0">
                     <Link href={`/watch/${video.id}`}>
-                        <h3 className="text-sm font-bold line-clamp-2 leading-tight text-zinc-100 group-hover:text-[#FFB800] transition-colors tracking-tight">
+                        <h3 className="text-base font-black line-clamp-2 leading-[1.1] text-white group-hover:text-[#FFB800] transition-colors tracking-tight font-premium uppercase italic">
                             {video.title || 'Untitled'}
                         </h3>
                     </Link>
-                    <div className="flex flex-col mt-1">
+                    <div className="flex flex-col mt-2">
                         <Link
                             href={`/profile/${username}`}
-                            className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition-colors font-medium"
+                            className="text-xs text-zinc-400 hover:text-white flex items-center gap-2 transition-colors font-black uppercase tracking-widest opacity-80"
                         >
                             {author}
                             {(video.profiles?.is_verified || video.profiles?.subscription_tier === 'premium') && (
-                                <CheckCircle2 size={12} className="text-[#FFB800]" fill="currentColor" />
+                                <CheckCircle2 size={12} className="text-[#FFB800] fill-current" />
                             )}
                         </Link>
-                        <div className="text-[11px] text-zinc-500 font-medium mt-1">
+                        <div className="text-[10px] text-zinc-600 font-bold mt-2 uppercase tracking-tighter">
                             {formatViews(views)} views • {timeStr}
                         </div>
                     </div>

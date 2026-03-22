@@ -34,14 +34,44 @@ async function streamToFile(readableStream: Readable, filePath: string) {
     });
 }
 
+import { supabase } from '@/lib/supabase';
+import { requestLivepeerTranscode } from '@/lib/livepeer/client';
+
 export async function POST(request: Request) {
     let currentTempDir: string | null = null;
     
     try {
-        const { rawPath, userId } = await request.json();
+        const { rawPath, userId, title } = await request.json();
 
         if (!rawPath || !userId) {
             return NextResponse.json({ error: 'rawPath and userId required' }, { status: 400 });
+        }
+
+        // 0. Check Subscription Tier
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('subscription_tier')
+            .eq('id', userId)
+            .single();
+
+        const isPremium = profile?.subscription_tier === 'premium';
+
+        if (isPremium && process.env.LIVEPEER_API_KEY) {
+            console.log(`[Premium-Pro] Triggering Livepeer Import for: ${rawPath}`);
+            const r2PublicUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${rawPath}`;
+            
+            try {
+                const lpAsset = await requestLivepeerTranscode(r2PublicUrl, title || `Premium Upload - ${userId}`);
+                return NextResponse.json({
+                    success: true,
+                    playbackId: lpAsset.playbackId,
+                    hls: true,
+                    provider: 'livepeer'
+                });
+            } catch (lpErr) {
+                console.error('[Livepeer Fallback] Failed to trigger Livepeer, falling back to local FFmpeg:', lpErr);
+                // Continue to local FFmpeg logic as fallback
+            }
         }
 
         const tempInputPath = path.join(os.tmpdir(), `input_${uuidv4()}.mov`);

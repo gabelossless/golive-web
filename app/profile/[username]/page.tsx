@@ -21,7 +21,7 @@ export async function generateMetadata(
 
     if (!profile) {
         return {
-            title: 'Channel Not Found - VibeStream'
+            title: 'Channel Not Found - Zenith'
         }
     }
 

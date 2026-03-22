@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { UploadCloud, X, CheckCircle, AlertCircle, FileVideo, Image as ImageIcon, Loader2, Globe, Lock, EyeOff, Check, Plus, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
+import { getGhostAvatar } from '@/lib/image-utils';
 
 function cn(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(" ");
@@ -447,7 +448,7 @@ export default function UploadPage() {
                 >
                     <div className="relative">
                         <img 
-                           src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`} 
+                           src={profile.avatar_url || getGhostAvatar()} 
                            className="w-12 h-12 rounded-full border-2 border-[#FFB800]" 
                            alt="" 
                         />

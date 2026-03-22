@@ -13,6 +13,7 @@ interface VideoPlayerProps {
     title?: string;
     onActiveWatch?: () => void;
     creator?: {
+        id: string;
         username: string;
         wallet_address?: string;
         solana_wallet_address?: string;

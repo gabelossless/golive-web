@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
         // ACTION: CREATE
         if (action === 'create') {
-            const { filename, contentType, folder } = body;
+            const { filename, contentType, fileSize, folder } = body;
             if (!filename || !contentType) {
                 return NextResponse.json({ error: 'Filename/contentType required' }, { status: 400, headers: corsHeaders });
             }
@@ -81,11 +81,21 @@ export async function POST(request: Request) {
             const uploadId = response.UploadId;
 
             // Generate signed URLs for all parts
-            const { fileSize } = body;
             const chunkSize = 5 * 1024 * 1024;
             const totalParts = Math.ceil((fileSize || 0) / chunkSize) || 1;
+
+            // SAFETY: Limit to 10GB for standard users (2000 parts)
+            if (totalParts > 2000) {
+                return NextResponse.json({ error: 'File too large for standard upload. Upgrade to Business for 50GB+ moves.' }, { status: 413, headers: corsHeaders });
+            }
+            
+            // SECURITY: Ensure folder is restricted to the user's namespace if provided
+            if (folder && !folder.includes(user.id)) {
+                return NextResponse.json({ error: 'Invalid storage namespace.' }, { status: 403, headers: corsHeaders });
+            }
             
             const endpoints = [];
+            // Pre-create the part signing promises for slightly better performance if R2 SDK allows
             for (let i = 1; i <= totalParts; i++) {
                 const partCommand = new UploadPartCommand({
                     Bucket: R2_BUCKET_NAME,

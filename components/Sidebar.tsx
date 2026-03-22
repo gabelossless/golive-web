@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
+import { getGhostAvatar } from '@/lib/image-utils';
 
 function cn(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(" ");
@@ -84,7 +85,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
 
     if (!isOpen) {
         return (
-            <aside className="hidden md:flex w-24 flex-col items-center py-6 gap-8 glass-deep border border-white/5 mx-2 my-2 rounded-3xl h-[calc(100vh-16px)] shrink-0">
+            <aside className="hidden md:flex w-24 flex-col items-center py-8 gap-8 glass-deep border border-white/10 mx-4 my-4 rounded-[32px] h-[calc(100vh-32px)] shrink-0 shadow-2xl transition-all duration-500">
                 {menuItems.map((item) => (
                     <Link key={item.label} href={item.path} title={item.label}
                         className={cn("flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-white/5 transition-all duration-300 w-16 group", pathname === item.path ? "text-[#FFB800] bg-white/[0.03] shadow-lg shadow-[#FFB800]/5" : "text-gray-400")}>
@@ -96,7 +97,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                 <div className="flex flex-col items-center gap-6">
                     {subscriptions.slice(0, 4).map(sub => (
                         <Link key={sub.id} href={`/profile/${sub.username}`} className="relative group" title={sub.username}>
-                            <img src={sub.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${sub.username}`} className="w-10 h-10 rounded-2xl border border-white/10 group-hover:border-[#FFB800]/40 transition-all" alt={sub.username} />
+                            <img src={sub.avatar_url || getGhostAvatar()} className="w-10 h-10 rounded-2xl border border-white/10 group-hover:border-[#FFB800]/40 transition-all" alt={sub.username} />
                             {sub.is_live && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[#FFB800] rounded-full border-2 border-[#111] animate-pulse" />}
                         </Link>
                     ))}
@@ -106,7 +107,18 @@ export default function Sidebar({ isOpen }: SidebarProps) {
     }
 
     return (
-        <aside className="hidden md:flex w-72 flex-col py-6 overflow-y-auto scrollbar-hide glass-deep border border-white/5 mx-2 my-2 rounded-[40px] h-[calc(100vh-20px)] shrink-0">
+        <aside className="hidden md:flex w-72 flex-col py-8 overflow-y-auto scrollbar-hide glass-deep border border-white/10 mx-4 my-4 rounded-[48px] h-[calc(100vh-32px)] shrink-0 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.9)] transition-all duration-500">
+            <div className="px-6 mb-8 group/logo">
+                <Link href="/" className="flex items-center gap-4 relative">
+                    <div className="absolute -inset-4 bg-[#FFB800]/20 rounded-full blur-3xl opacity-0 group-hover/logo:opacity-100 transition-opacity duration-700" />
+                    <div className="w-12 h-12 bg-gradient-to-br from-[#FFB800] via-[#FF8A00] to-orange-700 rounded-2xl flex items-center justify-center shadow-[0_8px_20px_rgba(255,184,0,0.3)] group-hover/logo:scale-110 group-hover/logo:rotate-3 transition-all duration-500 relative z-10 border border-white/20">
+                        <Flame size={28} className="text-black" fill="currentColor" />
+                    </div>
+                    <span className="text-2xl font-black italic tracking-tight uppercase group-hover/logo:text-[#FFB800] transition-all duration-500 relative z-10 text-white font-premium">
+                        Zenith
+                    </span>
+                </Link>
+            </div>
             <div className="px-3 space-y-1">
                 {menuItems.map((item) => (
                     <SidebarItem
@@ -137,10 +149,10 @@ export default function Sidebar({ isOpen }: SidebarProps) {
 
             <hr className="my-4 border-white/10 mx-4" />
 
-            <div className="px-3">
-                <h3 className="px-4 mb-3 text-[10px] font-black text-white/30 uppercase tracking-[0.3em] flex items-center justify-between">
+            <div className="px-5">
+                <h3 className="px-4 mb-4 text-[10px] font-black text-zinc-500 uppercase tracking-[0.4em] flex items-center justify-between">
                     <span>Following</span>
-                    <div className="w-8 h-[1px] bg-white/10" />
+                    <div className="flex-1 h-[1px] bg-gradient-to-r from-white/10 to-transparent ml-4" />
                 </h3>
                 <div className="space-y-1">
                     {subscriptions.length === 0 ? (
@@ -149,7 +161,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                         <Link key={sub.id} href={`/profile/${sub.username}`}
                             className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors group">
                             <div className="relative">
-                                <img src={sub.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${sub.username}`} alt={sub.username}
+                                <img src={sub.avatar_url || getGhostAvatar()} alt={sub.username}
                                     className="w-7 h-7 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
                                 {sub.is_live && <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[#FFB800] rounded-full border-2 border-[#0a0a0a]" />}
                             </div>
@@ -195,10 +207,10 @@ export default function Sidebar({ isOpen }: SidebarProps) {
 
             <hr className="my-4 border-white/10 mx-4" />
 
-            <div className="px-3">
-                <h3 className="px-4 mb-3 text-[10px] font-black text-white/30 uppercase tracking-[0.3em] flex items-center justify-between">
+            <div className="px-5">
+                <h3 className="px-4 mb-4 text-[10px] font-black text-zinc-500 uppercase tracking-[0.4em] flex items-center justify-between">
                     <span>Explore</span>
-                    <div className="w-8 h-[1px] bg-white/10" />
+                    <div className="flex-1 h-[1px] bg-gradient-to-r from-white/10 to-transparent ml-4" />
                 </h3>
                 <div className="space-y-1">
                     {exploreItems.map((item) => (
@@ -230,16 +242,16 @@ function SidebarItem({ icon: Icon, label, path, isActive, color }: any) {
             href={path}
             title={label}
             className={cn(
-                "flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 group relative overflow-hidden",
-                isActive ? "bg-white/[0.04] shadow-inner" : "hover:bg-white/[0.02]"
+                "flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-500 group relative overflow-hidden mx-2",
+                isActive ? "bg-white/[0.05] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/5" : "hover:bg-white/[0.03] border border-transparent hover:border-white/5"
             )}
         >
-            {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#FFB800] rounded-r-full shadow-[0_0_10px_#FFB800]" />}
-            <Icon size={20} className={cn("transition-all duration-300 group-hover:scale-110", isActive ? "text-[#FFB800] drop-shadow-[0_0_5px_rgba(255,184,0,0.5)]" : "text-zinc-500 group-hover:text-white", color)} strokeWidth={isActive ? 2.5 : 2} />
-            <span className={cn("text-sm font-bold tracking-tight transition-colors", isActive ? "text-white" : "text-zinc-400 group-hover:text-white")}>
+            {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-gradient-to-b from-[#FFB800] to-orange-600 rounded-r-full shadow-[4px_0_15px_rgba(255,184,0,0.4)]" />}
+            <Icon size={22} className={cn("transition-all duration-500 group-hover:scale-110 group-hover:rotate-3", isActive ? "text-[#FFB800] drop-shadow-[0_0_10px_rgba(255,184,0,0.6)]" : "text-zinc-500 group-hover:text-white", color)} strokeWidth={isActive ? 3 : 2} />
+            <span className={cn("text-[13px] font-black tracking-tight transition-all duration-500 uppercase italic", isActive ? "text-white scale-105" : "text-zinc-500 group-hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] group-hover:text-white")}>
                 {label}
             </span>
-            {isActive && <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-[#FFB800]" />}
+            {isActive && <div className="absolute right-4 w-2 h-2 rounded-full bg-[#FFB800] animate-pulse shadow-[0_0_10px_#FFB800]" />}
         </Link>
     );
 }

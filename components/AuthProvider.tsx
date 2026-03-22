@@ -5,6 +5,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Profile } from '@/types';
+import { getGhostAvatar } from '@/lib/image-utils';
 
 interface AuthContextType {
     user: User | null;
@@ -41,6 +42,13 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
             if (data) {
                 setProfile(data);
+                
+                // For OAuth users (which don't go through /register), we need to ensure they have an avatar_url
+                if (!data.avatar_url) {
+                    const avatar_url = currentUser.user_metadata?.avatar_url || getGhostAvatar();
+                    await supabase.from('profiles').update({ avatar_url }).eq('id', currentUser.id);
+                    setProfile({ ...data, avatar_url });
+                }
             } else {
                 // Profile doesn't exist, create it (Auto-fix)
                 console.log('Profile missing, creating default profile...');
@@ -50,8 +58,8 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
                 const newProfile: Partial<Profile> = {
                     id: currentUser.id,
-                    username: username, // Potential collision risk handled by DB constraint? Ideally needs retry logic.
-                    avatar_url: currentUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
+                    username: username,
+                    avatar_url: currentUser.user_metadata?.avatar_url || getGhostAvatar(),
                 };
 
                 const { data: createdProfile, error: createError } = await supabase

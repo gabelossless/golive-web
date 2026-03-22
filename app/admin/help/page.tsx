@@ -49,10 +49,10 @@ export default function AdminHelp() {
                     <div className="space-y-4">
                         <h3 className="font-bold text-lg flex items-center gap-2">
                             <Zap size={18} className="text-[#FFB800]" />
-                            The VibeStream Stack
+                            The Zenith Stack
                         </h3>
                         <p className="text-gray-400 text-sm leading-relaxed">
-                            VibeStream is built on **Next.js 15+ (App Router)** for the frontend/API, **Supabase** for Auth, DB, and Realtime, and **Cloudflare R2** for hyper-scalable media delivery.
+                            Zenith is built on **Next.js 15+ (App Router)** for the frontend/API, **Supabase** for Auth, DB, and Realtime, and **Cloudflare R2** for hyper-scalable media delivery.
                         </p>
                     </div>
 
@@ -139,7 +139,7 @@ export default function AdminHelp() {
             </section>
 
             <footer className="pt-10 border-t border-white/5 text-center">
-                <p className="text-gray-600 text-xs">VibeStream Admin Intelligence Suite • VS-ADMIN-DOC-02 • Genesis Build</p>
+                <p className="text-gray-600 text-xs">Zenith Admin Intelligence Suite • VS-ADMIN-DOC-02 • Genesis Build</p>
             </footer>
         </div>
     );

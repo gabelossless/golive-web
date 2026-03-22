@@ -30,7 +30,7 @@ export default function BotManagementPage() {
         const { data, error } = await supabase
             .from('profiles')
             .select('*, user_profiles(*)')
-            .ilike('email', '%@vibestream.bot');
+            .ilike('email', '%@zenith.bot');
 
         if (!error) setBots(data || []);
         setLoading(false);

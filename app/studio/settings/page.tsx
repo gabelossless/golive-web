@@ -7,6 +7,8 @@ import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { Profile } from '@/types';
 
+import { compressImage, uploadToR2, getGhostAvatar } from '@/lib/image-utils';
+
 function cn(...classes: (string | undefined | null | false)[]) {
   return classes.filter(Boolean).join(' ');
 }
@@ -46,26 +48,28 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    // Validation: 4MB for avatar, 6MB for banner
+    const maxSize = type === 'avatar' ? 4 * 1024 * 1024 : 6 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setMessage({ type: 'error', text: `${type === 'avatar' ? 'Profile picture' : 'Banner'} must be under ${type === 'avatar' ? '4MB' : '6MB'}.` });
+      return;
+    }
 
     setSaving(true);
+    setMessage(null);
+
     try {
-      // 1. Upload to storage
-      const bucket = type === 'avatar' ? 'avatars' : 'banners';
-      const { error: uploadError, data } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, { upsert: true });
+      // 1. Compress and Resize client-side
+      const compressedBlob = await compressImage(file, {
+        maxWidth: type === 'avatar' ? 512 : 1920,
+        maxHeight: type === 'avatar' ? 512 : 1080,
+        quality: 0.85
+      });
 
-      if (uploadError) throw uploadError;
+      // 2. Upload to R2
+      const publicUrl = await uploadToR2(compressedBlob, file.name, type === 'avatar' ? 'avatars' : 'banners');
 
-      // 2. Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
-
-      // 3. Update profile state and DB
+      // 3. Update DB
       const updateData = type === 'avatar' ? { avatar_url: publicUrl } : { banner_url: publicUrl };
       
       const { error: updateError } = await supabase
@@ -76,10 +80,10 @@ export default function SettingsPage() {
       if (updateError) throw updateError;
 
       setProfile({ ...profile, ...updateData });
-      setMessage({ type: 'success', text: `${type.charAt(0).toUpperCase() + type.slice(1)} updated!` });
+      setMessage({ type: 'success', text: `${type.charAt(0).toUpperCase() + type.slice(1)} synchronized successfully!` });
     } catch (err: any) {
       console.error(`Error uploading ${type}:`, err);
-      setMessage({ type: 'error', text: `Failed to upload ${type}.` });
+      setMessage({ type: 'error', text: `Sync failed: ${err.message}` });
     } finally {
       setSaving(false);
     }
@@ -201,7 +205,7 @@ export default function SettingsPage() {
                 <div className="relative mb-6">
                   <motion.img 
                     whileHover={{ scale: 1.05 }}
-                    src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`} 
+                    src={profile.avatar_url || getGhostAvatar()} 
                     className="w-32 h-32 rounded-full object-cover border-[6px] border-[#FFB800]/20 shadow-2xl relative z-10"
                     alt="Avatar"
                   />

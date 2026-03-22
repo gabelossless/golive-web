@@ -15,7 +15,7 @@ export default function ShareModal({ isOpen, onClose, video }: ShareModalProps) 
     const [copied, setCopied] = useState(false);
     
     // Fallback to window location if running client-side
-    const shareUrl = typeof window !== 'undefined' ? window.location.href : `https://vibestream.com/watch/${video.id}`;
+    const shareUrl = typeof window !== 'undefined' ? window.location.href : `https://zenith.com/watch/${video.id}`;
     
     const handleCopy = async () => {
         try {
@@ -32,7 +32,7 @@ export default function ShareModal({ isOpen, onClose, video }: ShareModalProps) 
             name: "X (Twitter)",
             icon: <Twitter size={24} />,
             color: "bg-black hover:bg-[#222]",
-            onClick: () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out this video on VibeStream: ${video.title}`)}&url=${encodeURIComponent(shareUrl)}`, '_blank')
+            onClick: () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out this video on Zenith: ${video.title}`)}&url=${encodeURIComponent(shareUrl)}`, '_blank')
         },
         {
             name: "Facebook",
@@ -44,7 +44,7 @@ export default function ShareModal({ isOpen, onClose, video }: ShareModalProps) 
             name: "Email",
             icon: <Mail size={24} />,
             color: "bg-gray-600 hover:bg-gray-700",
-            onClick: () => window.open(`mailto:?subject=${encodeURIComponent(video.title)}&body=${encodeURIComponent(`Watch this video on VibeStream: ${shareUrl}`)}`, '_blank')
+            onClick: () => window.open(`mailto:?subject=${encodeURIComponent(video.title)}&body=${encodeURIComponent(`Watch this video on Zenith: ${shareUrl}`)}`, '_blank')
         },
         {
             name: "WhatsApp",

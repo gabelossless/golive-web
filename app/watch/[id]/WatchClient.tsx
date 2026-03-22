@@ -20,6 +20,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { motion, AnimatePresence } from 'motion/react';
 import TipButton from '@/components/TipButton';
 import { getAnalyticsSessionId } from '@/lib/analytics-session';
+import { getGhostAvatar } from '@/lib/image-utils';
 
 function cn(...classes: (string | undefined | null | false)[]) {
     return classes.filter(Boolean).join(" ");
@@ -198,7 +199,7 @@ export default function WatchClient({ video: initialVideo, recommendations: init
 
     const username = video.profiles?.username || 'Unknown';
     const author = video.profiles?.channel_name || video.profiles?.display_name || video.profiles?.username || 'Unknown';
-    const avatar = video.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
+    const avatar = video.profiles?.avatar_url || getGhostAvatar();
 
     // Parse description, category, and tags
     const rawDesc = video.description?.replace(/\[PRIVATE_VIDEO_FLAG\]/, '').trim() || 'No description provided.';
@@ -240,13 +241,14 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                     <div className="flex justify-center bg-black/40 rounded-[48px] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)] border border-white/5 relative group">
                         <div className="absolute inset-0 bg-gradient-to-br from-[#FFB800]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                         <VideoPlayer
-                            src={video.video_url}
-                            poster={video.thumbnail_url ?? undefined}
-                            title={video.title}
+                            src={video?.video_url || ''}
+                            poster={video?.thumbnail_url ?? undefined}
+                            title={video?.title || 'Untitled'}
                             onActiveWatch={handleActiveWatch}
                             isLive={video.is_live}
                             playbackId={video.playback_id ?? undefined}
                             creator={{
+                                id: video.profiles?.id || '',
                                 username: video.profiles?.username || 'Creator',
                                 wallet_address: video.profiles?.wallet_address,
                                 solana_wallet_address: video.profiles?.solana_wallet_address
@@ -256,37 +258,41 @@ export default function WatchClient({ video: initialVideo, recommendations: init
 
                     <div className="space-y-4">
                         <div className="flex flex-col gap-4">
-                            <h1 className="text-3xl font-black leading-tight md:text-4xl tracking-tighter italic font-premium text-gradient">
+                            <h1 className="text-4xl font-black leading-[1.1] md:text-5xl tracking-tighter italic font-premium text-gradient uppercase">
                                 {video.title}
                             </h1>
-                            <div className="flex flex-wrap items-center gap-4 text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] italic">
-                                <span>{formatViews(video.view_count)} views</span>
+                            <div className="flex flex-wrap items-center gap-6 text-[10px] text-zinc-500 font-black uppercase tracking-[0.4em] italic opacity-80">
+                                <span className="flex items-center gap-2">
+                                    <Play size={10} fill="currentColor" />
+                                    {formatViews(video.view_count)} Views
+                                </span>
                                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
-                                <span>{new Date(video.created_at).toLocaleDateString()}</span>
-                                <span className="px-3 py-1 bg-white/5 rounded-full border border-white/10 text-[#FFB800]">#VIBESTREAM</span>
+                                <span>{video.created_at ? new Date(video.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently'}</span>
+                                <span className="px-4 py-1.5 bg-white/5 rounded-full border border-white/10 text-[#FFB800] shadow-[0_4px_12px_rgba(255,184,0,0.2)]">#ZENITH_EXCLUSIVE</span>
                             </div>
                         </div>
 
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 py-4 border-y border-white/5">
                                 <div className="flex items-center gap-4">
-                                    <Link href={`/profile/${username}`} className="flex-shrink-0 relative">
+                                    <Link href={`/profile/${username}`} className="flex-shrink-0 relative group/avatar">
+                                        <div className="absolute -inset-1 bg-gradient-to-br from-[#FFB800] to-orange-600 rounded-full blur opacity-0 group-hover/avatar:opacity-100 transition-opacity" />
                                         <img
                                             src={avatar}
                                             alt={author}
-                                            className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-white/5 shadow-lg shadow-black/50"
+                                            className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-white/10 shadow-2xl relative z-10"
                                             referrerPolicy="no-referrer"
                                         />
-                                        {video.is_live && <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#FFB800] rounded-full border-2 border-[#0a0a0a]" />}
+                                        {video.is_live && <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#FFB800] rounded-full border-4 border-[#0a0a0a] z-20" />}
                                     </Link>
-                                    <div className="flex flex-col min-w-0 pr-2">
-                                        <Link href={`/profile/${username}`} className="font-black text-sm md:text-base flex items-center gap-1 hover:text-[#FFB800] transition-colors tracking-tight truncate">
+                                    <div className="flex flex-col min-w-0 pr-4">
+                                        <Link href={`/profile/${username}`} className="font-black text-base md:text-lg flex items-center gap-2 hover:text-[#FFB800] transition-colors tracking-tighter truncate italic uppercase">
                                             {author}
                                             {(video.profiles?.is_verified || video.profiles?.subscription_tier === 'premium') && (
-                                                <CheckCircle2 size={14} className="text-[#FFB800] shrink-0" fill="currentColor" />
+                                                <CheckCircle2 size={16} className="text-[#FFB800] shrink-0" fill="currentColor" />
                                             )}
                                         </Link>
-                                        <span className="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-widest truncate">
-                                            {formatCount(video.profiles?.follower_count || 0)} subscribers
+                                        <span className="text-[10px] md:text-xs text-zinc-500 font-black uppercase tracking-[0.2em] truncate opacity-60">
+                                            {formatCount(video.profiles?.follower_count || 0)} Elite Members
                                         </span>
                                     </div>
                                     <div className="ml-auto md:ml-4">
@@ -294,13 +300,13 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
-                                    <div className="flex items-center bg-white/[0.03] rounded-2xl overflow-hidden border border-white/5 shrink-0 shadow-xl self-stretch">
+                                <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
+                                    <div className="flex items-center glass-deep rounded-2xl overflow-hidden border border-white/10 shrink-0 shadow-2xl self-stretch p-1">
                                         <button
                                             onClick={handleLike}
                                             className={cn(
-                                                "flex items-center gap-3 px-6 py-3 hover:bg-white/[0.05] transition-all border-r border-white/5 font-black uppercase tracking-widest text-[10px]",
-                                                isLiked ? "text-[#FFB800] bg-[#FFB800]/5" : "text-zinc-400"
+                                                "flex items-center gap-3 px-6 py-3 rounded-xl hover:bg-white/[0.08] transition-all font-black uppercase tracking-widest text-[10px]",
+                                                isLiked ? "text-[#FFB800] bg-[#FFB800]/10 shadow-inner" : "text-zinc-400"
                                             )}
                                             title="Like"
                                         >
@@ -308,12 +314,13 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                                                 animate={isLiked ? { scale: [1, 1.4, 1], rotate: [0, -15, 0] } : {}}
                                                 transition={{ duration: 0.45, ease: "easeOut" }}
                                             >
-                                                <ThumbsUp size={18} fill={isLiked ? "currentColor" : "none"} className={isLiked ? "drop-shadow-[0_0_8px_#FFB800]" : ""} />
+                                                <ThumbsUp size={18} fill={isLiked ? "currentColor" : "none"} className={isLiked ? "drop-shadow-[0_0_12px_#FFB800]" : ""} />
                                             </motion.div>
                                             <span className="min-w-[2ch]">{formatViews(video.likes_count || likes)}</span>
                                         </button>
+                                        <div className="w-[1px] h-6 bg-white/10 mx-1" />
                                         <button 
-                                            className="px-6 py-3 hover:bg-white/[0.05] transition-all text-zinc-500 active:bg-white/10" 
+                                            className="px-6 py-3 rounded-xl hover:bg-white/[0.08] transition-all text-zinc-500 active:bg-white/10" 
                                             title="Dislike" 
                                             aria-label="Dislike"
                                         >
@@ -322,17 +329,19 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                                     </div>
 
                                     <motion.button
+                                        whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                         onClick={handleHype}
                                         disabled={isHyping}
-                                        className="relative flex items-center gap-3 px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-gradient-to-br from-[#FFB800] to-orange-600 text-black shadow-xl shadow-[#FFB800]/10 disabled:opacity-50 shrink-0 hover:scale-105 transition-all self-stretch group"
+                                        className="relative flex items-center gap-4 px-10 py-3.5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] bg-gradient-to-br from-[#FFB800] via-[#FF8A00] to-orange-700 text-black shadow-[0_8px_32px_rgba(255,184,0,0.3)] disabled:opacity-50 shrink-0 transition-all self-stretch group overflow-hidden"
                                     >
-                                        <Flame size={18} fill="currentColor" className={cn("transition-transform group-hover:scale-125", isHyping ? "animate-push-pulse" : "")} />
-                                        {formatViews(hypes)} Hype
+                                        <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
+                                        <Flame size={20} fill="currentColor" className={cn("transition-transform group-hover:scale-125", isHyping ? "animate-push-pulse" : "")} />
+                                        HYPE {formatViews(hypes)}
                                         <AnimatePresence>
                                             {showHypeAnimation && (
                                                 <motion.div initial={{ opacity: 0, y: 0 }} animate={{ opacity: 1, y: -40 }} exit={{ opacity: 0 }} className="absolute -top-10 left-1/2 -translate-x-1/2 text-3xl pointer-events-none">
-                                                    ✨
+                                                    🔥
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
@@ -341,6 +350,7 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                                     <div className="h-full flex items-stretch">
                                         <TipButton 
                                             creator={{
+                                                id: video.user_id || video.profiles?.id || '',
                                                 username: video.profiles?.username || 'Creator',
                                                 wallet_address: video.profiles?.wallet_address,
                                                 solana_wallet_address: video.profiles?.solana_wallet_address
@@ -350,20 +360,12 @@ export default function WatchClient({ video: initialVideo, recommendations: init
 
                                     <button 
                                         onClick={() => setIsShareModalOpen(true)} 
-                                        className="flex items-center gap-3 px-8 py-3 bg-white/[0.03] hover:bg-white/[0.05] rounded-2xl transition-all border border-white/5 font-black uppercase tracking-widest text-[10px] shrink-0 shadow-xl self-stretch" 
+                                        className="flex items-center gap-3 px-8 py-3 glass-deep hover:bg-white/[0.08] rounded-2xl transition-all border border-white/10 font-black uppercase tracking-widest text-[10px] shrink-0 shadow-xl self-stretch" 
                                         title="Share video" 
                                         aria-label="Share video"
                                     >
-                                        <Share2 size={18} className="text-zinc-500" />
-                                        Share
-                                    </button>
-                                    
-                                    <button 
-                                        className="px-4 bg-white/[0.03] hover:bg-white/[0.05] rounded-2xl transition-all border border-white/5 shrink-0 shadow-xl self-stretch text-zinc-500 hover:text-white" 
-                                        title="More options" 
-                                        aria-label="More options"
-                                    >
-                                        <MoreHorizontal size={20} />
+                                        <Share2 size={18} className="text-[#7000FF] drop-shadow-[0_0_8px_rgba(112,0,255,0.4)]" />
+                                        Connect
                                     </button>
                                 </div>
                             </div>
@@ -371,7 +373,7 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                         <div className="glass-deep rounded-[32px] p-8 text-sm hover:bg-white/[0.04] transition-all duration-500 border border-white/5 flex flex-col items-start cursor-pointer group/desc relative overflow-hidden" onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}>
                             <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#FFB800]/20 to-transparent opacity-0 group-hover/desc:opacity-100 transition-opacity" />
                             <p className={cn(
-                                "whitespace-pre-wrap text-zinc-400 font-medium leading-relaxed transition-all",
+                                "whitespace-pre-wrap text-zinc-300 font-medium leading-[1.8] transition-all text-[15px] tracking-tight",
                                 !isDescriptionExpanded && "line-clamp-2 md:line-clamp-3"
                             )}>
                                 {displayDesc}

@@ -1,5 +1,5 @@
 /**
- * VibeStream CDN & Edge Acceleration Utility
+ * Zenith CDN & Edge Acceleration Utility
  * Handles routing between standard Cloudflare R2 and Decentralized Gateways (Saturn/IPFS/Livepeer).
  */
 

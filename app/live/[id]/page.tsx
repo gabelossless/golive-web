@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { Send, User, Heart, Share2, MoreVertical, Radio, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
+import { getGhostAvatar } from '@/lib/image-utils';
 
 export default function LiveWatchPage() {
     const { id } = useParams();
@@ -125,7 +126,7 @@ export default function LiveWatchPage() {
                         <h1 className="text-xl md:text-2xl font-bold line-clamp-1">{video.title}</h1>
                         <div className="flex items-center gap-3 mt-2">
                             <Link href={`/profile/${video.profiles.username}`} className="flex items-center gap-2 group">
-                                <img src={video.profiles.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${video.profiles.username}`} className="w-10 h-10 rounded-full bg-surface" />
+                                <img src={video.profiles.avatar_url || getGhostAvatar()} className="w-10 h-10 rounded-full bg-surface" />
                                 <div>
                                     <p className="font-bold text-sm group-hover:text-primary transition-colors">{video.profiles.username}</p>
                                     <p className="text-xs text-muted">Streaming {video.category}</p>
