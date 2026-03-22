@@ -58,7 +58,7 @@ function validateForm(
     thumbnailFile: File | null,
     hasAutoThumb: boolean,
     subscriptionTier: string = 'free',
-    videoDuration: number = 0
+    videoMeta: { width: number; height: number; duration: number } | null = null
 ): ValidationErrors {
     const errors: ValidationErrors = {};
 
@@ -81,9 +81,17 @@ function validateForm(
         else if (videoFile.size > VIDEO_MAX_MB * 1024 * 1024) errors.videoFile = `Video file must be under ${VIDEO_MAX_MB} MB.`;
         
         // Duration Check
-        const limitSeconds = subscriptionTier === 'premium' ? 1800 : 60; // 30m vs 60s
-        if (videoDuration > limitSeconds) {
-            errors.videoFile = `Upload limit exceeded. ${subscriptionTier === 'premium' ? 'Premium' : 'Free'} users are limited to ${subscriptionTier === 'premium' ? '30 minutes' : '60 seconds'}.`;
+        if (videoMeta) {
+            const isShort = videoMeta.width < videoMeta.height;
+            const limitSeconds = subscriptionTier === 'premium' 
+                ? (isShort ? 180 : 3600) // 3m shorts, 60m long form for premium
+                : (isShort ? 30 : 360);  // 30s shorts, 6m long form for free
+
+            if (videoMeta.duration > limitSeconds) {
+                const typeStr = isShort ? 'Shorts' : 'Long-form videos';
+                const limitStr = limitSeconds >= 60 ? `${limitSeconds / 60} minutes` : `${limitSeconds} seconds`;
+                errors.videoFile = `Upload limit exceeded. ${subscriptionTier === 'premium' ? 'Premium' : 'Free'} users are limited to ${limitStr} for ${typeStr}.`;
+            }
         }
     }
 
@@ -208,7 +216,7 @@ export default function UploadPage() {
         setAutoThumbnails([]);
         setSelectedAutoThumb(null);
 
-        // Fetch duration immediately
+        // Fetch duration and meta immediately
         try {
             const meta = await getVideoMetadata(file);
             setVideoMeta(meta);
@@ -216,7 +224,7 @@ export default function UploadPage() {
             if (touched) {
                 setFieldErrors(prev => ({ 
                     ...prev, 
-                    videoFile: validateForm(title, description, tags, file, null, false, profile?.subscription_tier, meta.duration).videoFile 
+                    videoFile: validateForm(title, description, tags, file, null, false, profile?.subscription_tier, meta).videoFile 
                 }));
             }
         } catch (err) {
@@ -269,12 +277,12 @@ export default function UploadPage() {
 
     const onTitleChange = (val: string) => {
         setTitle(val);
-        if (touched) setFieldErrors(prev => ({ ...prev, title: validateForm(val, description, tags, videoFile, thumbnailFile, selectedAutoThumb !== null, profile?.subscription_tier, videoDuration).title }));
+        if (touched) setFieldErrors(prev => ({ ...prev, title: validateForm(val, description, tags, videoFile, thumbnailFile, selectedAutoThumb !== null, profile?.subscription_tier, videoMeta).title }));
     };
 
     const onDescChange = (val: string) => {
         setDescription(val);
-        if (touched) setFieldErrors(prev => ({ ...prev, description: validateForm(title, val, tags, videoFile, thumbnailFile, selectedAutoThumb !== null, profile?.subscription_tier, videoDuration).description }));
+        if (touched) setFieldErrors(prev => ({ ...prev, description: validateForm(title, val, tags, videoFile, thumbnailFile, selectedAutoThumb !== null, profile?.subscription_tier, videoMeta).description }));
     };
 
     const onTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -320,7 +328,7 @@ export default function UploadPage() {
         if (e) e.preventDefault();
         setTouched(true);
         const hasAutoThumb = selectedAutoThumb !== null;
-        const errors = validateForm(title, description, tags, videoFile, thumbnailFile, hasAutoThumb, profile?.subscription_tier, videoDuration);
+        const errors = validateForm(title, description, tags, videoFile, thumbnailFile, hasAutoThumb, profile?.subscription_tier, videoMeta);
         setFieldErrors(errors);
 
         if (Object.keys(errors).length > 0) return;
@@ -356,7 +364,8 @@ export default function UploadPage() {
             category,
             isShort,
             userId: user.id,
-            sessionToken: session.access_token
+            sessionToken: session.access_token,
+            duration: videoDuration
         });
 
         router.push('/studio/dashboard');

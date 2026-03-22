@@ -24,6 +24,7 @@ interface UploadContextType {
             isShort: boolean;
             userId: string;
             sessionToken: string;
+            duration: number;
         }
     ) => Promise<void>;
 }
@@ -66,7 +67,9 @@ export function UploadProvider({ children }: { children: ReactNode }) {
                         filename: uniqueFilename, 
                         contentType: file.type, 
                         folder,
-                        fileSize: file.size
+                        fileSize: file.size,
+                        isShort: meta.isShort,
+                        duration: meta.duration
                     }),
                 });
 
@@ -178,7 +181,7 @@ export function UploadProvider({ children }: { children: ReactNode }) {
                     thumbnail_url: thumbnailUrl || null,
                     is_short: meta.isShort,
                     category: meta.category,
-                    duration: '0:00'
+                    duration: meta.duration
                 }]);
 
             if (dbError) throw dbError;

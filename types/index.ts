@@ -18,6 +18,7 @@ export interface Profile {
     follower_count?: number;
     wallet_address?: string;
     solana_wallet_address?: string;
+    downgraded_at?: string;
 }
 
 export interface Video {
@@ -49,6 +50,7 @@ export interface Video {
     is_short?: boolean;
     playback_id?: string;
     is_decentralized?: boolean;
+    duration?: number;
 }
 
 export interface Comment {

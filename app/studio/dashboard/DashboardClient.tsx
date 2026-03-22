@@ -23,7 +23,8 @@ import {
     History,
     Calendar,
     ExternalLink,
-    Rocket
+    Rocket,
+    AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -52,6 +53,20 @@ export default function DashboardClient() {
         videoCount: 0,
         totalHypes: 0
     });
+
+    // Grace Period Calculation
+    const gracePeriodDays = 31;
+    let daysRemaining = 0;
+    let inGracePeriod = false;
+
+    if (profile?.subscription_tier === 'free' && profile?.downgraded_at) {
+        const downgradeDate = new Date(profile.downgraded_at);
+        const today = new Date();
+        const diffTime = Math.abs(today.getTime() - downgradeDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        daysRemaining = gracePeriodDays - diffDays;
+        inGracePeriod = daysRemaining > 0 && daysRemaining <= gracePeriodDays;
+    }
 
     useEffect(() => {
         async function fetchDashboardData() {
@@ -146,6 +161,32 @@ export default function DashboardClient() {
 
     return (
         <div className="flex flex-col gap-8 p-6 md:p-10 max-w-[1600px] mx-auto w-full">
+            {/* Grace Period Warning */}
+            {inGracePeriod && (
+                <motion.div 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-red-500/10 border border-red-500/30 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-2xl relative overflow-hidden group"
+                >
+                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-red-500/50 to-transparent animate-pulse" />
+                    <div className="flex items-start md:items-center gap-6 relative z-10">
+                        <div className="p-4 bg-red-500/20 rounded-2xl relative shadow-inner">
+                            <AlertCircle className="text-red-500 w-8 h-8" />
+                            <div className="absolute inset-0 bg-red-500/20 blur-xl opacity-50 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl md:text-2xl font-black text-red-500 uppercase tracking-tighter m-0 italic font-premium mb-1">Active Grace Period</h3>
+                            <p className="text-red-200/80 text-sm font-medium leading-relaxed max-w-2xl">
+                                Your premium subscription has ended. Videos exceeding the free tier duration limits (6m long-form, 30s Shorts) will be permanently deleted in <span className="font-black text-white text-base px-2 py-0.5 bg-red-500/20 rounded-md border border-red-500/30">{daysRemaining} days</span>.
+                            </p>
+                        </div>
+                    </div>
+                    <Link href="/studio/settings" className="px-8 py-4 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all whitespace-nowrap shadow-xl shadow-red-500/20 hover:scale-105 active:scale-95 text-center relative z-10">
+                        Upgrade Now
+                    </Link>
+                </motion.div>
+            )}
+
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
                 <div className="space-y-2">

@@ -324,7 +324,7 @@ export default function VideoPlayer(props: VideoPlayerProps) {
                     if (hlsRef.current) return; // Ignore native errors if HLS.js is handling it
                     const isMov = finalSrc?.toLowerCase().endsWith('.mov');
                     if (isMov) {
-                        setError('This video is in .MOV format, which might not be supported by your browser. Try using Safari or a different device.');
+                        setError('This video is in .MOV/HEVC format. For best performance, use Safari or wait for the system to finish processing the HD version.');
                     } else {
                         setError('Failed to load video. Please check your connection or try again later.');
                     }

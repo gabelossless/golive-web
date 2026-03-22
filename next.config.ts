@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'test-streams.mux.dev' },
       { protocol: 'https', hostname: '*.supabase.co' }, // Wildcard for any supabase project
       { protocol: 'https', hostname: 'pub-*.r2.dev' }, // Wildcard for Cloudflare R2 public buckets
+      { protocol: 'https', hostname: 'lvpr.tv' }, // Livepeer playback
+      { protocol: 'https', hostname: '*.livepeer.studio' }, // Livepeer assets
+      { protocol: 'https', hostname: 'gateway.pinata.cloud' }, // IPFS Gateway
+      { protocol: 'https', hostname: 'w3s.link' }, // Web3.Storage / IPFS
     ],
   },
   /* 
