@@ -32,11 +32,11 @@ Handles complex, multi-gigabyte video uploads using a robust multipart handshake
 - **Parallel Uploads**: Compresses and uploads chunks in parallel to Cloudflare R2.
 - **Persistence**: Finalizes the upload and registers the asset in the Supabase `videos` table.
 
-### 3. [Vibe Guard Engine](file:///C:/GOLive/lib/vibe-rank.ts)
-A proprietary engagement and ranking algorithm:
-- **Shadow Buffering**: High-risk engagement events are "buffered" before being committed to the public count.
-- **Growth Loops**: Artificial bot seeding and engagement boosting for new high-quality content.
-- **Anti-Farming**: Strict uniqueness checks on Vibe Points to prevent engagement exploits.
+### 4. YouTube-Style Mobile Navigation
+The mobile UI employs a hidden `PullMenu` accessible via a pull-down gesture:
+- **`PullMenu.tsx`**: Uses `framer-motion` for gesture physics and drag events.
+- **`CategoryBar.tsx`**: Shared component between desktop (fixed) and mobile (hidden inside PullMenu).
+- **Hardening**: `VideoCard.tsx` includes automated URL normalization to prevent home feed crashes from malformed R2 thumbnail/avatar paths.
 
 ---
 
@@ -48,8 +48,11 @@ A performance-critical utility that routes assets through the most efficient pat
 - **IPFS Support**: Resolves `ipfs://` CIDs to public gateways.
 - **Livepeer**: Generates high-performance HLS playback URLs.
 
-### [lib/supabase.ts](file:///C:/GOLive/lib/supabase.ts)
-Standardized client for database interactions with pre-configured types and environment variable protection.
+### [lib/personalization.ts](file:///C:/GOLive/lib/personalization.ts)
+Handles tiered user logic and content limits:
+- **Standard**: 30s Shorts, 6m Long-form.
+- **Premium**: Extended limits (configurable).
+- **Grace Period**: Implementation of 30-day data retention for downgraded users before automated multi-tier deletion.
 
 ---
 
@@ -58,11 +61,11 @@ Standardized client for database interactions with pre-configured types and envi
 ### 1. Dependency Pinning
 **Viem**: Must be pinned to `2.47.4`. Newer versions (2.47.5+) introduce a peer dependency conflict with `@privy-io/ethereum` which stalls Vercel builds.
 
-### 2. Vercel Deployment Optimization
-A `.vercelignore` file is maintained to exclude the `brain/` directory (~360MB). This ensures the deployment payload remains under the 100MB limit and builds complete within <3 minutes.
+### 2. URL Normalization
+All media consumed via `next/image` **MUST** pass through `normalizeUrl()` to ensure leading slashes are present, especially for paths stored in the `videos` or `profiles` tables.
 
-### 3. Multipart API Protocol
-When initiating a multipart upload, the request **MUST** include `fileSize`. The API will automatically calculate the part count (chunk size is 5MB by default) and return the `endpoints` array required by the `UploadProvider`.
+### 3. Vercel Deployment Optimization
+A `.vercelignore` file is maintained to exclude the `brain/` directory (~360MB). This ensures the deployment payload remains under the 100MB limit and builds complete within <3 minutes.
 
 ---
 
@@ -83,10 +86,10 @@ When initiating a multipart upload, the request **MUST** include `fileSize`. The
 
 ---
 
-## 📈 Roadmap (Phase 44+)
+## 📈 Roadmap (Phase 45+)
+- **Mobile Refinement**: Advanced haptics for the Pull-Menu interaction.
 - **Social Dynamics**: Comments, Nested Replies, and User `@mentions`.
 - **Ecosystem Expansion**: VibeStream Developer SDK & Embeddable Player.
-- **Storage Evolution**: Full migration of cold storage to IPFS / Filecoin.
 
 **Documentation by Sonic Zenith Senior Dev Agents.**
-*Last Updated: March 2026*
+*Last Updated: March 2026 (Phase 45)*

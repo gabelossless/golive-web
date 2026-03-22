@@ -54,13 +54,21 @@ VibeStream is built for viral discoverability.
 
 ---
 
-## 7. Creator Payouts & Autonomous Wallets (Phase 32)
+## 8. Premium Tiered Creator Ecosystem (Phase 45)
 
-VibeStream features a native, non-custodial multi-chain payout infrastructure.
+VibeStream implements a sophisticated tier-based content management system to balance platform growth with computational costs.
 
-- **Embedded Wallets**: Every user receives an autonomous Base and Solana wallet upon signup via Privy. This allows for immediate monetization without requiring the user to install external browser extensions.
-- **On-Chain Revenue Sharing**: The system implements an immutable 75/25 split. 75% of every tip goes directly to the creator's wallet, while 25% is routed to the platform treasury.
-- **Security Protocols**:
-    - **No Custody**: The platform never touches private keys. All transactions are signed by the user's embedded wallet.
-    - **Wallet Timelock**: Platform treasury updates require a 48-hour on-chain confirmation via the `VibeStreamSplitter` contract to prevent immediate fund routing attacks.
-    - **Non-Hardcoded**: All sensitive addresses are managed through centralized environment variables, isolating the frontend from address-hijacking vulnerabilities.
+### Content Limits & Verification
+- **Standard Users**: Capped at 30 seconds for Shorts and 6 minutes for Long-form content. This ensures high-velocity discovery without overloading the transcoding pipeline.
+- **Premium Users**: Accessed via `/premium` subscription. Premium status unlocks extended upload limits and priority processing.
+- **Grace Period Engine**: If a user cancels their premium status:
+    - Their account enters a **30-day Grace Period**.
+    - During this time, all existing long-form content is preserved.
+    - On Day 31, the system automatically prunes assets exceeding standard user limits unless the subscription is reactivated.
+
+### Automated Lifecycle Management
+The `lib/personalization.ts` utility and `scripts/automated-pruning.sql` handles the detection and cleanup of over-limit assets, ensuring technical debt does not accumulate in the Cloudflare R2 storage buckets.
+
+---
+**Documentation by Sonic Zenith Senior Dev Agents.**
+*Last Updated: March 2026 (Phase 45)*
