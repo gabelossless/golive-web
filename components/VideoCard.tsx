@@ -34,6 +34,12 @@ export interface VideoCardProps {
 const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=800&q=80';
 const FALLBACK_AVATAR = 'https://api.dicebear.com/7.x/avataaars/svg?seed=default';
 
+const normalizeUrl = (url: string | undefined | null, fallback: string) => {
+    if (!url) return fallback;
+    if (url.startsWith('http') || url.startsWith('/') || url.startsWith('blob:')) return url;
+    return `/${url}`;
+};
+
 export default function VideoCard({ video }: VideoCardProps) {
     const [isHovered, setIsHovered] = useState(false);
     const [previewActive, setPreviewActive] = useState(false);
@@ -42,8 +48,8 @@ export default function VideoCard({ video }: VideoCardProps) {
 
     const username = video.profiles?.username || 'Unknown';
     const author = video.profiles?.channel_name || video.profiles?.display_name || video.profiles?.username || 'Unknown';
-    const avatar = video.profiles?.avatar_url || FALLBACK_AVATAR;
-    const thumb = video.thumbnail_url || FALLBACK_THUMB;
+    const avatar = normalizeUrl(video.profiles?.avatar_url, FALLBACK_AVATAR);
+    const thumb = normalizeUrl(video.thumbnail_url, FALLBACK_THUMB);
     const views = Math.max(video.view_count || 0, video.target_views || 0);
     const timeStr = timeAgo(video.created_at || new Date().toISOString());
     const isLive = video.is_live;

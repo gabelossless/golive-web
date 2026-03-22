@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 import VideoCard from '@/components/VideoCard';
-import CategoryBar from '@/components/CategoryBar';
+import PullMenu from '@/components/PullMenu';
 import VideoSkeleton from '@/components/VideoSkeleton';
 import { supabase } from '@/lib/supabase';
 import { rankVideos } from '@/lib/vibe-rank';
@@ -14,6 +14,7 @@ export default function HomeClient() {
     const [videos, setVideos] = useState<any[]>([]);
     const [filtered, setFiltered] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeCategory, setActiveCategory] = useState("All");
 
     useEffect(() => {
         async function fetchVideos() {
@@ -63,8 +64,9 @@ export default function HomeClient() {
     }, []);
 
     const handleCategory = (cat: string) => {
+        setActiveCategory(cat);
         if (cat === 'All') { setFiltered(videos); return; }
-        if (cat === 'Recent') {
+        if (cat === 'Recent' || cat === 'Trending') {
             const sorted = [...videos].sort((a: any, b: any) => 
                 new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
             );
@@ -78,8 +80,8 @@ export default function HomeClient() {
     const featuredVideo = filtered[0]; // Just use latest for now, real app might curate this
 
     return (
-        <div className="flex flex-col min-h-full">
-            <CategoryBar onSelect={handleCategory} />
+        <div className="flex flex-col min-h-screen">
+            <PullMenu onCategorySelect={handleCategory} activeCategory={activeCategory} />
 
             <div className="p-2 sm:p-4 md:p-6 lg:p-8 space-y-12">
 
