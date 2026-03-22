@@ -1,74 +1,197 @@
-# VibeStream Ecosystem & Management Guide
+# Zenith Ecosystem & Management Guide
 
-This document outlines the architecture and management of the VibeStream ecosystem, including the Natural Engagement System v2.0, Bot Management, and Admin Security protocols. It serves as the primary technical reference for new developers onboarding onto the platform's social algorithms.
-
-## 1. Natural Engagement System v2.0
-
-VibeStream uses a sophisticated "Natural Engagement" engine (`lib/growth.ts`) to simulate a thriving, hyper-active community. This is crucial for demonstrating platform scale and lowering the barrier to entry for new creators.
-
-### Algorithmic Growth Engine
-- **Logistic Growth Curves**: Videos no longer grow linearly. The system models a realistic content lifecycle consisting of an initial discovery spike, a viral peak, an exponential decay, and a long tail.
-- **Timezone-Aware Activity**: Engagement velocity is intelligently modified based on global "Prime Time" hours (e.g., evening peaks) and weekend multipliers. 
-- **Social Influence Graph**: The simulation incorporates a "Power Law" social network (`user_relationships` table). When a high-credibility influencer interacts with content, it triggers a cascade of engagement from their simulated follower base.
-
-### Intelligent Bot Interactions
-- **Bot Personalities**: Automated accounts are not generic. The system utilizes `BOT_PERSONALITIES` (e.g., Enthusiast, Analytical, Troll, Casual) which dictate their likelihood to like, comment, or share based on the video's content tier.
-- **Contextual Comments**: The engine generates contextual, category-aware comments. For example, gaming videos receive gaming-specific simulated discussions rather than generic praise.
-
-## 2. Bot Ecosystem Expansion
-
-The platform features a dedicated local bot workforce to hydrate content discovery and engagement.
-
-### Generation & Management
-- **Bulk Creation API**: An admin-only edge function (`/api/admin/create-bots`) utilizes the Supabase Service Role to instantly generate packets of 50 unique identities. These identities are assigned distinct timezones, interests, and behavioral profiles natively during creation.
-- **Admin Bot Dashboard**: Located at `/admin/bots`, this high-fidelity grid allows administrators to monitor the robotic curation base, view their credibility scores, and rapidly adjust simulation parameters to steer platform culture.
-
-## 3. Security & Admin Authentication
-
-Protecting the ecosystem controls is paramount. VibeStream employs layered security for administrative access.
-
-### Access Control
-- **Middleware Hardening**: The Next.js edge middleware (`lib/supabase-middleware.ts`) strictly evaluates the `profiles.is_admin` Postgres flag on every single request to `/admin/*` routes. It is impossible to bypass via client routing.
-- **Authentication Fallbacks**: To prevent administrative lockouts during high-stress deployments, two secure recovery methods are implemented:
-  1. **Google Social Login**: Administrators can authenticate via standard Google OAuth, linking their identities to Google Workspace.
-  2. **Self-Service Recovery**: A dedicated `/forgot-password` flow allows admins to receive secure, encrypted reset links to their registered email addresses to establish new credentials.
-
-## 4. Search & Discovery Intelligence
-
-To manage millions of rows seamlessly without latency degradation, VibeStream uses an advanced discovery layer.
-- **GIN Indexing**: The database utilizes PostgreSQL GIN (Generalized Inverted Index) configurations (`scripts/search-optimization-v1.sql`) enabling sub-second full-text searches across video titles, descriptions, and tags.
-- **Smart Routing**: The Watch Page dynamically queries "Similar Videos" using category proximity and tag-matching intelligence, prioritized by simulated social popularity, rather than relying on randomized fetching.
-
-## 5. Media Infrastructure & HLS
-
-To support global scale, VibeStream utilizes an adaptive bitrate streaming architecture.
-- **HLS Transcoding**: All uploaded content is automatically converted to HLS playlists (`.m3u8`) with multiple resolution tiers (240p to 1080p).
-- **CMAF Compatibility**: We use Common Media Application Format segments to ensure low-latency playback across both iOS and Web clients.
-- **Background Processing**: The processing pipeline is decoupled from the user session, allowing for high-availability transcoding even if the user closes their browser.
-
-## 6. SEO & Social Hydration
-
-VibeStream is built for viral discoverability.
-- **SSR Metadata**: Every video and profile page serves pre-rendered meta tags, ensuring that links shared on X (Twitter), Discord, or iMessage display high-fidelity previews immediately.
-- **Performance Budgeting**: We utilize IntersectionObserver-based lazy loading to ensure that even feeds with hundreds of videos maintain a 90+ Lighthouse performance score.
+This guide covers the Zenith social simulation, bot management, growth intelligence, admin security, and media infrastructure. Intended for developers onboarding onto the platform's algorithmic systems.
 
 ---
 
-## 8. Premium Tiered Creator Ecosystem (Phase 45)
+## 1. Natural Engagement System v2.0 (`lib/growth.ts`)
 
-VibeStream implements a sophisticated tier-based content management system to balance platform growth with computational costs.
+Zenith uses a sophisticated engagement engine to simulate a thriving community during early-stage growth. This is critical for demonstrating platform scale and lowering the barrier for new creators.
 
-### Content Limits & Verification
-- **Standard Users**: Capped at 30 seconds for Shorts and 6 minutes for Long-form content. This ensures high-velocity discovery without overloading the transcoding pipeline.
-- **Premium Users**: Accessed via `/premium` subscription. Premium status unlocks extended upload limits and priority processing.
-- **Grace Period Engine**: If a user cancels their premium status:
-    - Their account enters a **30-day Grace Period**.
-    - During this time, all existing long-form content is preserved.
-    - On Day 31, the system automatically prunes assets exceeding standard user limits unless the subscription is reactivated.
+### Logistic Growth Engine
 
-### Automated Lifecycle Management
-The `lib/personalization.ts` utility and `scripts/automated-pruning.sql` handles the detection and cleanup of over-limit assets, ensuring technical debt does not accumulate in the Cloudflare R2 storage buckets.
+The `applyGrowthBoost(videoId)` function models a realistic content lifecycle:
+
+```
+Phase 1 (0–30 min):  Immediate rise — discovery spike
+Phase 2 (30min–6h):  Peak discovery period
+Phase 3 (6h–24h):    Post-peak exponential decay
+Phase 4 (24h–168h):  Long tail weekly decay
+```
+
+**Performance Tiers** (assigned on first view):
+- **Viral** (5% chance): 10,000–30,000 target views
+- **Normal** (95%): 150–950 target views
+
+### Temporal Multipliers
+Engagement velocity adapts to real-world time:
+
+| Time Window | Multiplier |
+|-------------|-----------|
+| Prime-time (weekday 5pm–10pm, weekend 10am–10pm) | 1.5× |
+| Mid-day (12pm–2pm) | 1.2× |
+| Dead hours (12am–6am) | 0.2× |
+| Other | 1.0× |
+
+### Social Influence Cascade
+When high-credibility users (top 5 by `credibility_score`) interact with a video, their interaction triggers a `socialMultiplier`:
+```
+socialMultiplier = 1 + (influencer_likes × 0.75)
+```
+This mirrors real-world viral mechanics where influencer endorsement drives discovery.
 
 ---
-**Documentation by Sonic Zenith Senior Dev Agents.**
-*Last Updated: March 2026 (Phase 45)*
+
+## 2. Bot Ecosystem (`/admin/bots`)
+
+The platform runs a workforce of simulated users to hydrate content discovery.
+
+### Bot Personalities
+
+| Personality | Like % | Comment % | Share % |
+|-------------|--------|-----------|---------|
+| Enthusiast | 80% | 40% | 20% |
+| Analytical | 50% | 70% | 10% |
+| Casual | 40% | 10% | 5% |
+| Troll | 10% | 60% | 30% |
+
+### Contextual Comments
+Comments are generated by category matching:
+- **Gaming**: "The gameplay at 2:30 was nuts!", "Frame perfect execution"
+- **Tech**: "Clean review", "Finally a real review"
+- **Vibe**: "This is a vibe", "Algorithm brought me here!"
+
+### Bot Generation
+Admin route: `POST /api/admin/create-bots`
+- Creates batches of 50 unique bots with distinct usernames, timezones, and interest arrays
+- Bots are identified by `@zenith.bot` email domain
+- Managed and monitored at `/admin/bots`
+
+---
+
+## 3. Vibe-Rank Discovery Algorithm (`lib/vibe-rank.ts`)
+
+Every video gets a `totalScore` that drives its placement in Trending and For You feeds:
+
+```
+qualityScore(0–1) = Resolution: 4K→1.0, 1080p→0.9, 720p→0.7, SD→0.4
+velocityScore(0–1) = (hourlyGrowth × 10) / (ageHours + 2)^1.5
+hypeScore(0–2)    = min(2.0, hype_count × 0.2)
+
+totalScore = (quality × 0.4) + (velocity × 0.6) + hypeScore
+```
+
+**Hype** is a community-driven marker (like a "super like") that provides a significant virality surge.
+
+---
+
+## 4. Analytics Intelligence Pipeline (Phase 46)
+
+### Data Flow
+```
+User watches video
+  → client calls POST /api/analytics/event
+    → inserted into video_events table
+      → admin opens /admin/analytics
+        → GET /api/admin/stats calls get_platform_stats() RPC
+          → aggregated JSON returned to the UI
+            → results saved to platform_reports (daily snapshot)
+```
+
+### Database Tables
+
+**`video_events`** — Per-event log:
+- `video_id`, `user_id`, `session_id`
+- `event_type`: view | like | share | comment | complete | skip
+- `watch_seconds`, `device_type`, `country_code`
+
+**`platform_reports`** — Daily snapshots (one row per date):
+- `total_users`, `total_videos`, `dau`, `views_today`
+- `avg_watch_seconds`, `platform_revenue_usd`
+- Auto-upserted by the admin stats API on each dashboard view
+
+**`profile_settings`** — User preferences:
+- Notification toggles (subscriber, comment, tip, trending, digest)
+- Privacy toggles (public profile, wallet visibility, indexing, watch history)
+
+---
+
+## 5. Search & Discovery Intelligence
+
+**GIN Indexes**: Full-text search uses PostgreSQL GIN indexes on `videos.title`, `description`, and `tags` arrays for sub-50ms search across millions of rows.
+
+**Similar Videos**: The Watch page queries by:
+1. Matching category
+2. Tag overlap
+3. Sorted by `view_count` (as a Vibe-Rank proxy)
+
+**Tag Intelligence** (`lib/tags.ts`): Curated list of 150+ platform topics used for autocomplete and discovery routing.
+
+---
+
+## 6. Media Infrastructure
+
+### HLS Transcoding
+Uploaded videos go through Livepeer's decentralized transcoding network:
+- **Input**: Raw MP4/MOV/HEIC video from R2
+- **Output**: HLS master playlist (`.m3u8`) with multiple bitrate variants
+- **Delivery**: `lib/cdn.ts` routes playback through Saturn Network for edge acceleration
+
+### Storage Architecture
+```
+Upload → Cloudflare R2 (zero egress cost)
+         ↓
+       Saturn CDN (decentralized edge, L1 acceleration)
+         ↓
+       End User (cached + adaptive bitrate)
+```
+
+### Avatar/Thumbnail Flow
+Small assets (avatars, thumbnails) use the simple presigned URL upload route (`/api/upload`), stored in `/avatars/` and `/thumbnails/` R2 folders. HEIC files are automatically converted client-side before upload via dynamic import of `heic2any`.
+
+---
+
+## 7. Premium Tier System (`lib/personalization.ts`)
+
+### Content Limits
+
+| Tier | Shorts Max | Long-form Max |
+|------|-----------|---------------|
+| Standard | 30 seconds | 6 minutes |
+| Premium | Configurable | Configurable |
+
+### Grace Period Engine
+When a user downgrades from Premium:
+1. **Day 0**: Account enters 30-day grace period
+2. **Day 1–30**: All content preserved
+3. **Day 31**: Automated pruning removes assets exceeding Standard limits (script: `scripts/automated-pruning.sql`)
+
+---
+
+## 8. SEO & Social Hydration
+
+Every dynamic route (`/watch/[id]`, `/profile/[username]`) uses Next.js `generateMetadata()` (Server Component) to inject:
+- `og:title`, `og:description`, `og:image`
+- Twitter Card `summary_large_image`
+- Canonical URL
+
+This ensures high-fidelity link previews on X, Discord, iMessage, and Telegram at zero client cost.
+
+---
+
+## 9. Admin Security Model
+
+### Access Control Layers
+1. **Next.js Middleware** (`lib/supabase-middleware.ts`): Validates session JWT on every `/admin/*` request at the Edge
+2. **RLS Policies**: Supabase RLS enforces `role = 'admin'` on admin-only tables
+3. **API Auth**: Every admin API route validates `profile.role === 'admin'` server-side
+4. **Role Field**: Stored in `profiles.role` (enforce via direct SQL — never client-side)
+
+### Granting Admin Access
+```sql
+UPDATE profiles SET role = 'admin' WHERE username = 'YOUR_USERNAME';
+```
+
+---
+
+*Zenith Agent Workforce — Phase 46 — March 2026*
