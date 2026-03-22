@@ -5,11 +5,11 @@ import { v4 as uuidv4 } from 'uuid';
 export function getAnalyticsSessionId(): string {
     if (typeof window === 'undefined') return '';
     
-    let sessionId = sessionStorage.getItem('vibestream_session_id');
+    let sessionId = sessionStorage.getItem('zenith_session_id');
     
     if (!sessionId) {
         sessionId = uuidv4();
-        sessionStorage.setItem('vibestream_session_id', sessionId);
+        sessionStorage.setItem('zenith_session_id', sessionId);
     }
     
     return sessionId;

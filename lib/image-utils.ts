@@ -1,5 +1,5 @@
 /**
- * Client-side image processing for VibeStream
+ * Client-side image processing for Zenith
  * Handles resizing, compression, and format normalization
  */
 
@@ -9,8 +9,6 @@ export interface ImageOptions {
   quality?: number;
 }
 
-import heic2any from 'heic2any';
-
 /**
  * Compresses an image and returns a Blob/File
  * Supports JPEG/PNG resizing and quality adjustment
@@ -19,10 +17,10 @@ import heic2any from 'heic2any';
 export async function compressImage(file: File, options: ImageOptions = {}): Promise<Blob> {
   const { maxWidth = 1080, maxHeight = 1080, quality = 0.8 } = options;
 
-  // Handle HEIC conversion if needed
   let processingFile: File | Blob = file;
   if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
     try {
+      const heic2any = (await import('heic2any')).default;
       const converted = await heic2any({
         blob: file,
         toType: 'image/jpeg',
@@ -120,7 +118,7 @@ export async function uploadToR2(file: File | Blob, originalFilename: string, fo
 }
 
 /**
- * Premium "Ghost" Avatar. Returns a base64 DataURI of a sleek VibeStream SVG.
+ * Premium "Ghost" Avatar. Returns a base64 DataURI of a sleek Zenith SVG.
  */
 export function getGhostAvatar() {
   return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%231a1a1a"/><path d="M50 30c-11.05 0-20 8.95-20 20s8.95 20 20 20 20-8.95 20-20-8.95-20-20-20zm0 30c-5.52 0-10-4.48-10-10s4.48-10 10-10 10 4.48 10 10-4.48 10-10 10z" fill="%23ffd700" fill-opacity="0.8"/><circle cx="50" cy="50" r="45" fill="none" stroke="%23ffd700" stroke-width="2" stroke-dasharray="2 4" opacity="0.4"/></svg>`;

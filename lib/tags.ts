@@ -1,5 +1,5 @@
 /**
- * Canonical Top 50 Tags for VibeStream
+ * Canonical Top 50 Tags for Zenith
  * Used for AI discovery, SEO synchronization, and creator suggestions.
  */
 export const TOP_50_TAGS = [

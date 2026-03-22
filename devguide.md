@@ -1,95 +1,135 @@
-# Sonic Zenith: VibeStream Platform - Developer Guide
+# Zenith Platform — Developer Guide
 
-Welcome to the **Sonic Zenith (VibeStream)** codebase. This document serves as the primary technical reference for senior developers and engineers working on the platform's core infrastructure.
+Welcome to the **Zenith** codebase. This is the primary technical reference for senior developers and the AI agent workforce working on the platform.
 
 ## 🏗️ System Architecture
 
-Sonic Zenith is a high-performance, decentralized-first video social platform built using a modern, scalable stack:
+Zenith is a high-performance, decentralized-first video social platform:
 
 - **Framework**: [Next.js 15+](https://nextjs.org/) (App Router, React 19)
 - **Authentication**: [Privy](https://privy.io/) (Non-custodial Web3 Auth) & [Supabase Auth](https://supabase.com/auth)
 - **Database**: [Supabase PostgreSQL](https://supabase.com/) with RLS (Row Level Security)
 - **Storage**: [Cloudflare R2](https://www.cloudflare.com/products/r2/) (S3-compatible, Zero Egress Fees)
 - **Video Infrastructure**: [Livepeer](https://livepeer.org/) (Decentralized Transcoding & HLS Playback)
-- **CDN**: [Saturn Network](https://saturn.tech/) & Decentralized Gateways (L1 Edge Acceleration)
-- **Animation**: [Motion (Framer Motion)](https://motion.dev/) for high-fidelity interactive UI
+- **CDN**: [Saturn Network](https://saturn.tech/) & Decentralized Gateways
+- **Animation**: [Motion (Framer Motion)](https://motion.dev/)
 
 ---
 
 ## 🚀 Core Components
 
 ### 1. [VideoPlayer.tsx](file:///C:/GOLive/components/VideoPlayer.tsx)
-The heart of the viewing experience. It supports:
-- **HLS.js**: Native-quality streaming for `.m3u8` playlists.
-- **Ambient Mode**: Dynamic background glow based on video frames using hidden canvas sampling.
-- **Livepeer Support**: Priority routing for `playbackId` over standard source URLs.
-- **Decentralized Routing**: Automatically wraps standard R2 sources in decentralized gateway URLs for edge acceleration.
+- **HLS.js** streaming for `.m3u8` playlists
+- **Ambient Mode** — dynamic background glow from video frames
+- **Livepeer Support** — priority routing via `playbackId`
+- **Decentralized Routing** — R2 sources wrapped in Saturn gateway URLs
 
 ### 2. [UploadProvider.tsx](file:///C:/GOLive/components/UploadProvider.tsx)
-Handles complex, multi-gigabyte video uploads using a robust multipart handshake:
-- **Handshake**: Initializes with `fileSize` to the `/api/upload/multipart` route.
-- **Pre-signed URLs**: Receives a batch of pre-signed AWS S3 `UploadPartCommand` URLs.
-- **Parallel Uploads**: Compresses and uploads chunks in parallel to Cloudflare R2.
-- **Persistence**: Finalizes the upload and registers the asset in the Supabase `videos` table.
+Multi-gigabyte upload flow:
+- Initializes with `fileSize` → `/api/upload/multipart`
+- Receives batches of pre-signed `UploadPartCommand` URLs
+- Parallel chunk uploads to Cloudflare R2
+- Finalizes and registers asset in Supabase `videos` table
 
-### 4. YouTube-Style Mobile Navigation
-The mobile UI employs a hidden `PullMenu` accessible via a pull-down gesture:
-- **`PullMenu.tsx`**: Uses `framer-motion` for gesture physics and drag events.
-- **`CategoryBar.tsx`**: Shared component between desktop (fixed) and mobile (hidden inside PullMenu).
-- **Hardening**: `VideoCard.tsx` includes automated URL normalization to prevent home feed crashes from malformed R2 thumbnail/avatar paths.
+### 3. [settings/page.tsx](file:///C:/GOLive/app/settings/page.tsx)
+Full settings UI:
+- **Account**: username display, full_name edit, bio edit, **avatar upload** (→ R2 `/avatars/` folder)
+- **Notifications**: 5 toggles (subscriber, comment, tip, trending, weekly digest) → `profile_settings` table
+- **Privacy**: 4 toggles (public profile, wallet visibility, indexing, watch history) → `profile_settings` table
+- **Appearance**: Theme selector (Light / Dark / System)
+
+### 4. Mobile Navigation
+- **`PullMenu.tsx`**: `framer-motion` gesture physics for pull-down
+- **`CategoryBar.tsx`**: Shared between desktop (fixed) and mobile (PullMenu)
+- **`VideoCard.tsx`**: Automated `normalizeUrl()` to prevent home feed crashes
+
+---
+
+## 📊 Analytics & Data Pipeline (Phase 46)
+
+### Tables
+| Table | Purpose |
+|-------|---------|
+| `video_events` | Per-event tracker: views, likes, shares, completions |
+| `platform_reports` | Daily snapshots written by admin stats API |
+| `profile_settings` | Per-user notification & privacy preferences |
+
+### RPCs
+| Function | Purpose |
+|----------|---------|
+| `get_platform_stats()` | Returns full JSON stats object (DAU, views, likes, geo, device dist.) |
+| `upsert_profile_settings(...)` | Upserts user notification/privacy settings |
+| `increment_view_count(video_id, amount)` | Atomic view counter increment |
+
+### API Routes
+| Route | Agent | Purpose |
+|-------|-------|---------|
+| `GET /api/admin/stats` | Agent 2 | Protected stats aggregation; saves to `platform_reports` |
+| `POST /api/analytics/event` | Agent 2 | Client-side event logging (views, likes, shares) |
+| `POST /api/upload` | — | Simple presigned URL for profile images, thumbnails |
+| `POST /api/upload/multipart` | — | Multi-part video upload with auth |
+
+### Libs
+| File | Purpose |
+|------|---------|
+| `lib/stats-engine.ts` | Pure functions: fill daily views, compute device %, format counts |
+| `lib/vibe-rank.ts` | VibeRank algorithm: quality × velocity + hype score |
+| `lib/growth.ts` | Logistic growth simulation, bot engagement, temporal multipliers |
+| `lib/analytics-session.ts` | Session ID from `sessionStorage` (`zenith_session_id`) |
+| `lib/personalization.ts` | Subscription tier logic, upload limits, grace periods |
+
+### Admin Panel
+| Page | Data Source |
+|------|-------------|
+| `/admin` (dashboard) | Real Supabase counts: users, videos, views, likes, DAU, top creator |
+| `/admin/analytics` | `/api/admin/stats` → 30-day view chart, device dist., geo |
+| `/admin/bots` | `profiles` table filtered by `@zenith.bot` email domain |
 
 ---
 
 ## 🛠️ Key Utilities
 
 ### [lib/cdn.ts](file:///C:/GOLive/lib/cdn.ts)
-A performance-critical utility that routes assets through the most efficient path:
-- **R2 -> Saturn**: Detects Cloudflare R2 URLs and prefixes them with Saturn Network nodes.
-- **IPFS Support**: Resolves `ipfs://` CIDs to public gateways.
-- **Livepeer**: Generates high-performance HLS playback URLs.
+- **R2 → Saturn**: Routes R2 assets through Saturn Network nodes
+- **IPFS Support**: Resolves `ipfs://` to public gateways
+- **Livepeer**: Generates HLS playback URLs
 
 ### [lib/personalization.ts](file:///C:/GOLive/lib/personalization.ts)
-Handles tiered user logic and content limits:
-- **Standard**: 30s Shorts, 6m Long-form.
-- **Premium**: Extended limits (configurable).
-- **Grace Period**: Implementation of 30-day data retention for downgraded users before automated multi-tier deletion.
+- **Standard**: 30s Shorts, 6m Long-form
+- **Premium**: Extended limits
+- **Grace Period**: 30-day retention for downgraded users
 
 ---
 
-## 🩹 Critical Patches & Guidelines
+## 🩹 Critical Patches & Rules (All Agents Must Follow)
 
-### 1. Dependency Pinning
-**Viem**: Must be pinned to `2.47.4`. Newer versions (2.47.5+) introduce a peer dependency conflict with `@privy-io/ethereum` which stalls Vercel builds.
-
-### 2. URL Normalization
-All media consumed via `next/image` **MUST** pass through `normalizeUrl()` to ensure leading slashes are present, especially for paths stored in the `videos` or `profiles` tables.
-
-### 3. Vercel Deployment Optimization
-A `.vercelignore` file is maintained to exclude the `brain/` directory (~360MB). This ensures the deployment payload remains under the 100MB limit and builds complete within <3 minutes.
+1. **`viem` pinned to `2.47.4`** — newer versions break Vercel builds (Privy peer conflict)
+2. **`normalizeUrl()`** — all media in `next/image` or `<img>` must pass through this first
+3. **No SSR browser APIs** — use dynamic imports or `typeof window !== 'undefined'`
+4. **Admin routes require `role = 'admin'`** check on the requesting user's profile
+5. **Session key is `zenith_session_id`** (formerly `vibestream_session_id` — updated Phase 46)
+6. **No hardcoded stats in admin** — all numbers must come from DB or RPC
+7. **`.vercelignore`** excludes `brain/` dir (~360MB) to keep build payload under 100MB
 
 ---
 
 ## 👨‍💻 Development Workflow
 
-1.  **Clone & Install**:
-    ```bash
-    npm install
-    ```
-2.  **Environment Setup**:
-    Ensure `.env.local` contains valid keys for Supabase, Privy, and Cloudflare R2 (Access Key ID, Secret Access Key, and Endpoint).
-3.  **Local Development**:
-    ```bash
-    npm run dev
-    ```
-4.  **Database Migration**:
-    New schema changes should be applied via the scripts in the `scripts/` folder before being pushed to production.
+1. **Install**: `npm install`
+2. **Env Setup**: Populate `.env.local` with Supabase, Privy, and R2 credentials
+3. **Migrate DB**: Run `setup-analytics-phase46.sql` in Supabase SQL Editor
+4. **Local Dev**: `npm run dev`
 
 ---
 
-## 📈 Roadmap (Phase 45+)
-- **Mobile Refinement**: Advanced haptics for the Pull-Menu interaction.
-- **Social Dynamics**: Comments, Nested Replies, and User `@mentions`.
-- **Ecosystem Expansion**: VibeStream Developer SDK & Embeddable Player.
+## 📈 Roadmap (Phase 47+)
+- **Livestreaming** (`/live`): WebRTC or peer-assisted relay; target $0–10/mo for 10k users
+- **Social Graph**: Comments, nested replies, `@mentions`
+- **AI Reports**: Python/Cloud AI weekly digest for admin dashboard (when events exceed 1M/day)
+- **Mobile Haptics**: Advanced PullMenu haptic feedback
+- **Zenith SDK**: Embeddable player for third-party sites
 
-**Documentation by Sonic Zenith Senior Dev Agents.**
-*Last Updated: March 2026 (Phase 45)*
+---
+
+**Documentation by Zenith Agent Workforce.**
+*Last Updated: March 2026 — Phase 46*

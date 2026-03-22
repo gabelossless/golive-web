@@ -117,7 +117,7 @@ export default function HistoryPage() {
                     </div>
 
                     <div className="mt-8 pt-8 border-t border-white/5 text-[9px] font-black uppercase tracking-[0.3em] text-zinc-600 text-center italic">
-                        VibeStream Secure History
+                        Zenith Secure History
                     </div>
                 </div>
             </div>

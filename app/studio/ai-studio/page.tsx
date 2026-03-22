@@ -238,7 +238,7 @@ export default function AIStudioPage() {
                             </div>
                             <div className="space-y-2">
                                 <h2 className="text-3xl font-black uppercase tracking-tight">Short Published!</h2>
-                                <p className="text-gray-500">Your AI-generated short is now live on VibeStream.</p>
+                                <p className="text-gray-500">Your AI-generated short is now live on Zenith.</p>
                             </div>
                             <div className="flex gap-4 pt-8">
                                 <Link href="/shorts" className="px-8 py-3 bg-[#FFB800] text-black font-black uppercase text-xs rounded-full">View Feed</Link>

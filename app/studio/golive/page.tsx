@@ -68,7 +68,7 @@ export default function GoLivePage() {
                 .insert({
                     user_id: user.id,
                     title: title,
-                    description: `Live from VibeStream! Started at ${new Date().toLocaleTimeString()}`,
+                    description: `Live from Zenith! Started at ${new Date().toLocaleTimeString()}`,
                     video_url: playlistUrl,
                     thumbnail_url: `https://api.dicebear.com/7.x/shapes/svg?seed=${streamId}`,
                     is_live: true,

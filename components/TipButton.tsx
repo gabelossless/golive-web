@@ -97,7 +97,7 @@ export default function TipButton({ creator }: TipButtonProps) {
 
     const hasNoWallet = !creator.wallet_address && !creator.solana_wallet_address;
 
-    // ─── Base (EVM) tip via VibeStreamSplitter contract ──────────────────────
+    // ─── Base (EVM) tip via ZenithSplitter contract ──────────────────────
 
     const handleBaseTip = async (): Promise<string> => {
         const eth = (window as any).ethereum;

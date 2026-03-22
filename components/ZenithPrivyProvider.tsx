@@ -4,7 +4,7 @@ import { PrivyProvider } from '@privy-io/react-auth';
 import { base } from 'viem/chains';
 
 /**
- * VibeStreamPrivyProvider
+ * ZenithPrivyProvider
  * Wraps the app in Privy so every user gets an embedded, non-custodial
  * Base and Solana wallet auto-generated at login (email / Google / wallet).
  *

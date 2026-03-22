@@ -379,7 +379,7 @@ export default function UploadPage() {
                 <AlertCircle size={32} className="text-red-500" />
             </div>
             <h1 className="text-2xl font-bold">Sign in to Upload</h1>
-            <p className="text-gray-400 max-w-xs">You need an account to upload videos to VibeStream.</p>
+            <p className="text-gray-400 max-w-xs">You need an account to upload videos to Zenith.</p>
             <div className="flex gap-3">
                 <Link href="/login" className="px-6 py-2.5 bg-[#FFB800] text-black rounded-full font-bold no-underline">Log In</Link>
                 <Link href="/register" className="px-6 py-2.5 border border-white/10 text-white rounded-full font-bold no-underline hover:bg-white/5">Sign Up</Link>
