@@ -1,9 +1,0 @@
-# Task: GoLive UI Redesign
-
-- [x] Diagnose broken styling (missing Tailwind v4 config)
-- [ ] Fix [globals.css](file:///C:/GoLive/app/globals.css) with `@import "tailwindcss"` and `@theme` block
-- [ ] Rewrite Navbar for YouTube/Twitch hybrid look
-- [ ] Improve Sidebar with active states and Twitch-style live section
-- [ ] Polish VideoCard component (hover, badges, progress)
-- [ ] Update Home page category bar and grid
-- [ ] Verify all pages render correctly
