@@ -1,0 +1,41 @@
+# Implementation Plan: Cinematic Obsidian Overhaul
+
+## Goal
+Transform GoLive into a cinematic, high-end platform that feels distinct from Twitch. We are moving towards **"Obsidian Minimalism"** (Apple's precision + Netflix's immersive dark mode).
+
+## Proposed Changes
+
+### [Design System]
+- **Theme Shift**: Replace Twitch Purple (`#9147ff`) with **Electric Crimson** (`#E50914`) for accents, and use a deep Obsidian base (`#050505`).
+- **Precision Borders**: Use `1px` solid borders with `rgba(255, 255, 255, 0.1)` and subtle inner shadows.
+- **Glass Refinement**: Use a more subtle "Frosted Glass" (20% opacity) for headers and sidebars.
+
+### [Components Overhaul]
+#### [MODIFY] [globals.css](file:///C:/GOLive/app/globals.css)
+- Update `@theme` block with new primary colors and radius variables (shifting to sharper `6px` / `8px` corners for the Netflix look).
+- Redesign `auth-card` and `auth-input` classes.
+
+#### [MODIFY] [Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx)
+- Redesign the **Search Box**: Centered, minimal, pill-shaped with a glowing border on focus.
+- Update **Login/Signup** buttons to be clear Apple-style "outlined" and "filled" crimson.
+
+#### [MODIFY] [HomeClient.tsx](file:///C:/GOLive/app/HomeClient.tsx)
+- Replace grid layout with a more cinematic "featured row" at the top.
+- Ensure all category chips match the new crimson/black theme.
+
+#### [MODIFY] [VideoCard.tsx](file:///C:/GOLive/components/VideoCard.tsx)
+- Add "Verified" badge logic.
+- Implement Apple-style scale and border transition on hover.
+
+### [Auth Pages]
+#### [MODIFY] [login/page.tsx](file:///C:/GOLive/app/login/page.tsx) & [register/page.tsx](file:///C:/GOLive/app/register/page.tsx)
+- Strip all "messy" elements.
+- Use a pure centered card with elegant, wide-spaced inputs and no distracting background glows.
+
+## Data & Database
+- **Schema**: Add `is_verified` column to `profiles` if missing.
+- **Production cleanup**: Sweep components for `pravatar.cc` or `unsplash.com` links and replace with empty states or `DiceBear` user-tied seeds.
+
+## Verification
+- **Simulated Agents**: I will run a 20-agent simulation to check for edge cases.
+- **Build**: Final production build verification before push.

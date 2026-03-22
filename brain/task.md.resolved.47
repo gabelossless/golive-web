@@ -1,0 +1,56 @@
+# Task: GoLive Development Checklist
+
+## Phase 1-17: Core, Polish, Refactor & Growth (Completed) ✅
+- [x] Backend, Auth, Growth, Home, Trending, Upload, Studio, Subscriptions, Comments, Profile, Search, Error Handling, Settings, Library, Live Streaming, Mobile UX, Theater Mode, Type Safety, Community Seeding.
+
+## Phase 18: Final Polish & Deployment (Completed) ✅
+- [x] **Config Check**: Updated [next.config.ts](file:///C:/GOLive/next.config.ts) for Image optimization.
+- [x] **Final Code Review**: Refactored [HomePage](file:///C:/GOLive/app/page.tsx#43-47) to Server Component architecture for performance.
+- [x] **Documentation**: Created [deployment_guide.md](file:///C:/Users/Walt%20&%20Carter/.gemini/antigravity/brain/c5e659c1-a988-4ba8-988a-a16b9f037713/deployment_guide.md) and [launch_handbook.md](file:///C:/Users/Walt%20&%20Carter/.gemini/antigravity/brain/c5e659c1-a988-4ba8-988a-a16b9f037713/launch_handbook.md).
+- [x] **Handover**: Ready for launch.
+
+## Phase 19: Auth & Onboarding Polish (Completed) ✅
+- [x] **UI Polish**: Overhauled `login` and `register` pages with "Premium" designs.
+- [x] **Google Auth**: Implemented "Sign in with Google" with Supabase OAuth.
+- [x] **Auth Config**: Created [app/auth/callback/route.ts](file:///C:/GOLive/app/auth/callback/route.ts) for OAuth handling.
+- [x] **Email Confirmation**: Added unconfirmed email handling to signup flow.
+- [x] **Project Audit**: Verified key project files present.
+
+## Phase 20: Profile Real Data Integration (Completed) ✅
+- [x] **Profile Page**: Connected `app/profile/[username]` to Supabase.
+  - Fetches real profile data (Bio, Avatar, Name).
+  - Fetches real user videos.
+  - Handles "User not found" state.
+- [x] **Settings Page**: Connected `app/settings` to Supabase.
+  - User can edit `full_name` and `bio`.
+  - Real-time save with success/error feedback.
+
+## Phase 21: Twitch/YouTube Functional Parity Sprint (In Progress) 🚀
+- [x] **Navigation & Header**: Make Avatar, Login, Signup buttons dynamic. Remove hardcoded "FragMaster" links.
+- [x] **Profile Auto-fix**: Ensure `profiles` row exists for every auth user. Auto-create if missing.
+- [x] **Dashboard/Home**: Ensure `page.tsx` fetches real videos. Remove static mocks.
+- [x] **Sidebar**: Make "Following" list dynamic.
+- [x] **Global Polish**: Remove all instances of "FragMaster" and hardcoded Unsplash images.
+- [x] **UI & Upload**: Enhance Upload page with progress bars, glassmorphism, and Apple-style borders.
+
+## Post-Handover Fixes (Completed) ✅
+- [x] Fixed `HomeClient.tsx` build error (type mismatch).
+- [x] Fixed `profile/page.tsx` build error (missing icon imports).
+- [x] Fixed `trending/page.tsx` build error (Supabase join array/object normalization).
+- [x] Fixed `tsconfig.json` (excluded `scripts` folder).
+- [x] Fixed `page.tsx` (removed non-existent `is_live` column).
+- [x] Fixed `search/page.tsx` (added missing `Suspense` boundary).
+- [x] Audited `studio/golive/page.tsx` (removed `is_live` insert).
+- [x] **Build Verification**: `npm run build` passed successfully. 🎉
+## Phase 22: Launch & Deployment (Completed) ✅
+- [x] **Git Setup**: Local repository initialized and committed.
+- [x] **GitHub Push**: Remote added and pushed to `gabelossless/golive-web`.
+- [x] **Vercel Link**: Project connected and deployed with env variables.
+- [x] **Final Check**: Site verified live at [https://golive-web.vercel.app](https://golive-web.vercel.app).
+
+## Phase 23: Premium Auth Redesign (In Progress) 🎨
+- [/] **Core Styles**: Adding minimalist auth utility classes to `globals.css`.
+- [ ] **Login Redesign**: Updating `login/page.tsx` with Apple/Google aesthetic.
+- [ ] **Register Redesign**: Updating `register/page.tsx` with unified premium look.
+- [ ] **Verification**: Testing flows and responsive states.
+

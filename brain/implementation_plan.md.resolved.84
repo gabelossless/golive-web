@@ -1,0 +1,27 @@
+# Phase 33: Creator Revenue Dashboard
+
+This phase focuses on surfacing the Phase 32 payment data to creators with a high-fidelity analytics view.
+
+## Proposed Changes
+
+### [Revenue Dashboard]
+#### [MODIFY] [DashboardClient.tsx](file:///C:/GOLive/app/studio/dashboard/DashboardClient.tsx)
+- Add a "Revenue" tab to the Creator Studio.
+- Implement high-fidelity "Earnings Overview" cards showing total USDC/Native tips.
+- Add a "Recent Tips" table fetching from the `tip_transactions` table.
+- Integrate Recharts for visual velocity charts (tips over time).
+
+### [Production Polish]
+#### [MODIFY] [Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx)
+- Ensure consistent branding and responsive link behavior.
+- Verify Admin Shield visibility for authorized users.
+
+## Verification Plan
+
+### Automated Tests
+- Production build check (`npm run build`) - **PASSED**
+- Revenue API endpoint latency check - **PASSED**
+
+### Manual Verification
+- Audit all dashboard buttons (AI Studio, New Content, Tab Switching).
+- Verify Tip Modal interactions on the Watch page.

@@ -1,0 +1,32 @@
+# Phase 3 Implementation Plan — YouTube 2.0 Refinement
+
+## Goals
+1. **Fix Navigation Polish**: Correct search bar formatting, add Voice Search, and refine Navbar icons.
+2. **Deepen Engagement**: Build full-featured Comment and Interaction sections.
+3. **Creator Empowerment**: Finalize "My Channel" and prepare for Live Streaming infrastructure.
+
+## Proposed Changes
+
+### 1. Unified Search Bar ([Navbar.tsx](file:///C:/GoLive/components/Navbar.tsx))
+- **Structure**: Wrap input and button in a single `max-w-xl` div with a unified border.
+- **Visuals**: Remove the search icon from inside the input. Add a **Voice Search** button (Mic icon) next to the bar.
+- **Focus**: Ensure the entire pill highlights on focus.
+
+### 2. Video Interactions ([app/watch/[id]/page.tsx](file:///C:/GoLive/app/watch/[id]/page.tsx))
+- **Comments**: Implement a YouTube-style comment section below the description.
+  - Sorting: "Top Comments" vs "Newest First".
+  - Threaded replies (mocked).
+- **Engagement**: Refine the Like/Dislike/Share pill to be more tactile.
+
+### 3. Channel Management ([app/profile/[username]/page.tsx](file:///C:/GoLive/app/profile/[username]/page.tsx))
+- **Customization**: Add "Edit Profile" and "Customize Channel" buttons for the owner.
+- **Sections**: Add "Featured Video" and "Recent Activity" sections.
+
+### 4. Preparing for Live
+- **Metadata**: Add `isLive` status to the mock video database.
+- **Player**: Prepare a `LivePlayer` component that can show viewer count and a "Live" badge overlay.
+
+## Verification
+- Search bar looks unified and premium across screen sizes.
+- Comment section is interactive and follows modern spacing.
+- Profile page feels like a professional creator hub.

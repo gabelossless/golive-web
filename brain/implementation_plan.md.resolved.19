@@ -1,0 +1,26 @@
+# Premium Cinematic Typography Overhaul
+
+Upgrade the application's font system from standard "Inter" to a high-end, cinematic pairing of **Bebas Neue** (for aggressive, condensed display headers) and **Outfit** (for premium geometric body text).
+
+## Proposed Changes
+
+### [Layout & Theme]
+- **[MODIFY] [layout.tsx](file:///C:/GOLive/app/layout.tsx)**: Remove Inter; import `Outfit` and `Bebas_Neue` from `next/font/google`.
+- **[MODIFY] [globals.css](file:///C:/GOLive/app/globals.css)**: 
+    - Update `--font-sans` to use `Outfit`.
+    - Add `--font-display` using `Bebas_Neue`.
+    - Adjust letter-spacing for premium feel.
+
+### [Component Updates]
+- **[MODIFY] [Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx)**: Apply Display font to the "GoLive" brand logo.
+- **[MODIFY] [HomeClient.tsx](file:///C:/GOLive/app/HomeClient.tsx)**: Apply Display font to section headings and "FEATURED PREMIERE".
+- **[MODIFY] [login/page.tsx](file:///C:/GOLive/app/login/page.tsx)** & **[register/page.tsx](file:///C:/GOLive/app/register/page.tsx)**: Unified typography for "BREACH PROTOCOL" headers.
+
+## Verification Plan
+
+### Automated Tests
+- `npm run build` to ensure font optimization works correctly.
+
+### Manual Verification
+- Visual inspection of contrast, readability, and "premium" factor across all pages.
+- Verify no "cheap" appearance in input fields or secondary meta data.

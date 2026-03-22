@@ -1,0 +1,37 @@
+# Phase 2 Implementation Plan — GoLive Expansion
+
+## Goals
+1. **Modernize Navigation**: Bring the Sidebar to 2026 standards (collapsible, sleek, contextual).
+2. **Expand Content Discovery**: Implement 'Trending' and 'Following' pages.
+3. **Empower Creators**: Build a 'My Channel' dashboard.
+
+## Proposed Changes
+
+### 1. Modern Sidebar ([Sidebar.tsx](file:///C:/GoLive/components/Sidebar.tsx))
+- **Collapsible Mode**: Add a generic state to toggle between full and icon-only width (YouTube style).
+- **Visuals**: Enhance glassmorphism, add a "glow" to the active item, and improve typography.
+- **Organization**: Group into "Menu", "Library", "Subscriptions".
+
+### 2. Trending Page ([app/trending/page.tsx](file:///C:/GoLive/app/trending/page.tsx))
+- **Algorithm**: Implement a mock ranking system:
+  `Score = (Views * 1) + (Likes * 5) - (HoursOld * DecayFactor)`
+- **UI**: Display videos with a "Trending Rank" badge (#1, #2, etc.).
+
+### 3. Following Page ([app/subscriptions/page.tsx](file:///C:/GoLive/app/subscriptions/page.tsx))
+- **Filter**: Show videos only from specific "subscribed" authors.
+- **Layout**: Standard video grid, but maybe with a "Latest from X" distinct section.
+
+### 4. Creator Dashboard ([app/dashboard/page.tsx](file:///C:/GoLive/app/dashboard/page.tsx))
+- **Analytics Cards**: Views, Subs, Revenue (mocked).
+- **Recent Uploads Table**: Edit/Delete actions.
+- **Quick Upload Widget**.
+
+## New Files
+- `app/trending/page.tsx`
+- `app/subscriptions/page.tsx`
+- `app/dashboard/page.tsx` (or `app/channel/page.tsx`)
+
+## Verification
+- Check Sidebar toggle on desktop/mobile.
+- Verify Trending algorithm sorts correctly (newest + most viral on top).
+- Ensure Dashboard graphs/stats look premium.

@@ -1,0 +1,33 @@
+# Phase 14: Live Streaming & Real-time Chat
+
+## Goal Description
+Implement a simulated live streaming experience. Users can "Go Live" from the Studio, which creates a live video record. This stream appears in the Sidebar with a "Live" badge. Viewers can watch the stream (simulated video loop) and chat in real-time.
+
+## Proposed Changes
+
+### Database Schema
+#### [NEW] [setup-live-streaming.sql](file:///C:/GoLive/setup-live-streaming.sql)
+- Add `is_live` (boolean) column to `videos` table.
+- Add `stream_key` (text) to `profiles` (optional, for realism).
+- Create `live_chats` table (or reuse `comments` with `is_live` flag?). *Decision: Reuse `comments` but optimizing for real-time.*
+
+### Components
+#### [NEW] [app/studio/golive/page.tsx](file:///C:/GoLive/app/studio/golive/page.tsx)
+- Form to set stream title and category.
+- "Start Stream" button (Insert `videos` record with `is_live=true`).
+- "End Stream" button (Update `videos` record to `is_live=false`).
+
+#### [NEW] [app/live/[id]/page.tsx](file:///C:/GoLive/app/live/[id]/page.tsx)
+- Watch page optimized for live content.
+- Video Player: Simulates live stream (e.g., repeating high-quality video).
+- Chat: Real-time chat on the right side.
+
+#### [MODIFY] [components/Sidebar.tsx](file:///C:/GoLive/components/Sidebar.tsx)
+- Fetch real `videos` where `is_live=true`.
+- Display live channels with red badge.
+
+## Verification
+- **Go Live**: User A goes to `/studio/golive`, starts stream.
+- **Discovery**: User B sees User A in Sidebar "Live Channels".
+- **Watch**: User B clicks, goes to `/live/[id]`. Sees video and chat.
+- **Chat**: User A and User B can chat in real-time.

@@ -1,0 +1,10 @@
+# Exclude brain artifacts to speed up Vercel deployment
+brain/
+*.webp
+*.png
+*.jpg
+scripts/
+tests/
+node_modules/
+.next/
+.vercel/

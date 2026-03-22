@@ -1,0 +1,43 @@
+# Phase 7: Creator Tools & App Polish
+
+This phase focuses on empowering creators with video editing tools and improving the application's mobile experience and reliability.
+
+## Proposed Changes
+
+### [Component] Creator Studio
+We will add a dedicated video editing interface to allow creators to manage their content metadata.
+
+#### [NEW] [EditVideoClient.tsx](file:///C:/GOLive/app/studio/video/[id]/EditVideoClient.tsx)
+A client component containing the form for editing video metadata (Title, Description, Visibility, etc.).
+
+#### [NEW] [page.tsx](file:///C:/GOLive/app/studio/video/[id]/page.tsx)
+The page wrapper that fetches the video data and renders the `EditVideoClient`.
+
+#### [MODIFY] [DashboardClient.tsx](file:///C:/GOLive/app/studio/dashboard/DashboardClient.tsx)
+Update the active video list to link the "Edit" button to the new edit page.
+
+---
+
+### [Component] Progressive Web App (PWA)
+We will increase the application's "app-like" behavior on mobile devices.
+
+#### [NEW] [sw.js](file:///C:/GOLive/public/sw.js)
+A service worker implementation for basic asset caching and offline resilience.
+
+#### [MODIFY] [layout.tsx](file:///C:/GOLive/app/layout.tsx)
+Register the service worker and ensure all mobile-related meta tags are correctly configured.
+
+---
+
+### [Component] Global Refinements
+
+#### [MODIFY] [Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx)
+Display the "Verified" badge and "Channel Name" in the user dropdown menu.
+
+## Verification Plan
+
+### Manual Verification
+- Navigate to the Studio Dashboard and click "Edit" on a video.
+- Change the title and description, save, and verify updates on the watch page.
+- Test the application on a mobile browser to ensure it prompts for installation (PWA) and shows the corrected manifest details.
+- Verify the "Verified" badge appears in the Navbar when logged in as a premium/verified user.

@@ -1,0 +1,23 @@
+# Task: Native Mobile Processing Layers & Format Support
+
+- [x] VC Showcase Readiness & Debugging <!-- id: 15 -->
+    - [x] Debug 'not connected' upload error <!-- id: 16 -->
+    - [x] Verify Supabase Storage bucket configurations and RLS policies <!-- id: 17 -->
+    - [x] Test and fix Subscription system functionality <!-- id: 18 -->
+    - [x] Test and fix Like/Comment system functionality <!-- id: 19 -->
+    - [ ] Perform end-to-end "Clean Slate" test (Register -> Upload -> Like -> Sub) <!-- id: 20 -->
+- [/] Native Mobile Processing Layers & Format Support <!-- id: 0 -->
+    - [/] Identify best libraries for MOV/HEVC processing in Next.js environment <!-- id: 1 -->
+    - [ ] Design the transcoding architecture (Serverless vs External Service) <!-- id: 2 -->
+    - [ ] Draft implementation plan <!-- id: 3 -->
+- [ ] Backend Implementation <!-- id: 4 -->
+    - [ ] Install necessary dependencies (ffmpeg.wasm or similar) <!-- id: 5 -->
+    - [ ] Create processing API route or Edge function <!-- id: 6 -->
+    - [ ] Implement format detection and optimization logic <!-- id: 7 -->
+- [ ] Frontend Integration <!-- id: 8 -->
+    - [ ] Update Upload component to handle mobile selection reliably <!-- id: 9 -->
+    - [ ] Add progress tracking for the processing stage <!-- id: 10 -->
+- [ ] Verification & Testing <!-- id: 11 -->
+    - [ ] Test with native .MOV and HEVC files <!-- id: 12 -->
+    - [ ] Verify cross-browser and cross-device playback <!-- id: 13 -->
+    - [ ] Finalize walkthrough <!-- id: 14 -->

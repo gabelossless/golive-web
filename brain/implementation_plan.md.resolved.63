@@ -1,0 +1,41 @@
+# playback UI & YouTube Parity Optimization
+
+Achieving professional parity with YouTube's playback engine by implementing adaptive containers, intelligent metadata-driven scaling, and a refined Ambient Mode (Halo Engine V2).
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Container Behavior**: I am removing the hardcoded `aspect-video` (16:9) constraint. The player will now detect video dimensions and adapt its shape (e.g., slimming down for vertical videos on the watch page), eliminating the "massive black bars" issue.
+>
+> **Shorts Fitting**: I will ensure that if a horizontal video enters the Shorts feed, it is NOT cropped. Instead, it will be centered with a blurred background glow, matching YouTube's professional standard.
+
+## Proposed Changes
+
+### Video Component
+#### [MODIFY] [VideoPlayer.tsx](file:///C:/GOLive/components/VideoPlayer.tsx)
+- **Automatic AR Detection**: Implement `onLoadedMetadata` to capture `videoWidth` and `videoHeight`.
+- **Dynamic Container**: Update the wrapping `div` to use dynamic aspect ratio styles based on detected dimensions.
+- **Ambient Mode V2**: 
+    - Scale the background canvas to match the detected orientation.
+    - Increase blur and saturation for a more premium "SaaS" feel.
+    - Ensure `object-fit: contain` is used consistently within the container to prevent stretching.
+
+### Watch Feature
+#### [MODIFY] [WatchClient.tsx](file:///C:/GOLive/app/watch/[id]/WatchClient.tsx)
+- Optimize the main layout grid to handle slimmer vertical players without breaking the sidebar or comment sections.
+- Ensure the player container has a maximum height constraint (e.g., `80vh`) to prevent vertical videos from overflowing the viewport.
+
+### Shorts Feature
+#### [MODIFY] [ShortsClient.tsx](file:///C:/GOLive/app/shorts/ShortsClient.tsx) (or equivalent)
+- Update fitting logic: If a video is horizontal (16:9), display it centered in the 9:16 container with "Ambient Blur" on the top/bottom instead of cropping.
+
+## Verification Plan
+
+### Automated/Subagent Tests
+- **Horizontal Test**: Verify 16:9 video fills container without bars.
+- **Vertical Test**: Verify 9:16 video on watch page slims the container (no massive black bars).
+- **Shorts Test**: Verify /shorts feed maintains consistent vertical sizing and doesn't crop wide videos.
+
+### Manual Verification
+- Verify the "Ambient Mode" glow color matches the video edges in real-time.
+- Test "Theater Mode" transition and ensure it respects the video's natural aspect ratio.

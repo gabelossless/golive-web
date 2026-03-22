@@ -1,0 +1,113 @@
+# Phase 32: Multi-Chain Production Payments
+
+Goal: Harden the prototype into a production-grade, non-custodial, multi-chain payment system with real wallet addresses and on-chain smart contracts for 75/25 splitting. Ensure all UI buttons are functional.
+
+---
+
+## ⚠️ Wallet Security Model: NOT Hardcoded
+
+> [!CAUTION]
+> **NEVER hardcode production wallet addresses in frontend source code.** This approach is a major security risk because:
+> - The entire source code is public once deployed (Next.js client bundles are readable)
+> - Attackers can scan open-source repos for addresses and target them
+> - You cannot update hardcoded values without a full redeploy (which is a huge operational risk)
+
+### Recommended Approach: Environment Variables + Admin API
+- **Production Wallets** → Stored as `NEXT_PUBLIC_PLATFORM_WALLET_*` environment variables in Vercel, NOT in source code
+- **Updatability** → A restricted admin API (`/api/admin/update-wallets`) allows updating wallets via Supabase, with a 24h timelock confirmation to prevent a single-point compromise
+- **Smart Contracts** → Contracts use an `owner()` pattern and `transferOwnership()`, requiring a 2-of-3 multisig to change the payout address
+
+---
+
+## Platform Wallet Configuration (Production)
+
+All addresses below will be configured as environment variables in Vercel **and the [.env.local](file:///C:/GOLive/.env.local)** file. They will NOT appear in any client-side [.ts](file:///C:/GOLive/next-env.d.ts) file directly.
+
+| Network | Address |
+|---|---|
+| **Solana** | `DDztsJc2RmC2m2DvKFoB3ActexVkdzHZqYdMd3UXY6ft` |
+| **Base** | `0x5b9C3D6e92F4e6A7fD03cBC1f60da3De002BC1a8` |
+| **Bitcoin** | `bc1qs0jsf7lfqgp7mg3c32cf67ahzx8r9xu2hv7gnl` (Display only, no direct smart contract) |
+| **Monad (Mainnet)** | `0x5b9C3D6e92F4e6A7fD03cBC1f60da3De002BC1a8` (same as Base, EVM compatible) |
+
+---
+
+## Proposed Changes
+
+---
+
+### 1. Environment & Security Layer
+
+#### [MODIFY] [.env.local](file:///C:/GOLive/.env.local)
+- Add `NEXT_PUBLIC_PLATFORM_WALLET_EVM`, `NEXT_PUBLIC_PLATFORM_WALLET_SOLANA`, `NEXT_PUBLIC_PLATFORM_WALLET_BTC`
+- These are read at build time and injected into the client bundle, but the source is not committed to GitHub
+
+#### [MODIFY] [constants.ts](file:///C:/GOLive/lib/constants.ts)
+- Remove all hardcoded placeholder addresses
+- Pull platform wallets from `process.env.NEXT_PUBLIC_*` with a safe fallback to throw an error if not set
+
+---
+
+### 2. Smart Contracts
+
+#### [NEW] `contracts/vibestream-splitter/` — Base & Monad (Solidity)
+A lightweight, non-upgradeable Splitter contract deployed on Base Sepolia (test) and Base Mainnet. Key properties:
+- Accepts ETH or USDC
+- Atomically splits 75% → creator, 25% → platform in a single transaction
+- `owner` is the platform multisig wallet
+- `updateFee()` requires `owner`, preventing unauthorized changes
+
+#### [NEW] `contracts/anchor/vibestream-splitter/` — Solana (Rust/Anchor)
+A Solana program that accepts SOL or USDC (SPL) and atomically distributes via CPI.
+- Single transaction with multiple transfer instructions (already atomic by design)
+- Program authority = platform wallet (`DDzts...`)
+
+---
+
+### 3. Frontend Updates
+
+#### [MODIFY] [TipButton.tsx](file:///C:/GOLive/components/TipButton.tsx)
+- Use the deployed contract address for Base instead of sequential transfers
+- Add Bitcoin display-only option (shows QR code + address for manual payment)
+- Fix all button accessibility (add `aria-label`, `title`)
+- Add wallet detection UX: Show "Install MetaMask" if no wallet found
+- Fix amount presets for Native vs USDC (ETH/SOL have very different values vs USDC $1/$5/$20)
+
+#### [MODIFY] [constants.ts](file:///C:/GOLive/lib/constants.ts)
+- Set real wallet addresses from env vars
+
+---
+
+### 4. Database Migration
+
+#### [NEW] [scripts/add-solana-wallet.sql](file:///C:/GOLive/scripts/add-solana-wallet.sql)
+```sql
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS solana_wallet_address text;
+```
+This migration is ready. User must run in Supabase SQL editor.
+
+---
+
+### 5. Button Reliability Audit
+
+All buttons in the tip flow will be reviewed and fixed:
+- ✅ "Hype Creator" button opens modal
+- ✅ Chain selector (Base, Solana) properly toggles
+- ✅ Asset selector (Native, USDC) properly toggles
+- 🔧 Amount presets show correct denominations (ETH for Base, SOL for Solana, USDC for stablecoin)
+- 🔧 "Confirm Hype" button disabled when no amount entered
+- 🔧 Close (X) button accessible with `aria-label`
+- 🔧 Bitcoin option added as "display-only" with address copy + QR
+
+---
+
+## Verification Plan
+
+### Automated (Code Review)
+- Confirm no wallet addresses in source code
+- Confirm env vars used throughout
+
+### Manual (On-Chain)
+1. **Base Sepolia**: Deploy Splitter → send 0.001 ETH → verify 75/25 split on block explorer
+2. **Solana Devnet**: Send 0.01 SOL → verify atomic split transaction on Solana Explorer
+3. **USDC**: Test token transfer on both chains (Testnet)

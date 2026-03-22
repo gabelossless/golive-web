@@ -1,0 +1,42 @@
+# VibeStream Phase 39 & 41: Strategic Execution Plan ($1500 Budget)
+
+This plan prioritizes **legal compliance** (non-custodial flows) and **cost-efficiency** ($1500 total budget) for the next stage of VibeStream.
+
+---
+
+## 💎 Phase 39: The Creator Liquidity & Premium Pipeline
+*Allocated Budget: ~$700 (Infrastructure & API Fees)*
+
+### 1. Non-Custodial Automated Payouts
+- **Legal Strategy**: Use direct smart contract splitters (Solana/Base). VibeStream never touches or "holds" creator funds. Payouts are triggered by successful `tx_hash` verification in the database.
+- **Implementation**:
+    - Update `profiles` to include `solana_payout_address` and `evm_payout_address`.
+    - Build a serverless "Sweep" job that calculates earnings and initiates non-custodial transfers from the platform fee wallet.
+
+### 2. Livepeer Premium Transcoding
+- **Cost Strategy**: Low-tier Pay-as-you-go. Only **Premium Creators** get Livepeer HLS transcoding (adaptive bitrate). Free users stay on standard R2/Supabase storage.
+- **Implementation**:
+    - Integrate Livepeer SDK in the `upload` flow.
+    - Store Livepeer `playbackId` in the `videos` table.
+
+---
+
+## 🔥 Phase 41: Viral Social Dynamics & Hype Streaks
+*Allocated Budget: ~$800 (Incentive Pool & Analytics)*
+
+### 1. Vibe Points (Engagement Engine)
+- **Legal Strategy**: Use **Off-Chain Points** (not ERC-20 tokens) to avoid securities/MTL regulations. Points are "Virtual Credits" for platform features.
+- **Implementation**:
+    - Create `user_vibe_points` table.
+    - Logic: +10 pts for Hype, +50 pts for daily streak, +100 for verified referral.
+
+### 2. Viral Leaderboards & Streaks
+- **UI**: High-fidelity "Global Vibe" leaderboard on the Discover page.
+- **Logic**: Daily cron job to calculate "Hype Streaks" based on `vibe_events`.
+
+---
+
+## 📅 Immediate Execution (Phase 39)
+1. **Database**: Add payout addresses and Livepeer metadata columns.
+2. **API**: Implement `api/studio/payouts` for revenue tracking.
+3. **Integration**: Setup Livepeer API keys and upload plumbing.

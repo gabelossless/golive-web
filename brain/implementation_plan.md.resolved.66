@@ -1,0 +1,45 @@
+
+# Platform Audit & Growth Intelligence
+
+Ensuring a clean, production-ready codebase and empowering admins with "Growth Engine" tools to simulate and manage platform activity.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Admin Documentation**: I will create a `ADMIN_PROTCOL.md` in the project root. This file will be marked for **local-only** use and will contain secrets/URLs needed for admin access.
+>
+> **Growth Engine**: The "Slow Drip" feature will use a cron-like trigger or a background queue (simulated via RPC) to increment metrics over time.
+>
+> **Dummy Accounts**: These accounts will have generated profiles (DiceBear/Faker-style) but will exist in the `profiles` table with a special `is_dummy` flag.
+
+## Proposed Changes
+
+### Data & Cleanup
+#### [MODIFY] Multiple Files
+- **Mock Data Purge**: Audit [Sidebar.tsx](file:///C:/GOLive/components/Sidebar.tsx), `Trending`, [CategoryBar](file:///C:/GOLive/components/CategoryBar.tsx#24-51), and [Dashboard](file:///C:/GOLive/app/admin/dashboard/page.tsx#14-123) for any remaining hardcoded arrays.
+
+### Admin Panel Expansion
+#### [NEW] [admin/growth/page.tsx](file:///C:/GOLive/app/(admin)/growth/page.tsx)
+- **Slow Drip Controller**: UI to select a video and set a "Target Velocity" (e.g., 50 views/hr).
+- **Metric Booster**: Direct controls for "Simulating Viral Success" by targeting specifically chosen videos.
+
+#### [NEW] [admin/dummies/page.tsx](file:///C:/GOLive/app/(admin)/dummies/page.tsx)
+- **Account Generator**: Create 10-50 realistic users with one click.
+- **Bulk Action Manager**: Have dummy accounts automatically "Like" or "Follow" target creators.
+
+#### [NEW] [engagement-growth-rpcs.sql](file:///C:/GOLive/scripts/engagement-growth-rpcs.sql)
+- **Growth Logic**: SQL functions to handle metric increments on a scheduled or triggered basis.
+
+### Security & Docs
+#### [NEW] [ADMIN_PROTOCOL.md](file:///C:/GOLive/ADMIN_PROTOCOL.md)
+- **Private Access Guide**: Detailed instructions on middleware bypass, role assignment, and panel navigation.
+
+## Verification Plan
+
+### Automated/Subagent Tests
+- **Purge Audit**: Search codebase for strings like `const mockData` or `[...] // Mock`.
+- **Growth Test**: Trigger a "Slow Drip" via admin panel and verify metrics increment after the specified interval.
+- **Dummy Test**: Generate accounts and verify they appear in the `profiles` table with the correct flags.
+
+### Manual Verification
+- Verify the `ADMIN_PROTOCOL.md` is NOT committed to public repos (if applicable) and contains correct login flow instructions.

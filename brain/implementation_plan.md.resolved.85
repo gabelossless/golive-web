@@ -1,0 +1,42 @@
+# Phase 35: Premium UI/UX Overhaul
+
+This phase focuses on elevating the VibeStream aesthetic from "functional" to "premium/state-of-the-art" by refining micro-details, enhancing depth with glassmorphism, and optimizing layouts.
+
+## Proposed Changes
+
+### [Design System & Globals]
+#### [MODIFY] [globals.css](file:///C:/GOLive/app/globals.css)
+- [NEW] Introduce refined utility classes for:
+    - **Premium Borders**: `.border-premium` (subtle gradient/dual-tone).
+    - **Advanced Glass**: `.glass-deep` (higher blur, multi-layered background).
+    - **Bento Shadows**: Soft, expansive shadows for depth.
+    - **Refined Typography**: Tracking and leading adjustments for "Outfit" font.
+
+### [Core Layout & Components]
+#### [MODIFY] [Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx)
+- Implement a floating glass effect with a subtle "active" glow.
+- Refine the search bar with internal depth and a better focus state.
+#### [MODIFY] [Sidebar.tsx](file:///C:/GOLive/components/Sidebar.tsx)
+- Transition to a more "floating" aesthetic with active-item glows.
+- Soften the divider lines and improve icon alignment.
+
+### [Core Pages Overhaul]
+#### [MODIFY] [Home Feed (page.tsx)](file:///C:/GOLive/app/page.tsx)
+- Implement a **Bento Grid** layout for featured content/shorts.
+- Enhance `VideoCard` with hover-scale effects and elegant info-overlays.
+#### [MODIFY] [Watch Page (WatchClient.tsx)](file:///C:/GOLive/app/watch/[id]/WatchClient.tsx)
+- Upgrade the **Halo Engine** for smoother ambient glows.
+- Refine the action bar (Hype, Tip, Share) with tonal button designs.
+#### [MODIFY] [Creator Studio (DashboardClient.tsx)](file:///C:/GOLive/app/studio/dashboard/DashboardClient.tsx)
+- Redesign stats cards into a high-fidelity "Intelligence Bento".
+- Improve table legibility with row-hover highlights and refined vertical spacing.
+
+## Verification Plan
+
+### Automated Tests
+- Production build check (`npm run build`) to ensure CSS/Types stability.
+- Accessibility audit for contrast and readability in the new "deep glass" styles.
+
+### Manual Verification
+- Visual "Vibe Check" across mobile (390px) and desktop (1440px).
+- Verify smoothness of all new micro-animations and hover transitions.

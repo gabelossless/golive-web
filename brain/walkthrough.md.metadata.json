@@ -1,0 +1,6 @@
+{
+  "artifactType": "ARTIFACT_TYPE_WALKTHROUGH",
+  "summary": "Walkthrough update for the Multipart Upload Hotfix and the start of Phase 43 (Decentralized CDN). Highlights the resolution of a critical \"o.length\" error and the introduction of decentralized routing utilities.",
+  "updatedAt": "2026-03-21T18:16:23.905776300Z",
+  "version": "103"
+}

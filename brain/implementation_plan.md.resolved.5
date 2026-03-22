@@ -1,0 +1,29 @@
+# Phase 5 Implementation Plan — Shorts & Notifications
+
+## Goals
+1.  **Shorts Experience**: Create an addictive, immersive vertical video player (TikTok/Reels style) to compete with YouTube Shorts.
+2.  **Interactive Notifications**: Make the Bell icon functional with a professional dropdown for alerts.
+3.  **Navigation Fixes**: Ensure Mobile Nav points to the new Shorts experience.
+
+## Proposed Changes
+
+### 1. Immersive Shorts Player ([app/shorts/page.tsx](file:///C:/GoLive/app/shorts/page.tsx))
+-   **Layout**: Full-screen (`100vh`), snap-scrolling container.
+-   **Video Component**: Vertical video holder with overlay controls.
+    -   **Right Sidebar**: Like, Dislike, Comment, Share icons (floating on video).
+    -   **Bottom Overlay**: Author avatar, name, subscribe button, and rolling caption.
+-   **Interaction**: Keyboard arrow keys to scroll (desktop), Swipe (mobile partial support via CSS snap).
+
+### 2. Notification System ([components/Notifications.tsx](file:///C:/GoLive/components/Notifications.tsx))
+-   **UI**: A dropdown menu triggered by the Bell icon in [Navbar](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/components/Navbar.tsx#11-85).
+-   **Content**: Mock alerts for "New Upload from X", "Someone liked your comment", "Live Now".
+-   **Read State**: Visual distinction between read/unread items.
+
+### 3. Route & Nav Updates
+-   **Mobile Nav**: Update "Shorts" link to point to `/shorts` instead of `/trending`.
+-   **Sidebar**: Add "Shorts" link if missing or distinct from Trending.
+
+## Verification
+-   Go to `/shorts` and verifies it snap-scrolls one video at a time.
+-   Click the Bell icon and see the dropdown appear/disappear.
+-   Verify responsive design (Shorts look good on mobile vs desktop centered).

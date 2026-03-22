@@ -1,0 +1,62 @@
+# Discovery & Personalization Engine Upgrade
+
+Enhancing the VibeStream ecosystem with intelligent discovery tools and premium UI refinements for creators and viewers.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Shorts Detection**: I will implement automatic detection based on **aspect ratio (vertical)** and **duration (< 60s)**. This ensures that content uploaded via the standard flow is correctly categorized without manual input.
+>
+> **Tag Intelligence**: I will introduce a curated list of the **Top 50 Trending Tags** (e.g., #Gaming, #AIVibes, #Shorts, #TechReview). These will appear as autocomplete suggestions during upload to improve SEO and recommendation accuracy.
+>
+> **Channel Polish**: I will upgrade the Profile (Channel) UI to include "Bento-style" stats and more interactive banner elements.
+>
+> **Shorts Cinematic Parity**: I will refine the `/shorts` player to match YouTube's high-fidelity layout, including the right-side "tonal" action bar, integrated subscribe button, and high-quality ambient background.
+
+## Proposed Changes
+
+### Discovery Engine
+#### [NEW] [lib/tags.ts](file:///C:/GOLive/lib/tags.ts)
+- **Tag Library**: Define the canonical Top 50 tags for VibeStream.
+
+#### [MODIFY] [UploadPage](file:///C:/GOLive/app/upload/page.tsx)
+- **Shorts Logic**: Auto-set `is_short` flag in database based on metadata (`height > width` and `duration <= 60`).
+- **Autocomplete UI**: Implement a suggestions dropdown for the tag input field.
+
+### Creator Experience
+#### [MODIFY] [SettingsPage](file:///C:/GOLive/app/studio/settings/page.tsx)
+- **UI Refinement**: Apply glossy, high-fidelity styles to configuration cards.
+- **New Meta**: Add fields for "Primary Channel Category" to help the recommendation engine.
+
+#### [MODIFY] [Profile/Channel UI](file:///C:/GOLive/app/%5Busername%5D/page.tsx)
+- **Visual Polish**: Refine the banner/avatar layout for a more "Expensive" aesthetic.
+- **Shorts Grid**: Ensure shorts are displayed in a vertical 9:16 grid on the channel page.
+
+### [NEW] Shorts Parity (Phase 20)
+#### [MODIFY] [ShortsPage](file:///C:/GOLive/app/shorts/page.tsx)
+- **Action Bar**: Redesign with tonal circular buttons and labels directly beneath.
+- **Creator Overlay**: Integrate "Subscribe" button next to handle.
+- **Cinematic Ambient**: Refine the background blur and dimming for better contrast.
+- **Interaction Logic**: Implement Heart (Like) animation and share sheet.
+
+### [NEW] Mobile Playback Excellence (Phase 21)
+#### [MODIFY] [WatchClient](file:///C:/GOLive/app/watch/[id]/WatchClient.tsx)
+- **Touch Targets**: Increase padding/margin for action buttons on mobile screens.
+- **Ambient Optimization**: Ensure Halo Engine runs smoothly on mobile viewports.
+
+#### [MODIFY] [Shorts Classification](file:///C:/GOLive/app/upload/page.tsx)
+- **Logic Sync**: Fix the `is_short` auto-flagging to ensure vertical videos populate the shorts feed.
+
+#### [MODIFY] [PWA Manifest](file:///C:/GOLive/public/manifest.json)
+- **Asset Fix**: Supply missing 192x192 and 512x512 icons for better PWA support.
+
+## Verification Plan
+
+### Automated/Subagent Tests
+- **Shorts Test**: Upload a vertical 30s video and verify it appears in the `/shorts` feed and the database `is_short` flag is TRUE.
+- **Tag Test**: Type "Ga" in the upload tag field and verify "Gaming" appears as a suggestion.
+- **Shorts UI Review**: Verify action bar and creator overlay match YouTube layout on mobile/desktop.
+- **Mobile Watch Test**: Verify action buttons on the watch page are easily clickable on a 390px viewport.
+
+### Manual Verification
+- Verify that "Home" and "Trending" correctly separate Shorts from long-form content based on the new flags.

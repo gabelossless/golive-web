@@ -1,0 +1,18 @@
+# Phase 43.4: Diagnostic Agent Optimizations
+
+This implementation plan covers the immediate execution of the technical debt and optimization recommendations surfaced in the recent 20-node agent diagnostic report.
+
+## Proposed Changes
+
+### 1. Global Edge Caching (ISR)
+#### [MODIFY] [Help Center](file:///C:/GOLive/app/help/page.tsx)
+-   **Static Revalidation**: Because the Help Center rarely changes data dynamically throughout the day, we will inject `export const revalidate = 3600;` at the top level. This instructs Vercel's Global CDN to cache the rendered HTML at network edge nodes, completely bypassing the Supabase/Node servers for 99% of requests until the 1-hour invalidation window.
+
+### 2. Next.js Image Optimization
+#### [MODIFY] [Global Search](file:///C:/GOLive/app/search/page.tsx)
+-   **Avatar Compression**: Replace the standard HTML `<img />` tag used for rendering creator profile avatars with the native `next/image` component.
+-   **Size Constriction**: Apply strict `width={64}` and `height={64}` bounds. This allows the Vercel Image Optimization API to downscale and serve 4KB webp versions of user avatars rather than raw, potentially multi-megabyte source bin files, drastically improving the FCP (First Contentful Paint) payload speed upon search completion.
+
+## Verification Plan
+-   Check the build logs to ensure [app/help/page.tsx](file:///C:/GOLive/app/help/page.tsx) maps correctly to `ISR` (Incremental Static Regeneration).
+-   Examine the DOM on the `/search` page to verify the Next.js optimization `_next/image` URLs wrap the creator avatars.

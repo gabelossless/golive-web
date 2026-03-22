@@ -1,0 +1,50 @@
+# Walkthrough — GoLive UI Redesign 🎮
+
+## Root Cause Fixed
+
+The entire site was broken because [globals.css](file:///C:/GoLive/app/globals.css) was missing two critical Tailwind v4 directives:
+
+```diff
++@import "tailwindcss";
++
++@theme {
++  --color-background: #0e0e10;
++  --color-surface: #18181b;
++  --color-primary: #9147ff;
++  /* ... 15+ tokens */
++}
+```
+
+Without these, **none** of the Tailwind utility classes (`flex`, `bg-primary`, `rounded-xl`, etc.) were being generated.
+
+## What Changed
+
+| File | Changes |
+|------|---------|
+| [globals.css](file:///C:/GoLive/app/globals.css) | Added `@import`, `@theme`, redesigned color palette (Twitch-dark), custom components |
+| [Navbar.tsx](file:///C:/GoLive/components/Navbar.tsx) | YouTube-style centered search with button, circular action buttons |
+| [Sidebar.tsx](file:///C:/GoLive/components/Sidebar.tsx) | Twitch-style live channels with viewer counts, active nav indicator |
+| [Layout.tsx](file:///C:/GoLive/components/Layout.tsx) | Proper sidebar offset with responsive mobile override |
+| [VideoCard.tsx](file:///C:/GoLive/components/VideoCard.tsx) | LIVE badge support, 16:9 aspect-ratio, hover overlay |
+| [page.tsx](file:///C:/GoLive/app/page.tsx) | Interactive category chips, 12 videos incl. live stream |
+| [watch page](file:///C:/GoLive/app/watch/[id]/page.tsx) | YouTube action buttons, Twitch chat with 9 messages |
+| [login](file:///C:/GoLive/app/login/page.tsx) / [register](file:///C:/GoLive/app/register/page.tsx) | Cleaned up with new tokens |
+| [upload](file:///C:/GoLive/app/upload/page.tsx) | Simplified drop zone, cleaner form |
+| [profile](file:///C:/GoLive/app/profile/[username]/page.tsx) | YouTube-style tabs, 4 video cards, circular avatar |
+
+## Design Palette
+
+- **Background**: `#0e0e10` (Twitch dark)
+- **Surface**: `#18181b` (cards, inputs)
+- **Primary**: `#9147ff` (Twitch purple)
+- **Accent**: `#00e6cb` (teal highlights)
+- **Border**: `#2f2f35` (subtle dividers)
+
+## How to Verify
+
+Your dev server at `http://localhost:3001` should auto-reload. Check:
+1. **Home** — Video grid with category chips
+2. **Watch** (`/watch/1`) — Player + chat sidebar
+3. **Profile** (`/profile/FragMaster`) — Banner + tabs + videos
+4. **Login** / **Register** — Auth forms
+5. **Upload** — Drag-and-drop interface

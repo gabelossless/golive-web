@@ -1,0 +1,43 @@
+# Phase 38: Stress Testing, Dashboard Refinement & Ecosystem Seeding
+
+## Problem Statement
+The app requires a realistic ecosystem test to ensure production readiness. This involves:
+1. **Removing Mock Data**: The Creator Dashboard ([app/studio/page.tsx](file:///C:/GOLive/app/studio/page.tsx)) still relies on hardcoded arrays and "Cinematic Obsidian" styles instead of real Supabase data and the new YouTube x Twitch design.
+2. **Ecosystem Seeding**: The app needs real-looking users (10 male, 20 female, mostly Gen Z/Millennial ages 18-40) from the US & Canada, with candid human profile pictures and realistic bios to make the platform feel alive.
+3. **Stress Testing**: Every page and core feature must be hammered by simulated users to validate Vercel/Supabase stability.
+
+## User Action Required
+
+> [!IMPORTANT]
+> The Supabase **Service Role Key** is missing from our environment variables. I will need you to provide the `SUPABASE_SERVICE_ROLE_KEY` so I can securely bulk-create 30 real auth accounts (bypassing email verification) and seed their profiles.
+
+---
+
+## Proposed Changes
+
+### 1. Dashboard Refinement & Real Data Integration
+#### [MODIFY] [app/studio/page.tsx](file:///C:/GOLive/app/studio/page.tsx)
+- **UI Update**: Tear out the old "Cyberpunk/Obsidian" design and replace it with the new clean YouTube/Twitch Dashboard layout.
+- **Data Fetching**: Remove the hardcoded `[40, 60, 45...]` graphs and `1.2M` views.
+- **Real Analytics**: Fetch the authenticated user's actual video stats from Supabase (Total Views, Total Videos, Recent Uploads) and compute real metrics.
+
+### 2. Ecosystem Seeding (30 Realistic Users)
+#### [NEW] `scripts/seed_realistic_users.ts`
+- Create a script that generates 30 high-quality user profiles (10 Male, 20 Female, US/CAD demographics, ages 18-40, skewed 19-25).
+- **Names/Bios**: Generate authentic, casual gamer/vlogger usernames (e.g., "SarahPlays", "josh_reacts99") and relatable bios ("21 • Toronto • Variety streamer & coffee addict").
+- **Profile Pics**: Use high-quality candid portrait URLs from Unsplash (or `randomuser.me`'s curated dataset) that look like real, non-stock humans.
+- **Auth Creation**: Use the Supabase Admin API (`supabase.auth.admin.createUser`) to auto-confirm their emails and bypass the verification flow.
+
+### 3. Stress Testing Phase
+- **Simulation Script**: Write a Node.js scraper/API stress tester that logs in, fetches the homepage, searches for content, clicks videos, and posts comments at high concurrency.
+- **Verification**: Ensure latency remains under 200ms and no 500/403 errors surface during the simulation.
+
+## Verification Plan
+
+### Automated Steps
+- Admin SDK successfully inserts 30 rows into Auth and `profiles` tables.
+- Node.js stress testing script outputs a success matrix (0 failed API calls out of N requests).
+
+### Manual Verification
+- You log in, navigate to the **Studio**, and confirm the data matches your actual uploads.
+- You browse the platform and see the new realistic users interacting/existing.

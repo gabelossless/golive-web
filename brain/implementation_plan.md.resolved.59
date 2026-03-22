@@ -1,0 +1,33 @@
+# Phase 12: Cinematic Immersion & Ambient Glow
+
+Creating a perfectly seamless transition between video content and the platform UI, inspired by YouTube's high-fidelity "Ambient Mode."
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Ambient Mode Logic**: We will use a low-resolution canvas behind the video player to sample colors in real-time. This can be toggled via the settings menu.
+
+## Proposed Changes
+
+### UI: Ambient Halo Engine
+#### [MODIFY] [VideoPlayer.tsx](file:///C:/GOLive/components/VideoPlayer.tsx)
+- **Canvas Backdrop**: Add a hidden canvas that samples video frames at 2 FPS (for efficiency).
+- **CSS Blur Overlay**: Apply `backdrop-filter` and `blur(100px)` to the sampled image to create a soft, glowing halo.
+- **Seamless Container**: Remove harsh borders and ensure the video player feels "embedded" in the glowing atmosphere.
+
+---
+
+### UX: Modern Playback Controls
+#### [MODIFY] [VideoPlayer.tsx](file:///C:/GOLive/components/VideoPlayer.tsx)
+- **Settings Toggle**: Add an "Ambient Mode" toggle in the gear menu.
+- **Adaptive Gradient**: Ensure the control bar gradient doesn't clash with the ambient glow.
+
+## Verification Plan
+
+### Automated Verification
+- Check canvas sampling interval and performance impacts.
+
+### Manual Verification
+- Verify the "Glow" matches the dominant colors of the video.
+- Confirm "Theater Mode" + "Ambient Mode" creates a seamless IMAX-like experience.
+- Test toggle functionality in the settings menu.

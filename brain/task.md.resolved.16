@@ -1,0 +1,18 @@
+# Task: GoLive Development Checklist
+
+## Phase 1-3: Core, Discovery, Refinement (Completed)
+- [x] UI Redesign & Tailwind v4 Fix `[x]`
+- [x] Modern Sidebar & Discovery Pages `[x]`
+- [x] Search Bar, Comments, Channel Hub `[x]`
+
+## Phase 4: Mobile Experience & Core Pages (In Progress)
+- [ ] Mobile Navigation `[ ]`
+    - [ ] Create `BottomNav` component (Mobile only)
+    - [ ] Integrate into Layout (Hide Sidebar on Mobile)
+- [ ] Functional Library Pages `[ ]`
+    - [ ] Implement **History** Page (List view)
+    - [ ] Implement **Liked Videos** Page (Grid view)
+- [ ] User Settings `[ ]`
+    - [ ] Settings Layout (Sidebar + Content)
+    - [ ] Account & Appearance sections
+- [ ] Final Verification & Sync `[ ]`

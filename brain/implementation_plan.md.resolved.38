@@ -1,0 +1,45 @@
+# Implementation Plan: VibeStream Scaling & Creator Ecosystem
+
+Transforming VibeStream into a hyper-personalized creator platform built for discovery and monetization.
+
+## Proposed Changes
+
+### [Backend] Database Evolution
+
+We will expand the `profiles` table and introduce a `stats` layer for discovery.
+
+#### [MODIFY] `profiles` table
+- Add `banner_url` (TEXT): For custom channel branding.
+- Add `social_links` (JSONB): To store Instagram, Twitter, and personal websites.
+- Add `featured_video_id` (UUID): To showcase a specific video on the profile.
+- Add `is_monetized` (BOOLEAN): To enable digital gifting and subscriptions.
+
+#### [NEW] `video_reach_stats` table
+- Track views per day to enable "Trending Velocity" discovery.
+
+### [Frontend] Creator Personalization Suite
+
+#### [MODIFY] [StudioPage](file:///C:/GOLive/app/studio/page.tsx)
+- Implement backend save logic for Profile Picture, Banner, and Bio.
+- Add a new "Personalization" tab for Featured Video selection and Social Links.
+
+#### [MODIFY] [ProfilePage](file:///C:/GOLive/app/profile/[username]/page.tsx)
+- Render the custom banner.
+- Implement the "Featured Video" hero section.
+
+### [Algorithm] Discovery Engine
+
+#### [NEW] [trending-engine.ts](file:///C:/GOLive/lib/trending-engine.ts)
+- A logic layer that calculates trending videos based on recent view growth (velocity), not just total counts.
+- This ensures new creators can be discovered.
+
+## Verification Plan
+
+### Automated/Manual Tests
+- **Branding Test**: Upload a banner and avatar, then verify they appear correctly on the public profile.
+- **Velocity Test**: Boost a new video's views and verify it appears in the "Trending" section ahead of older, higher-view videos.
+- **Social Link Test**: Click through social icons on a creator's profile.
+
+### Budget Management ($1,000)
+- **Infrastructure**: Optimize R2 caching and Supabase indexes to keep costs under $50/mo.
+- **Growth**: Utilize the **Growth Momentum Engine** (bot interactions) to simulate initial traction without expensive ad spend.

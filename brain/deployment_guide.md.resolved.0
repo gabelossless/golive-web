@@ -1,0 +1,77 @@
+# GoLive Deployment Guide 🚀
+
+Congratulations on building **GoLive**! This guide will walk you through building your application for production and deploying it to the world.
+
+## 1. Prerequisites
+
+Ensure you have your **Supabase** credentials ready:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+## 2. Local Build & Test
+
+Before deploying, verify the production build locally.
+
+```bash
+# 1. Install dependencies (if you haven't)
+npm install
+
+# 2. Run the build command
+npm run build
+```
+
+> **Note**: If you see Type errors, they are safety checks. We have refactored the code to be strict, but if legacy code remains, you might need to fix it or (temporarily) ignore it in [next.config.ts](file:///C:/GoLive/next.config.ts) if you are in a rush.
+
+```bash
+# 3. Start the production server locally
+npm run start
+```
+Visit `http://localhost:3000`. The app should feel snappy (thanks to Server Components!).
+
+## 3. Deploying to Vercel (Recommended)
+
+Vercel is the creators of Next.js and offers the seamless deployment for this tech stack.
+
+1.  **Push to GitHub**:
+    - Commit your code: `git add . && git commit -m "Ready for launch"`
+    - Push to a new GitHub repository.
+
+2.  **Import to Vercel**:
+    - Go to [vercel.com](https://vercel.com) -> **Add New Project**.
+    - Select your GitHub repo.
+
+3.  **Environment Variables**:
+    - In the "Environment Variables" section on Vercel, add:
+        - `NEXT_PUBLIC_SUPABASE_URL` : (Your URL)
+        - `NEXT_PUBLIC_SUPABASE_ANON_KEY` : (Your Key)
+        - `NEXT_PUBLIC_ENABLE_COMMUNITY_SEEDING` : `true` (if you want the growth engine on)
+
+4.  **Deploy**:
+    - Click **Deploy**. Vercel will build your site.
+    - Once done, you will get a live URL (e.g., `golive-streaming.vercel.app`).
+
+## 4. Production Database Setup
+
+Ensure your Supabase project is production-ready.
+
+1.  **Run Migrations**:
+    - Go to Supabase SQL Editor.
+    - Ensure you have run all our setup scripts:
+        - [setup-supabase.sql](file:///C:/GoLive/setup-supabase.sql) (Core Schema)
+        - [setup-growth.sql](file:///C:/GoLive/setup-growth.sql) (Growth Engine)
+        - [setup-live-streaming.sql](file:///C:/GoLive/setup-live-streaming.sql) (Live Features)
+        - [setup-seeds.sql](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/setup-seeds.sql) (50 Seed Users)
+
+2.  **Storage Policies**:
+    - Check `Storage` -> `Policies` in Supabase.
+    - Ensure `videos`, `thumbnails`, and `avatars` buckets are "Public" (anyone can read) but only authenticated users can upload. (Our scripts cover this, but good to double-check).
+
+## 5. Post-Launch Checklist
+
+- [ ] **First Upload**: Create an account and upload a video to test the flow on the live site.
+- [ ] **Seed Growth**: If Seeding is enabled, wait 15 mins and check if your new video gets "organic" views.
+- [ ] **Live Stream**: Try "Go Live" feature. Since this is a simulation, verify the chat works in real-time.
+- [ ] **Share**: Send the link to friends!
+
+---
+**Enjoy your new platform!** 🔴

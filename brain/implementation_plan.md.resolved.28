@@ -1,0 +1,33 @@
+# Phase 43: New UI Integration & Backend Sync
+
+## Problem Statement
+The user has provided a new design in `C:\GoLive\new UI`. We need to swap the current UI for this new one while maintaining all backend functionality (Supabase, Auth, R2). Additionally, we need to fix the "Network Error" (newline in R2 bucket name) and refresh the Supabase schema.
+
+## Proposed Changes
+
+### [Backend] Configuration & Fixes
+#### [MODIFY] [.env.local](file:///C:/GOLive/.env.local)
+- Ensure all R2 variables are trimmed of any hidden newline characters (`%0D%0A`).
+
+#### [SQL] Supabase Schema Refresh
+- Run `NOTIFY pgrst, 'reload schema'` via API or notify user to do it in dashboard if needed.
+
+---
+
+### [UI] Migration
+#### [REPLACE] `app/*` and `components/*`
+- Systematically move logic from the existing `app` directory to the new structure.
+- Map existing backend hooks (`useAuth`, `supabase`) into the new components.
+- Ensure the "Cinematic Obsidian" theme elements requested earlier (minimalism, high-end typography) are preserved or enhanced by the new UI.
+
+---
+
+### [Verification] 3-Agent QA Force
+- **Agent Alpha**: Test Authentication (Signup/Login/Logout).
+- **Agent Beta**: Test Media pipeline (Upload -> R2 -> Database Insert).
+- **Agent Gamma**: Test Interaction (Watch page, Likes, Comments, Profile).
+
+## Verification Plan
+1. Local `npm run build` to check for type errors.
+2. Full browser simulation of the complete user lifecycle.
+3. Verify the R2 upload no longer contains `%0D%0A` in the URL.

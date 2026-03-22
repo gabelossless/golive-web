@@ -1,0 +1,30 @@
+# Phase 38: The Vibe Guard (Production Hardened)
+
+VibeStream's defensive architecture is now "Production-Hardened," featuring zero-downtime deployment patterns and industrial-grade security controls.
+
+## 🛡️ Production-Hardened Strategy
+
+### 1. Zero-Downtime Deployments
+- **Safe Replacement**: All SQL functions now use the `DROP FUNCTION IF EXISTS` pattern. This allows for changing return types (e.g., from `void` to `JSONB`) without breaking the migration or requiring manual database intervention.
+- **Signature Integrity**: Ensures that new Vibe Guard features (like shadow-buffering metadata) are deployed atomically without service interruption.
+
+### 2. Service-Role RLS Enforcement
+- **Audit Immutability**: The `vibe_events` audit log is now locked down. Only the **service_role** (the backend API) can insert events. 
+- **Anti-Spam**: This prevents client-side actors from polluting the behavioral signals or bypassing the Vibe Guard scoring logic by manually inserting logs.
+
+### 3. Vibe Guard: Pulse-Aware Defense
+- **Global Pulse Detection**: Automatically adjusts risk thresholds during trending spikes to ensure excited users aren't incorrectly shadow-buffered.
+- **System Whitelist**: The owner and verified partners (`is_system_verified`) bypass all throttles, ensuring "Push" deals and platform-native engagement are always verified.
+
+### 4. Secure Crypto Tipping
+- **`process_crypto_tip`**: A unified, fraud-aware entry point for crypto payments that integrates behavioral scoring with on-chain transaction tracking.
+
+## 🛠️ Deployment Instructions
+To activate the production-hardened Vibe Guard, run:
+👉 [phase-38-vibe-guard.sql](file:///C:/GOLive/scripts/phase-38-vibe-guard.sql)
+
+## Verified Components
+- [x] Zero-Downtime SQL Functions ([SQL](file:///C:/GOLive/scripts/phase-38-vibe-guard.sql))
+- [x] Service-Role Audit Logging
+- [x] Whitelisted Partnership Bypass
+- [x] Pulse-Aware Activity Thresholds

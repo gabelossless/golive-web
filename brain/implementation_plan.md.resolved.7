@@ -1,0 +1,28 @@
+# Phase 7 Implementation Plan — Supabase Integration
+
+## Goals
+1.  **Real Backend**: Connect the app to a live Supabase database.
+2.  **Authentication**: Allow users to actually Sign Up and Login.
+3.  **Data Persistence**: Replace mock data with real data from the database.
+4.  **Storage**: Enable actual video and image uploads.
+
+## Proposed Changes
+
+### 1. Supabase Setup
+-   **Credentials**: Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to `.env.local`.
+-   **Schema**: Execute [setup-supabase.sql](file:///C:/GoLive/setup-supabase.sql) to create tables and RLS policies.
+-   **Storage**: Create public buckets: `videos`, `thumbnails`, `avatars`.
+
+### 2. Authentication ([components/AuthProvider.tsx](file:///C:/GoLive/components/AuthProvider.tsx))
+-   **Provider**: Create a context to manage User state globally.
+-   **Login/Register**: Update existing pages to call `supabase.auth.signUp` / `signInWithPassword`.
+
+### 3. Data Integration
+-   **Home Page**: Replace `mockVideos` with `supabase.from('videos').select(...)`.
+-   **Watch Page**: Fetch video details, comments, and related videos dynamically.
+-   **Upload Page**: Upload file to Storage Bucket -> Get URL -> Insert row into `videos` table.
+
+## Verification
+-   Sign up a new user and see them in the specific Supabase Auth dashboard.
+-   Upload a video and see it appear on the Home page.
+-   Comment on a video and see it persist after refresh.

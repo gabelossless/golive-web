@@ -1,0 +1,37 @@
+# Phase 37: Hardened Production Analytics & Security
+
+Following a comprehensive security audit, VibeStream's analytics and engagement systems have been overhauled to meet industrial-grade production standards. This update moves the platform's trust boundaries from the client to a secure server-side perimeter.
+
+## 🛡️ Security Hardening (Audit Response)
+
+### 1. Eliminating Money Injection (Tipping)
+- **Identity Enforcement**: The `insert_tip` policy now strictly verifies `auth.uid() = fan_user_id`. It is no longer possible for a user to spoof tips on behalf of others.
+- **Precision Integrity**: Changed `amount_raw` from `TEXT` to `NUMERIC` with a `CHECK (amount_raw > 0)` constraint, preventing precision loss and "negative tip" exploits.
+
+### 2. View-Farming Protection
+- **Server-Side IP Detection**: The `track_video_view` RPC now detects the user's IP directly from the request headers (`x-real-ip`). We no longer trust client-side IP hashes.
+- **Enhanced Cooldown**: Increased the view cooldown to **12 hours** and integrated multi-factor deduplication (IP + User + Session).
+- **Rate Limiting**: Implemented a 2-second per-IP rate limit at the API layer to prevent mass-botting floods.
+
+### 3. Privilege Escalation Safeguards
+- **Search Path Isolation**: All `SECURITY DEFINER` functions now explicitly set `SET search_path = public` to prevent malicious search-path hijacking.
+- **Identity Verification**: The `toggle_like` function now automatically identifies the user via `auth.uid()`, removing the vulnerable `user_id` parameter.
+
+### 4. Admin Audit & Economic Safety
+- **Immutable Audit Log**: Created `admin_audit_log` to track every `admin_boost_video` action, including admin ID and metadata.
+- **Boost Limits**: Added a hard limit of **10,000 views** per single boost command to prevent accidental or malicious massive inflation.
+- **Storage Hygiene**: Added a `cleanup_old_logs()` utility to prune `video_views_log` entries older than 30 days.
+
+## 📈 Dashboard & Performance
+- **View Velocity**: High-fidelity charts pulling from verified time-series data.
+- **Vibe Intelligence**: AI-powered growth forecasts and content recommendations.
+- **Revenue Dashboard**: Restored full USDC earnings reporting alongside engagement stats.
+
+## 🛠️ Deployment Instructions
+To apply these critical security fixes, you **MUST** run the updated consolidated migration script in your Supabase SQL Editor:
+👉 [setup-db-phase-37.sql](file:///C:/GOLive/scripts/setup-db-phase-37.sql)
+
+## Verified Components
+- [x] Hardened `track-view` API ([route.ts](file:///C:/GOLive/app/api/video/track-view/route.ts))
+- [x] Hardened Engage Logic ([WatchClient.tsx](file:///C:/GOLive/app/watch/[id]/WatchClient.tsx))
+- [x] Idempotent SQL Migrations ([setup-db-phase-37.sql](file:///C:/GOLive/scripts/setup-db-phase-37.sql))

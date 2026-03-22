@@ -1,0 +1,162 @@
+# Phase 32: VibeStream Payment Architecture — Strategic Plan
+
+## The Core Questions Answered
+
+---
+
+### ❌ Do NOT Deploy a Custom Solana Program
+**You do not need one.** Here's why:
+
+For SOL tipping with a 75/25 split, a single Solana transaction can contain multiple `SystemProgram.transfer` instructions. This is **atomic**, **gasless** for us, and costs the **fan ~$0.0001** per transaction. No custom program needed.
+
+For USDC (SPL token), we call the existing `spl-token` program (already deployed on Solana). No program deployment needed.
+
+**Only deploy a Solana program if** you want a locked-in, on-chain fee split enforced by the network itself (not by the frontend). For now, client-side atomic transactions are fine and legally identical.
+
+**Solana Program Cost (if you ever DO deploy one later):**
+- Deployment: ~0.76–2 SOL (one-time, ~$150–$400)
+- Rent-exempt storage: included above
+- Transaction fees: ~$0.0001/tx (paid by fan)
+- **Total startup cost: $0 (no program needed now)**
+
+---
+
+### ❌ Remove Bitcoin
+Agreed. No smart contract = custodial risk. Removed.
+
+### ❓ Remove Monad
+Defer. Monad mainnet is launching but too early-stage to bet production revenue on. EVM compatible, so we can add it later in 1 day (same Solidity contract, new RPC). Not worth the risk now.
+
+---
+
+## 🏠 Chain Strategy: Where Does VibeStream Live?
+
+### Recommendation: **Primary = Base, Secondary = Solana**
+
+| Factor | Base | Solana |
+|---|---|---|
+| **Tx Cost** | ~$0.001 | ~$0.0001 |
+| **Speed** | ~2s finality | ~0.4s finality |
+| **Consumer Reach** | 🏆 Coinbase 100M+ users, Coinbase Wallet | Phantom, massive creator/NFT culture |
+| **Streaming Comps** | New territory (opportunity) | FROGY, Audius, SolstakeTV exist |
+| **USDC** | Native (Circle) | Native (Circle) |
+| **Dev Tooling** | EVM/Solidity (more devs) | Rust/Anchor (specialized) |
+| **Vantix zk** | Easier (EVM zk-proofs standard) | Possible but more work |
+| **Creator Culture** | Growing | 🏆 Strong (NFTs, memecoins, DePIN) |
+
+**Primary: Base**
+- Coinbase backs this. They have ~100M users and are actively building "bring the next billion onchain." Their [OnchainKit](https://onchainkit.xyz) has USDC, social login, and Buy Crypto built-in.
+- A video platform on Base + Coinbase Wallet = the WebView inside Coinbase app can surface your content.
+- Legally safest jurisdiction for US-facing apps (Coinbase = regulated).
+
+**Secondary: Solana**
+- Creator-native culture. Audius, FROGY, and streaming platforms already live here and have built audiences.
+- SOL micropayments ($0.0001/tx) make real-time tipping economically viable at any scale.
+- Phantom Wallet has 7M+ users and is creator-friendly.
+
+---
+
+## 💰 Token Strategy: USDC First, Native Second
+
+**Recommended payout token: USDC** (primary)
+
+Reasons:
+1. **No price volatility** — Creators get paid a stable amount. If they tip $5 in SOL and SOL drops 30%, the creator got $3.50. USDC removes this.
+2. **Circle is trusted** — USDC is regulated, audited, and available on both Base and Solana natively.
+3. **Easier tax reporting** — Stablecoin = no gain/loss calculation for creators.
+4. **Cross-chain** — Same 6-decimal standard on both Base and Solana.
+
+**Keep SOL/ETH as secondary** — Some users will want to use native tokens. Support it, but default the UI to USDC.
+
+**Removed: BTC, Monad (deferred)**
+
+---
+
+## 👛 Wallet Generation at Signup (Critical Feature)
+
+**Every new creator gets an embedded wallet auto-generated at signup.**
+
+### Recommended Tool: **Privy**
+- Generates a non-custodial embedded wallet from email/Google login
+- User never sees a seed phrase (unless they export it)
+- Works with both Base (EVM) and Solana
+- Keys secured via TEE (Trusted Execution Environment) + key sharding — Privy never sees the full key
+- **Free tier: 50,000 signatures/month** — covers thousands of users
+- Next.js SDK exists, installs in 1 hour
+
+**Flow:**
+```
+User signs up with email/Google
+    → Privy generates EVM wallet (Base) + Solana wallet
+    → Both wallet addresses stored in profiles table
+    → Creator can use immediately as payout address
+    → Creator can optionally export keys or link their own Phantom/MetaMask
+```
+
+**This eliminates** the current problem of creators having to manually enter wallet addresses in Settings.
+
+---
+
+## 🔐 Vantix zk Integration (High Value)
+
+If Vantix.xyz has a zk "is human" verification layer, integrate it as follows:
+
+| Use Case | How Vantix Helps |
+|---|---|
+| **Bot-proof tips** | Require a Vantix zk proof that the tipper is human before processing payment |
+| **Real view counting** | Only count a view as valid if the viewer passes a Vantix human check (invisible to UX) |
+| **Creator verification badge** | "Vantix Verified Human" badge on channel pages |
+| **Anti-sybil subscriptions** | Prevent one bot from farming 1000 fake subscribers |
+
+This is a **massive competitive differentiator**. YouTube, Twitch, and competitors have massive bot problems. VibeStream being "bot-proof by cryptographic proof" is a powerful narrative for both creators and advertisers.
+
+---
+
+## Smart Contracts to Write
+
+### 1. Base Splitter Contract (Solidity)
+**File:** `contracts/VibeStreamSplitter.sol`
+- Accepts ETH or USDC
+- Single tx splits 75% → creator, 25% → platform
+- `owner` = platform multisig (can update platform wallet with 24h timelock)
+- Deploy on Base Sepolia for testing, Base Mainnet for prod
+- **Estimated deployment cost:** ~$5–15 one-time on Base
+
+### 2. No Solana Program Needed (use client-side atomic tx)
+If we want to enforce it on-chain in the future, we can write an Anchor program later.
+
+---
+
+## Wallet Security: Environment Variables
+
+```
+NEXT_PUBLIC_PLATFORM_WALLET_EVM=0x5b9C3D6e92F4e6A7fD03cBC1f60da3De002BC1a8
+NEXT_PUBLIC_PLATFORM_WALLET_SOLANA=DDztsJc2RmC2m2DvKFoB3ActexVkdzHZqYdMd3UXY6ft
+```
+- Stored in Vercel env vars, **NOT in source code**
+- Contract `owner` is the platform EVM wallet, has a `updatePlatformWallet()` function with a 48h timelock for security
+- If a hacker finds the env var, they can only *read* the address (public on-chain anyway) — they cannot steal funds
+
+---
+
+## Total Cost Estimate
+
+| Item | Cost |
+|---|---|
+| Solana program deployment | $0 (not needed) |
+| Base Splitter contract deploy (Sepolia) | Free |
+| Base Splitter contract deploy (Mainnet) | ~$5–15 one-time |
+| Privy embedded wallets | Free (50k sigs/mo) |
+| Per-tip tx fee (fan pays) | ~$0.0001–0.001 |
+| **Total upfront** | **~$15 max** |
+
+---
+
+## Recommended Next Steps (Implementation Order)
+
+1. **Write Base Solidity Splitter Contract** + deploy to Sepolia
+2. **Integrate Privy** for auto-wallet generation at signup
+3. **Update [constants.ts](file:///C:/GOLive/lib/constants.ts)** with env var approach (real wallet addresses)
+4. **Rebuild [TipButton](file:///C:/GOLive/components/TipButton.tsx#22-328)** to call the contract + handle Bitcoin → removed, BTC replaced with "Copy Address" for manual
+5. **Supabase migration** for `solana_wallet_address`
+6. **Vantix zk integration** planning session

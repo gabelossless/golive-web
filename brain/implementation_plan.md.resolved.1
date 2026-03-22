@@ -1,0 +1,49 @@
+# UI Redesign Plan — GoLive
+
+## Problem
+The entire site is broken because [globals.css](file:///C:/GoLive/app/globals.css) is missing:
+1. `@import "tailwindcss"` — Tailwind v4 requires this to generate utility classes
+2. `@theme { ... }` — custom color tokens must be registered here for classes like `bg-primary` to work
+
+Without these, **every Tailwind class in every component renders as nothing**. The site shows raw unstyled HTML.
+
+## Root Cause Fix
+
+#### [MODIFY] [globals.css](file:///C:/GoLive/app/globals.css)
+- Add `@import "tailwindcss"` at the top
+- Add `@theme` block with all color/spacing tokens mapped to `--color-*`, `--spacing-*` naming convention
+- Add custom component classes for `.glass`, `.btn`, `.no-scrollbar`, etc. inside `@layer components`
+- Add `line-clamp`, `aspect-ratio`, and animation utilities
+
+---
+
+## Visual Improvements (YouTube + Twitch hybrid)
+
+Once Tailwind actually works, I will also improve these components:
+
+#### [MODIFY] [Navbar.tsx](file:///C:/GoLive/components/Navbar.tsx)
+- Tighten the search bar to match YouTube's centered search
+- Add a proper YouTube-style search button beside the input
+- Fix icon imports and add Upload icon (Plus in circle like YouTube)
+
+#### [MODIFY] [Sidebar.tsx](file:///C:/GoLive/components/Sidebar.tsx)
+- Add active state highlighting (purple left border like Twitch)
+- Improve the "Live Now" section with viewer counts
+
+#### [MODIFY] [VideoCard.tsx](file:///C:/GoLive/components/VideoCard.tsx)
+- Fix hover effects to closely match YouTube card behavior
+- Improve thumbnail duration badge styling
+- Add progress bar at bottom of thumbnail (like YouTube "watched" indicator)
+
+#### [MODIFY] [page.tsx](file:///C:/GoLive/app/page.tsx)
+- Improve category pill styling to match YouTube's chip bar
+- Add more mock video data for a fuller feed
+- Hide scrollbar on category chips
+
+#### [MODIFY] [Layout.tsx](file:///C:/GoLive/components/Layout.tsx)
+- Ensure proper sidebar offset for main content
+
+## Verification
+1. Run `npm run dev` and verify pages render correctly
+2. Check Home, Watch, Login, Upload, and Profile pages load
+3. Verify responsive behavior at mobile/tablet/desktop breakpoints

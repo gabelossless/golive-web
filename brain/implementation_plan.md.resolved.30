@@ -1,0 +1,41 @@
+# Phase 44: UI Scaling & Upload Restoration
+
+## Goals
+1. Rebuild [Watch](file:///C:/GoLive/new%20UI/src/pages/Watch.tsx#11-135), [Studio](file:///C:/GOLive/app/studio/page.tsx#10-164), and [Search](file:///C:/GoLive/new%20UI/src/pages/Search.tsx#6-106) pages to match the new UI's premium style.
+2. Fix the "Network Error" preventing video uploads.
+3. Improve mobile responsiveness in Navbar, Sidebar, and Home grid.
+
+## Proposed Changes
+
+### [UI] Watch Page Rebuild
+#### [MODIFY] [app/watch/[id]/page.tsx](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/app/watch/%5Bid%5D/page.tsx)
+- Replace with a premium layout matching `new UI/src/pages/Watch.tsx`.
+- Use inline styles for layout stability.
+- Implement glassmorphism for the video description and sidebar.
+
+### [UI] Studio & Search Overhaul
+#### [MODIFY] [app/studio/page.tsx](file:///C:/GOLive/app/studio/page.tsx)
+- Refresh analytics dashboards with premium dark slate theme.
+#### [MODIFY] [app/search/page.tsx](file:///C:/GOLive/app/search/page.tsx)
+- Implement centered search results and filtering inspired by the new design.
+
+### [Mobile] Responsiveness Overhaul
+#### [MODIFY] [components/Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx)
+- Implement a cleaner mobile search (icon-only until clicked).
+- Use `flex-wrap` and `overflow-x-hidden` protection.
+#### [MODIFY] [components/Sidebar.tsx](file:///C:/GOLive/components/Sidebar.tsx)
+- Ensure the sidebar behaves as an overlay on mobile instead of pushing content.
+- Increase tap targets for icons.
+
+### [Bugfix] Upload restoration
+#### [INVESTIGATE] [app/api/upload/route.ts](file:///C:/GOLive/app/api/upload/route.ts) & [app/upload/page.tsx](file:///C:/GOLive/app/upload/page.tsx)
+- Check for R2 configuration errors or CORS issues.
+- Verify presigned URL generation and the subsequent PUT request.
+#### [INVESTIGATE] Manual CORS Verification
+- Since the automated script failed with AccessDenied, I will prepare the exact CORS JSON configuration for the user to paste into the Cloudflare R2 dashboard if my secondary attempt fails.
+- Re-check `R2_BUCKET_NAME` for potential case-sensitivity issues.
+
+## Verification Plan
+1. **Media Pipeline**: Perform a full upload test with a sample MP4.
+2. **UI Parity**: Compare breadcrumbs and layouts of Watch/Search/Profile against the `new UI` source.
+3. **Mobile Audit**: Use browser simulation for iPhone 14 (390px) to ensure zero horizontal scroll and proper layering.

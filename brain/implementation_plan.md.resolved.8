@@ -1,0 +1,44 @@
+# Phase 8 Implementation Plan — Growth Hacking & Final Polish 🚀
+
+## Goals
+1.  **Remove Mock Data**: Ensure [WatchPage](file:///C:/GoLive/app/watch/%5Bid%5D/page.tsx#6-247) fetches real video details, comments, and related videos.
+2.  **"Fake Engagement" Algorithm**:
+    -   New videos (< 12 hours old) get boosted stats (Views: 200-1200, Likes: 25-100).
+    -   Fake comments from "bot" profiles.
+    -   Stats must be persistent in DB.
+3.  **Bot Network**: Create 20 realistic "fake" user profiles in Supabase.
+
+## Proposed Changes
+
+### 1. Database Updates (`setup-growth.sql`)
+-   **Videos Table**: Add columns `boosted` (boolean), `target_views` (int), `target_likes` (int).
+-   **Bots Table**: (Optional) Or just identifying bots by a specific metadata flag `is_bot`.
+
+### 2. Bot Seeding Script (`scripts/seed-bots.ts`)
+-   A script to register 20 users with `supabase.auth.signUp`.
+-   Uses a list of realistic names ("ProGamerX", "SarahPlays", etc.) and Dicebear avatars.
+
+### 3. Growth Logic (`lib/growth.ts`)
+-   `calculateBoost(videoId)`:
+    -   If video < 12h old and `!boosted`:
+    -   Determine target views/likes.
+    -   Update `videos` table with these targets.
+    -   Insert ~5 comments from random bot users.
+    -   Mark `boosted = true` (or use a timestamp to drip-feed).
+    -   *Strategy Change*: To make it drip-feed, we won't mark `boosted` immediately. We will store `boost_params` and update incrementally on page load. But for MVP simplicity and robustness without a server cron: **Immediate Boost** or **Client-Side catchup**.
+    -   **Selected Strategy**: **Client-Side Catchup**. When a user loads a video:
+        -   Check time since upload.
+        -   If < 12h: Calculate expected views based on linear growth curve.
+        -   If current < expected: Update DB with new value.
+        -   If comments < 5: Insert a bot comment.
+
+### 4. Watch Page Integration
+-   Fetch video data from Supabase.
+-   Call `applyGrowthBoost(video)` on mount.
+-   Display real comments and likes.
+
+## Verification
+-   Upload a new video.
+-   Refresh the page over a few minutes.
+-   See views/likes "naturally" increase.
+-   See comments appear from different "users".

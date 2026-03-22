@@ -1,0 +1,26 @@
+# Phase 17: Growth Hacking & Community Seeding
+
+## Goal Description
+Implement a "Cold Start" strategy by seeding the platform with 50 realistic user profiles ("Seed Accounts"). These accounts will automatically engage (view, like, comment) with new content based on a "Momentum Engine" that simulates organic growth over a 12-hour window.
+
+## Proposed Changes
+
+### Database Schema
+#### [NEW] [setup-seeds.sql](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/setup-seeds.sql)
+- SQL script to insert 50 high-quality profiles into the `profiles` table.
+- Insert corresponding IDs into the `bots` table for system tracking.
+- Personas include: Tech, Gaming, Vlog, Music, Food, Fitness, etc.
+
+### Logic & Backend
+#### [MODIFY] [lib/growth.ts](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/lib/growth.ts)
+- **Flag**: Add check for `NEXT_PUBLIC_ENABLE_COMMUNITY_SEEDING`.
+- **Momentum Engine**:
+  - Drip feed views/likes using a simulated bell curve (slow start -> peak -> taper).
+  - Use the 50 Seed Profiles for comments and likes.
+  - Ensure persistence: Check if a bot has *already* liked/commented to prevent duplicates.
+
+## Verification Plan
+1.  **Run SQL**: Execute `setup-seeds.sql`.
+2.  **Env Var**: Set `NEXT_PUBLIC_ENABLE_COMMUNITY_SEEDING=true`.
+3.  **Test**: Upload a video or visit a new video page.
+4.  **Observe**: Refresh the page over time. See views increase and comments appear from the "Seed" users.

@@ -1,0 +1,51 @@
+# VibeStream Phase 39 & 41: Strategic Execution Plan ($1500 Budget)
+
+This plan prioritizes **legal compliance** (non-custodial flows) and **cost-efficiency** ($1500 total budget) for the next stage of VibeStream.
+
+---
+
+## 💎 Phase 39: The Creator Liquidity & Premium Pipeline
+*Allocated Budget: ~$700 (Infrastructure & API Fees)*
+
+### 1. Non-Custodial Automated Payouts
+- **Legal Strategy**: Use direct smart contract splitters (Solana/Base). VibeStream never touches or "holds" creator funds. Payouts are triggered by successful `tx_hash` verification in the database.
+- **Implementation**:
+    - Update `profiles` to include `solana_payout_address` and `evm_payout_address`.
+    - Build a serverless "Sweep" job that calculates earnings and initiates non-custodial transfers from the platform fee wallet.
+
+### 2. Livepeer Premium Transcoding
+- **Cost Strategy**: Low-tier Pay-as-you-go. Only **Premium Creators** get Livepeer HLS transcoding (adaptive bitrate). Free users stay on standard R2/Supabase storage.
+- **Implementation**:
+    - Integrate Livepeer SDK in the `upload` flow.
+    - Store Livepeer `playbackId` in the `videos` table.
+
+---
+
+## 🔥 Phase 41: Viral Social Dynamics & Hype Streaks
+*Allocated Budget: ~$800 (Incentive Pool & Analytics)*
+
+### 1. Vibe Points (Engagement Engine)
+- **Legal Strategy**: Use **Off-Chain Points** (not ERC-20 tokens) to avoid securities/MTL regulations. Points are "Virtual Credits" for platform features.
+- **Implementation**:
+    - Create `user_vibe_points` table.
+    - Logic: +10 pts for Hype, +50 pts for daily streak, +100 for verified referral.
+
+### 2. Viral Leaderboards & Streaks
+- **UI**: High-fidelity "Global Vibe" leaderboard on the Discover page.
+- **Logic**: Daily cron job to calculate "Hype Streaks" based on `vibe_events`.
+
+---
+
+## 🎨 Phase: UI Polish & Stacking Fixes (Agent 8 & 9)
+*Focus: Resolving Navbar overlap and responsive "weirdness".*
+- **Navbar Elevation**: Increase [Navbar](file:///C:/GOLive/components/Navbar.tsx#16-244) `z-index` to `z-[1000]` to ensure dominance over video overlays and categories.
+- **CategoryBar Offset**: Offset the [CategoryBar](file:///C:/GOLive/components/CategoryBar.tsx#24-51) `sticky top` to `top-[72px]` (Navbar height + margin) to prevent clashing.
+- **Background Opacity**: Increase `glass-deep` opacity on mobile to prevent content "bleeding" through.
+
+---
+
+## 📅 Immediate Execution (Phase 39 & UI Fix)
+1. **Navbar Fix**: Update [Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx) and [CategoryBar.tsx](file:///C:/GOLive/components/CategoryBar.tsx) stacking logic.
+2. **Database**: Add payout addresses and Livepeer metadata columns.
+3. **API**: Implement `api/studio/payouts` for revenue tracking.
+4. **Integration**: Setup Livepeer API keys and upload plumbing.

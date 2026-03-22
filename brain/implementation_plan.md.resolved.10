@@ -1,0 +1,35 @@
+# Phase 11: Subscriptions & Comments
+
+## Goal Description
+Implement a robust subscription system allowing users to follow channels and see a dedicated feed. Also refine the commenting experience with delete functionality and better component structure.
+
+## Proposed Changes
+
+### Database Schema
+#### [NEW] [setup-subscriptions.sql](file:///C:/GoLive/setup-subscriptions.sql)
+- Create `subscriptions` table (subscriber_id, channel_id, created_at).
+- Add RLS policies (public read, auth insert/delete).
+
+### Component Updates
+#### [NEW] [components/CommentSection.tsx](file:///C:/GoLive/components/CommentSection.tsx)
+- Extract comment logic from WatchPage.
+- Add "Delete Comment" functionality.
+
+#### [MODIFY] [app/watch/[id]/page.tsx](file:///C:/GoLive/app/watch/[id]/page.tsx)
+- Replace inline comments with `CommentSection`.
+- Implement functional Subscribe button (toggle state).
+
+#### [MODIFY] [app/profile/[username]/page.tsx](file:///C:/GoLive/app/profile/[username]/page.tsx)
+- Implement functional Subscribe button.
+
+### New Pages
+#### [NEW] [app/subscriptions/page.tsx](file:///C:/GoLive/app/subscriptions/page.tsx)
+- Feed of videos from channels the user is subscribed to.
+- Sorted by newest first.
+
+## Verification Plan
+### Manual Verification
+- **Subscribe**: Click subscribe on a channel, verify button state changes.
+- **Feed**: Go to `/subscriptions`, verify the channel's videos appear there.
+- **Unsubscribe**: Click unsubscribe, verify video disappears from feed (on refresh).
+- **Comments**: Post a comment, then delete it.

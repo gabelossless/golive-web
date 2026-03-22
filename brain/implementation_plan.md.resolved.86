@@ -1,0 +1,41 @@
+# Phase 35: Premium UI/UX & Engagement Intelligence
+
+This phase expands the premium overhaul to include robust views tracking, automated engagement, and mobile UI optimization for the Creator Studio.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Views Tracking**: I am implementing a `daily_stats` table to track views over time. Existing views will be captured, but historical "day-by-day" data for old videos won't be available immediately.
+> **Automatic Engagement**: The "Slow Drip" system will automatically add 1-5 views to videos with low engagement every time the drip is triggered (can be automated via Supabase Cron).
+
+## Proposed Changes
+
+### Database & Analytics
+#### [NEW] [daily-stats.sql](file:///C:/GOLive/scripts/daily-stats.sql)
+- Create `daily_stats` table to track `views` and `revenue` per day per user.
+- Create `drip_global_engagement()` RPC to automate baseline engagement.
+- Update `increment_view_count` to also log to `daily_stats`.
+
+### Backend APIs
+#### [NEW] [route.ts](file:///C:/GOLive/app/api/studio/analytics/route.ts)
+- New endpoint to provide temporal data for views and revenue charts.
+
+### Frontend - Creator Studio
+#### [MODIFY] [DashboardClient.tsx](file:///C:/GOLive/app/studio/dashboard/DashboardClient.tsx)
+- Integrate Views Velocity chart using Recharts.
+- Optimized Mobile layout for stats cards and video management.
+- Improved "Engagement" indicator for videos.
+
+### Frontend - Upload
+#### [MODIFY] [Upload UI]
+- Improve mobile responsiveness and add "Engagement Settings" (where users can see their boosted status).
+
+## Verification Plan
+
+### Automated Tests
+- Trigger `increment_view_count` and verify both `videos` and `daily_stats` are updated.
+- Verify `/api/studio/analytics` returns correctly formatted data for Recharts.
+
+### Manual Verification
+- Check Dashboard on mobile emulator (390px).
+- Verify "Slow Drip" execution via Supabase SQL editor.

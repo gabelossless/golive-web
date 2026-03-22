@@ -1,0 +1,33 @@
+# Phase 4 Implementation Plan — Mobile Experience & Core Pages
+
+## Goals
+1.  **Mobile Native Feel**: Implement a proper Bottom Navigation bar for mobile users, replacing the hidden sidebar.
+2.  **Functional Library**: Build out the "History" and "Liked Videos" pages so sidebar links work.
+3.  **User Personalization**: Create a robust **Settings** page for account and preference management.
+
+## Proposed Changes
+
+### 1. Mobile Navigation ([components/BottomNav.tsx](file:///C:/GoLive/components/BottomNav.tsx))
+-   **New Component**: A fixed bottom bar visible only on mobile (hidden on desktop).
+-   **Icons**: Home, Trending, Creator (+), Subscriptions, Library.
+-   **Integration**: Update [Layout.tsx](file:///C:/GoLive/components/Layout.tsx) to include this conditionally.
+
+### 2. Core Library Pages
+-   **History Page ([app/history/page.tsx](file:///C:/GoLive/app/history/page.tsx))**:
+    -   List view of recently watched videos.
+    -   "Clear History" button.
+-   **Liked Videos ([app/liked/page.tsx](file:///C:/GoLive/app/liked/page.tsx))**:
+    -   Grid view of liked content.
+    -   Shuffle/Play All buttons.
+
+### 3. Settings Page ([app/settings/page.tsx](file:///C:/GoLive/app/settings/page.tsx))
+-   **Layout**: Sidebar navigation for settings (Account, Appearance, Notifications).
+-   **Features**:
+    -   Profile picture upload (mock).
+    -   Theme toggle (if applicable, or just refined dark mode settings).
+    -   Notification preferences.
+
+## Verification
+-   Resize browser to mobile width (<768px) to see Bottom Nav appear and Sidebar disappear.
+-   Clicking "History" and "Liked Videos" in sidebar/nav works and shows content.
+-   Settings page toggles feel responsive.

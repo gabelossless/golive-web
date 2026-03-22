@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { CheckCircle2, MoreVertical, Play, Flame, Volume2, VolumeX } from 'lucide-react';
 import { motion, AnimatePresence, useInView } from 'motion/react';
 import { formatViews, timeAgo, formatDuration } from '@/lib/utils';
+import { getDecentralizedUrl } from '@/lib/cdn';
 
 export interface VideoCardProps {
     video: {
@@ -90,7 +91,7 @@ export default function VideoCard({ video }: VideoCardProps) {
                             className="relative w-full h-full"
                         >
                             <Image
-                                src={thumb}
+                                src={getDecentralizedUrl(thumb)}
                                 alt={video.title || "Video"}
                                 fill
                                 className="object-cover group-hover:scale-105 transition-transform duration-700"
@@ -103,7 +104,7 @@ export default function VideoCard({ video }: VideoCardProps) {
                             ref={videoRef}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            src={video.video_url}
+                            src={getDecentralizedUrl(video.video_url)}
                             className="w-full h-full object-cover rounded-xl"
                             muted
                             loop

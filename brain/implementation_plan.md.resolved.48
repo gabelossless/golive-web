@@ -1,0 +1,258 @@
+# VibeStream: Startup Pre-Launch Plan
+
+> **Goal**: Build the next YouTube/Netflix/Twitch for the future. Every decision should be made as if it will scale to 10 million users. Zero monthly AI API costs in launch phase.
+
+## Audit Findings (Senior Dev Review)
+
+### 🔴 Critical Issues
+- **Playback 404**: Newly uploaded videos return 404 on the watch page despite existing in the database.
+- **Integer 0.9 Mismatch**: The database rejects float values (e.g., 0.9) being inserted into integer columns (likely `quality_score` or `duration`).
+- **Sidebar has hardcoded mock users/videos** (`Ninja`, `Valkyrae`, `MrBeast Gaming`) pointing to `/watch/v1`, `/watch/v2` which are 404s.
+- **VideoCard**: Thumbnail fallback uses an Unsplash URL — acceptable for dev but must be a local asset or R2-hosted fallback in production.
+- **[formatViews](file:///C:/GOLive/lib/utils.ts#5-16) function has a duplicate `if (n >= 1_000_000)` branch** — dead code bug.
+
+### 🟡 UI / UX Notes
+- Home page: Clean and solid. **Do not touch.** Featured hero, category bar, and grid are all correct.
+- VideoCard: Good design. Minor fix needed: the `CheckCircle2` icon should only appear if `is_verified` is true in the profile (not always shown).
+- Profile page needs a full overhaul — still showing mock channels.
+- No mobile bottom nav visible on `/watch/[id]` pages.
+
+---
+
+## Proposed Changes
+
+### Phase 1: Housekeeping (Code Quality)
+
+#### [MODIFY] [components/Sidebar.tsx](file:///C:/GOLive/components/Sidebar.tsx)
+- Replace hardcoded `MOCK_USERS` and `MOCK_VIDEOS` with a real Supabase query to `subscriptions` and `videos`.
+- Add a "Shorts" link to the nav.
+- Show "No subscriptions yet" if the user has no subscriptions.
+
+#### [MODIFY] [components/VideoCard.tsx](file:///C:/GOLive/components/VideoCard.tsx)
+- Fix duplicate [formatViews](file:///C:/GOLive/lib/utils.ts#5-16) branch.
+- Only show `CheckCircle2` if `profile.is_verified === true`.
+- Use a local R2-hosted placeholder image for fallback, not Unsplash.
+
+---
+
+### Phase 2: Creator Dashboard (`/studio/dashboard`)
+
+A dedicated page for creators to manage their content, separate from profile settings.
+
+#### [NEW] [app/studio/dashboard/page.tsx](file:///C:/GOLive/app/studio/dashboard/page.tsx)
+- **Header**: Creator stats (Total Views, Subscribers, Videos, Revenue).
+- **Video Manager Table**: List all uploaded videos. Each row has: thumbnail, title, views, visibility badge, publish date, and action buttons (`Edit`, [Delete](file:///C:/GOLive/app/studio/dashboard/page.tsx#66-79)).
+- **Quick Upload CTA**: "Upload Your Next Video" button.
+- **AI Studio Link**: A prominent, Apple-style card link to `/studio/ai-studio`.
+
+---
+
+### Phase 3: AI Studio (`/studio/ai-studio`) — $0 Cost
+
+Accessible ONLY from the Creator Dashboard or Studio menu. Not on the homepage or public pages.
+
+**Design**: Apple-style — clean white card on dark background. A single primary action at a time (like the iPhone's "Open with" sheet). No clutter.
+
+#### [NEW] [app/studio/ai-studio/page.tsx](file:///C:/GOLive/app/studio/ai-studio/page.tsx)
+- **Step 1**: Creator selects one of their uploaded videos from a dropdown (populated via Supabase).
+- **Step 2**: Click "✨ Analyze for Viral Moments". The UI shows a beautiful loading state.
+- **Step 3**: Results show 2-4 timestamped "Vibe Moments" (e.g., `0:32 - 0:48: High-energy moment detected`).
+- **Step 4**: Creator clicks "Clip & Post as Short" — the system trims the video to that segment.
+
+#### [NEW] [app/api/ai-studio/analyze/route.ts](file:///C:/GOLive/app/api/ai-studio/analyze/route.ts)
+- Accepts `{ videoId }` from the client.
+- Fetches the video URL from Supabase.
+- Calls the **Gemini 2.5 Flash API (Free Tier)** via `@google/genai` SDK.
+- Sends the video URL and a structured prompt: *"Analyze this video for 2-4 moments most likely to go viral on short-form platforms. Look for: emotional peaks, surprising cuts, high-energy moments, first 3 seconds impact. Return JSON: `[{ startSec, endSec, reason, viralScore }]`"*.
+- The Gemini free tier allows **250 requests/day** (1 frame/sec analysis) — sufficient for early launch.
+- Returns the timestamped moments JSON to the client.
+
+#### [NEW] [app/api/ai-studio/clip/route.ts](file:///C:/GOLive/app/api/ai-studio/clip/route.ts)
+- Accepts `{ videoUrl, startSec, endSec }`.
+- Uses `fluent-ffmpeg` (already in the project) to trim the video locally.
+- Uploads the trimmed clip to R2 under `shorts/{userId}/...`.
+- Saves a new `videos` record with `is_short=true`.
+- **$0 cost**: ffmpeg is open-source, no third-party service needed.
+
+---
+
+### Phase 4: Shorts / Reels
+
+#### [NEW] [app/shorts/page.tsx](file:///C:/GOLive/app/shorts/page.tsx)
+- Full-viewport vertical snap-scrolling.
+- Right-side floating action buttons (Like, Comment, Share, Subscribe).
+- Auto-plays video on scroll, mutes on swipe-away.
+- Queries `videos` WHERE `is_short = true`.
+
+#### [MODIFY] [components/Sidebar.tsx](file:///C:/GOLive/components/Sidebar.tsx)
+- Add `{ icon: Film, label: "Shorts", path: "/shorts" }` to menu items.
+
+#### [NEW] SQL
+```sql
+ALTER TABLE public.videos ADD COLUMN IF NOT EXISTS is_short BOOLEAN DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_videos_is_short ON public.videos(is_short) WHERE is_short = true;
+```
+
+---
+
+### Phase 5: Profile & Channel Overhaul
+
+#### [MODIFY] [app/profile/[username]/page.tsx](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/app/profile/%5Busername%5D/page.tsx)
+- Real data only. No fallback mock names.
+- "Videos" and "Shorts" tabs with correct queries.
+- Beautiful empty state if no content.
+- Premium Apple-style typography: SF-Pro-style weight, tight tracking, generous whitespace.
+
+---
+
+### Phase 6: Mobile & PWA
+
+#### [NEW] [public/manifest.json](file:///C:/GOLive/public/manifest.json)
+- PWA manifest for "Add to Home Screen" on iOS/Android.
+- Short name: "VibeStream", theme color: `#0a0a0a`.
+
+#### [MODIFY] [app/layout.tsx](file:///C:/GOLive/app/layout.tsx)
+- Link PWA manifest.
+
+---
+
+## Mobile App Separation Strategy
+
+| Phase | Action |
+|---|---|
+| **Now** | PWA with native-feel gestures and bottom navigation |
+| **Phase 2** | Capacitor.js wrapper around this Next.js app for a real iOS/Android app |
+| **Phase 3** | Full React Native rewrite sharing Supabase layer |
+
+---
+
+## Verification Plan (QA Agents)
+
+- **Agent 1 (Code)**: Fix Sidebar mock data bug and VideoCard duplicate branch.
+- **Agent 2 (UI)**: Review `/studio/dashboard` and `/studio/ai-studio` for Apple-level spacing and hierarchy.
+- **Agent 3 (Integration)**: Test Gemini API with a real video URL from R2 and verify JSON response.
+- **Agent 4 (Shorts)**: Test the snap-scroll feed across mobile viewport sizes (390px, 430px).
+- **Agent 5 (Regression)**: Ensure home page is unchanged. No mock data anywhere.
+
+---
+
+## R2 Large File Upload Analysis & Fix
+
+### Problem: 500 Server Error on Large Videos
+When attempting to upload a 535 MB video file, Cloudflare R2 consistently returns a `500 Internal Server Error`.
+- **Root Cause**: The current implementation uses a **single `PUT` request** to upload videos. Large files over a single connection can easily hit browser, CDN, or proxy timeouts, or they may be silently rejected by R2 due to connection droppage. Cloudflare explicitly requires **Multipart Uploads** for reliable transmission of files over 100MB.
+
+### Proposed Solutions
+
+#### Option A: Keep R2 -> Implement S3 Multipart Upload (Recommended for Scale)
+Keep the $0 egress cost but fix the reliability issue by chunking large videos.
+- Add `@aws-sdk/s3-request-presigner` and `@uppy/aws-s3-multipart` to handle robust chunking out of the box.
+- Or, rewrite the upload component to manually chunk the file into 5MB parts (using `CreateMultipartUpload`, `UploadPart`, `CompleteMultipartUpload` APIs).
+- **Pros**: Maintains the $0 bandwidth model. Highly resilient to network drops.
+- **Cons**: Most complex to implement and test.
+
+#### Option B: Supabase TUS Storage (Fastest Developer Experience)
+Switch the upload pipeline perfectly back into our existing Supabase ecosystem.
+- Supabase's JS client natively implements the TUS resumable upload protocol. It automatically chunks large videos and resumes them if the connection drops.
+- **Pros**: Incredibly robust. Zero boilerplate code required. Leverages our existing Auth system perfectly.
+- **Cons**: The free tier is strictly capped at 1GB of storage and 2GB of bandwidth. Uploading a few 500MB test videos will immediately require upgrading to the $25/mo Pro tier.
+
+#### Option C: UploadThing
+A dedicated file upload service built primarily for NextJS.
+- **Pros**: Handles all CORS, chunking, and Vercel limits automatically.
+- **Cons**: Requires a new service dependency and account. Free tier is 2GB total.
+
+#### Option D: Mux (The True "Startup" Video Route)
+Mux ingests the raw MP4 and transcodes it into Adaptive Bitrate streams (HLS/DASH) natively. 
+- **Pros**: The ultimate, professional solution for a YouTube/Twitch clone. Viewers on slow mobile phones get 480p, fast computers get 1080p dynamically.
+- **Cons**: Paid enterprise API. Completely breaks the $0 launch budget.
+
+### Next Steps for Implementation
+Review the options above. Once a path is chosen, we will overhaul the [app/upload/page.tsx](file:///C:/GOLive/app/upload/page.tsx) pipeline to utilize resilient chunking (or migrate to the chosen alternative).
+
+---
+
+### Phase 7: Monetization & Verification
+Implement the core economy for creators to start earning.
+
+#### [NEW] `app/studio/monetization/page.tsx`
+- **Application Flow**: Users can apply for the "Vibe Partner Program" if they have >1000 views.
+- **Verification Badge**: Toggle for "Verified" status (Admin only).
+- **Ad Revenue Config**: Let creators see their estimated earnings per video.
+
+---
+
+### Phase 8: Advanced Analytics
+Real-time insights for viral growth.
+
+#### [MODIFY] [app/studio/dashboard/page.tsx](file:///C:/GOLive/app/studio/dashboard/page.tsx) (Expanded)
+- Add a "Traffic Sources" chart using `recharts` or similar.
+- Show "Retention Rate" (Conceptual: average duration vs total duration).
+- **Viral Velocity Index**: A custom stat showing how fast a video is gaining views in the last hour.
+
+---
+
+### Phase 9: Discoverability & UI Polish
+Improve the user's ability to find content and enhance the visual scale.
+
+#### [MODIFY] [components/VideoCard.tsx](file:///C:/GOLive/components/VideoCard.tsx)
+- **Larger Thumbnails**: Increase the grid size to match YouTube (fewer columns on desktop, larger images).
+- **Creator Thumbnails**: Ensure `thumbnail_url` from the database is prioritized over fallbacks.
+- **Improved Metadata**: Add more descriptive info (e.g., view count + relative time) with better typography.
+
+#### [NEW] [app/trending/page.tsx](file:///C:/GOLive/app/trending/page.tsx)
+- Implement a real trending algorithm: Views per hour vs Total views.
+- Category-based filtering for discovery.
+
+---
+
+### Phase 10: Hype & Engagement Engine
+A community-driven discoverability system.
+
+#### [NEW] SQL
+```sql
+ALTER TABLE public.videos ADD COLUMN IF NOT EXISTS hype_count INTEGER DEFAULT 0;
+```
+
+#### [MODIFY] [app/watch/[id]/WatchClient.tsx](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/app/watch/%5Bid%5D/WatchClient.tsx)
+- **Hype Button**: Add a "Hype" button (Flame icon) next to Like.
+- **Micro-interactions**: Sparkle animations when hyping.
+- **Hype Pulse**: Videos with many hypes in a short time get a "Hype" badge on their thumbnail.
+
+#### [MODIFY] [lib/vibe-rank.ts](file:///C:/GOLive/lib/vibe-rank.ts)
+- Include `hype_count` in [calculateVibeRank](file:///C:/GOLive/lib/vibe-rank.ts#10-47). Hypes give a 2x boost compared to normal likes for discovery.
+
+---
+
+### Phase 11: SEO & Dynamic Metadata
+Maximize organic search traffic from Google and social media.
+
+#### [MODIFY] [app/watch/[id]/page.tsx](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/app/watch/%5Bid%5D/page.tsx)
+- Implement dynamic `generateMetadata` function.
+- Set `title`, `description`, and `openGraph` images using the video's thumbnail and title.
+- **Twitter Cards**: Optimize for engagement when sharing links on X/Twitter.
+
+---
+
+### Phase 12: Playback Recovery & Shorts Population
+Address the critical blockers identified during the audit.
+
+#### [MODIFY] [app/HomeClient.tsx](file:///C:/GOLive/app/HomeClient.tsx) & [app/watch/[id]/page.tsx](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/app/watch/%5Bid%5D/page.tsx)
+- **Resilient Queries**: Remove `quality_score` from direct Supabase `.select()` if it's causing 400 errors, or ensure it's added to the DB.
+- **Watch Page Fix**: Re-verify the `await params` logic and add even more detailed error logging to catch production-specific environmental issues.
+
+#### [NEW] SQL (Consolidated Fix)
+```sql
+-- Add quality_score if missing to prevent 400 errors
+ALTER TABLE public.videos ADD COLUMN IF NOT EXISTS quality_score FLOAT DEFAULT 0.5;
+-- Ensure is_short is present
+ALTER TABLE public.videos ADD COLUMN IF NOT EXISTS is_short BOOLEAN DEFAULT false;
+```
+
+---
+
+## Verification Plan (QA)
+- **Agent 1 (Playback)**: Verify playback on mobile and desktop viewports.
+- **Agent 2 (Upload)**: Test the 2GB upload fix with a real large file.
+- **Agent 3 (Studio)**: Verify the AI Studio -> Dashboard flow correctly updates video lists.
+- **Agent 4 (Security)**: Audit RLS to ensure private videos are never leaked to the public API.

@@ -1,0 +1,203 @@
+# Task: VibeStream Pre-Launch Build
+
+## Phase 1: Housekeeping
+- [x] Fix [formatViews](file:///C:/GOLive/lib/utils.ts#5-16) duplicate branch in [VideoCard.tsx](file:///C:/GOLive/components/VideoCard.tsx)
+- [x] Replace mock data in [Sidebar.tsx](file:///C:/GOLive/components/Sidebar.tsx) with real Supabase queries
+- [x] Fix `CheckCircle2` to be conditional on `is_verified` flag
+- [x] Add [Shorts](file:///C:/GOLive/app/shorts/page.tsx#20-285) link to Sidebar navigation
+- [x] Fix missing `subscriptions` table in Supabase (User verified)
+- [x] Audit Video Playback across environments (Fixed Home feed 400)
+- [x] Resilient Queries (Fixed crashes on missing columns)
+- [x] Debug Watch page 404 in production environment (Diagnostics deployed)
+- [x] Schema Normalization (Add `is_live`, `category`, `quality_score`, `is_verified`)
+
+## Phase 2: Creator Dashboard (`/studio/dashboard`)
+- [x] Build dashboard UI (stats header, video table)
+- [x] Implement video listing from Supabase
+- [x] Implement video delete
+- [ ] Implement video edit (title, desc, visibility) - *Moved to Phase 7*
+- [x] Add prominent AI Studio CTA card
+
+## Phase 3: AI Studio (`/studio/ai-studio`)
+- [x] Build AI Studio page UI (Apple-style, step-by-step flow)
+- [x] Build `/api/ai-studio/analyze` route (Gemini 2.5 Flash free tier)
+- [x] Build `/api/ai-studio/clip` route (ffmpeg trim + R2 upload)
+- [x] Test with real R2 video URL
+
+## Phase 4: Shorts & Engagement
+- [x] Check for `is_short` column in `videos` table
+- [x] Create mobile-first shorts feed (`/shorts`)
+- [x] Implement "Hype" (Upvote) engine with animations
+- [x] Add "Verified" badge for premium users on VideoCards
+
+## Phase 5: Mobile PWA & Push
+- [x] Create [manifest.json](file:///C:/GOLive/public/manifest.json) for PWA
+- [x] Integrate manifest in [layout.tsx](file:///C:/GOLive/app/layout.tsx)
+- [ ] Add service worker for offline/install support - *Basic manifest support added*
+- [ ] Implement basic push notification triggers - *Backlog*
+
+## Phase 6: Global Launch & Distribution
+- [x] Final UI/UX Audit (Mobile Vibe Check)
+- [x] Implement Premium ($10/mo) subscription toggle
+- [x] Verified Badge for premium users
+- [x] Fallback storage (Supabase) for premium users (if needed)
+- [x] Implement Profile Settings (@username, display name, channel name)
+
+## Phase 7: Advanced Creator Features & PWA Resilience
+- [x] Implement Video Metadata Editor (Title, Desc, Visibility)
+- [x] Add Service Worker for offline asset caching
+- [x] Register Service Worker in App Layout
+- [x] Display Verified Badge in Navbar User Menu
+- [x] Prioritize Channel Name in UI display logic
+
+## Phase 8: Admin Intelligence Suite
+- [x] Database Schema Script: `scripts/admin-roles.sql`
+- [x] RLS Policies Logic: Integrated in SQL migration
+- [x] Next.js Middleware: Route protection for `/admin/*`
+- [x] Admin Layout: Sidebar and navigation
+- [x] Admin Dashboard: Stats for Users and Videos
+- [x] Admin Management: "Toggle Admin" feature in Users UI
+- [x] Admin Onboarding Script: `scripts/set-admin.ts` (Handles multiple accounts)
+- [ ] Database Execution: Manually verified by user
+
+## Phase 9: Admin Excellence & Documentation
+- [x] Help Me Documentation: Integrated in Admin Panel
+- [x] Growth Metrics: Daily user update logic
+- [x] UI Refinement: High-fidelity premium polish
+- [x] System Settings: Advanced platform configuration
+- [x] Audit Logging: Track administrative actions
+
+## Phase 10: Engagement & Social Intelligence Hub
+- [x] Database Schema: Apply `likes` and `comments` tables
+- [x] Atomic RPCs: Implement `toggle_like` and `increment_view_count`
+- [x] View Tracking: Increment views on actual video playback
+- [x] Real-time Likes: Synchronize like counts across clients
+- [x] Comment Section: Fully functional real-time replies/listing
+- [x] Social Sharing: Clipboard support for video links
+
+## Phase 11: Premium Ecosystem & Viral UX
+- [x] Upload Limits: 60s (Free) / 30m (Premium) duration enforcement
+- [x] Cinematic Player: Theater mode & glassmorphic UI polish
+- [x] Shorts Discovery: Vertically-tuned viewing & home feed reel
+- [x] AI Transcription: Research & implement skeleton for captions
+- [x] Audit: Review app for incomplete pages & missing state
+
+## Phase 12: Cinematic Immersion & Ambient Glow
+- [x] Halo Engine: Canvas-based background color sampling
+- [x] Seamless Integration: Adjust player borders and container fitting
+- [x] UX Toggle: Add "Ambient Mode" to settings menu
+
+## Phase 13: Creator Dashboard & Channel Excellence
+- [x] Studio Upgrade: Real-time velocity stats and "Quick Edit"
+- [x] Branding Engine: Custom banners and channel color themes
+- [x] Profile Layout: Video/Shorts/About tabs with verification badge
+- [ ] Analytics: Subscriber growth breakdown
+
+## Phase 14: Senior UI/UX Audit & Brand Pivot
+- [x] Icon Rebrand: Replace "YouTube Red" with "VibeStream Gold"
+- [x] Interaction Fix: Central play button overlay functionality
+- [x] Professional Polish: Responsiveness audit (Dashboard/Admin)
+- [x] SaaS Visuals: Typography and spacing refinement
+
+## Phase 15: Playback Immersion & Format Optimization
+- [x] Revert "Vertical-All" Layout: Restore 16:9 for long-form videos
+- [x] Adaptive Player: Implement 9:16 support for Shorts in Watch page
+- [x] Ambient Mode V2: High-fidelity sampled glow (Halo Engine)
+- [x] YouTube Parity: Final UI/Flow audit against YouTube standards
+- [x] YouTube Parity Execution: Dynamic Container Scaling & Halo V2
+
+## Phase 16: Mobile Optimization & Shorts Integration
+- [x] Verify Mobile Experience: Browser testing with mobile viewports
+
+- [x] Professional Channel UI: Polish profile pages with new branding features
+
+## Phase 18: Platform Audit & Growth Intelligence
+- [x] Comprehensive Audit: Playback, Discovery, Dashboard, Shorts
+- [x] Persistence Test: Verify data "stays" after session end
+- [x] Mock Data Purge: Identify and remove hardcoded mock data
+- [x] Admin Intelligence: Implement "Growth Engine" (Slow drip views/likes)
+- [x] Dummy Management: Build tool to manage simulated realistic users
+- [x] Private Admin Documentation: Secure guide for admin panel access
+
+## QA Verification
+- [x] Fix Watch page 404 (await params) - *Ongoing troubleshooting for prod*
+- [x] Refactor Upload UI to Creator Studio dashboard
+- [x] Add identity header ("Uploading as")
+- [x] Add Advanced Creator Options (clipping, comments, license)
+- [x] Implement backend enforcement for clipping/comments
+- [x] Verify with build check
+- [x] Fix "0.9" integer mismatch bug in AI Studio
+- [x] Implement Share Link functionality
+- [x] Build Creator Dashboard UI (`/studio/dashboard`)
+- [x] Implement basic video management (Delete) in Dashboard
+- [x] Implement "Hype" button in [WatchClient.tsx](file:///C:/GOLive/app/watch/%5Bid%5D/WatchClient.tsx)
+- [x] Increase thumbnail sizes in [VideoCard](file:///C:/GOLive/components/VideoCard.tsx#35-168) (YouTube-style)
+- [x] Ensure creator-chosen thumbnails are used in all grids
+- [x] Build "Trending" / Explore page with discoverability logic
+- [x] Implement "Recent" filter in CategoryBar
+- [x] Final mobile viewport test (390px, 430px)
+- [x] Production Build Verification: Unified `/admin` routing and TypeScript resolution
+## Phase 19: Discovery & Personalization
+- [x] Implement Top 50 Trending Tags system ([lib/tags.ts](file:///C:/GOLive/lib/tags.ts))
+- [x] Add Autocomplete support to Video Upload & Edit UI
+- [x] Fix Shorts Detection (Auto-flag vertical content < 60s)
+- [x] Refine Channel (Profile) UI with Bento-style stats and layouts
+- [x] Enhance Creator Settings with glossy categories and advanced meta
+
+## Phase 20: YouTube Shorts Parity
+- [x] Redesign Shorts Action Bar with YouTube-style "tonal" circles and labels
+- [x] Integrate "Subscribe" button into the Shorts creator overlay
+- [x] Optimize Ambient Background (High-fidelity blur and dimming)
+- [x] Implement Heart (Like) pop-animation and Share sheet
+- [x] Verify vertical scroll snapping fluidity
+
+## Phase 21: Mobile Playback Excellence
+- [x] Implement touch-tuned volume/seek controls for mobile player
+- [x] Optimize Halo Engine (Ambient Mode) for mobile performance
+- [x] Refine mobile navigation (Bottom Bar vs Hamburger)
+- [x] Fix layout shifts on mobile watch page
+- [x] Verify Shorts interaction fluidity on mobile
+
+## Phase 22: Engagement & Distribution Polish
+- [x] View Tracking: Build a strict view counting system (e.g., must watch 5s actively)
+- [x] Share Sheet: Build a dedicated modal for sharing to social media
+- [x] Subscriptions: Audit and fix `subscriptions` schema/logic
+- [x] Description UI: Implement expandable UI with clickable tags
+- [x] Likes: Audit `toggle_like` robustness and UI feedback
+
+## Phase 23: Production Hardening (Floor 1-2)
+- [x] Fix React Hooks violation in [WatchClient.tsx](file:///C:/GOLive/app/watch/%5Bid%5D/WatchClient.tsx)
+- [x] Implement 5s active view tracking logic
+- [x] Migrate Subscriptions/Liked pages to Supabase data
+- [x] Audit database indexing ([performance-audit-v1.sql](file:///C:/GOLive/scripts/performance-audit-v1.sql))
+- [x] Fix accessibility (labels/titles) across core components
+- [x] Implement scalability limits (.limit 48-100) for all fetches
+
+## Phase 24: Home Screen Redesign (YouTube Inspired)
+- [x] Research: Analyze YouTube desktop/mobile grid patterns
+- [x] UI: Implement premium category pill bar with smooth scroll
+- [x] UX: Add video hover preview/expansion logic
+- [x] Layout: Refine Sidebar vs Feed balance
+- [x] Performance: Implement skeleton loading states
+- [x] Content: Intermix 'Trending Shorts' dynamically into the main feed
+
+## Phase 25: Search & Discovery Intelligence
+- [x] UI: Build Advanced Filters drawer for Search page
+- [x] Logic: Implement date/duration/quality filtering in Supabase queries
+- [x] UX: Add Search Autocomplete suggestions (Tag-based)
+- [x] Recommendation: Implement "Similar Videos" logic on Watch page
+- [x] Performance: Optimize search indexing for 1M+ rows
+
+## Phase 26: Natural Engagement System v2.0
+- [x] Schema: Apply tables for User Profiles, Social Graph, and Content Scores
+- [x] Engine: Implement Timezone-aware Activity Curves
+- [/] Social: Build Relationship Network & Cascade logic
+- [ ] Timing: Implement Staggered Engagement Windows (views/comments)
+- [/] Personalities: Build Personality-driven Bot Generator
+- [ ] Growth: Implement Logistic Viral Growth Curves (v2.0)
+
+## QA Verification
+- [x] Verify Shorts appear in vertical grids on Channel Page
+- [x] Test Tag Autocomplete performance
+- [x] Verify Shorts Parity UI matches YouTube standards
+- [x] Build & Sync all changes live

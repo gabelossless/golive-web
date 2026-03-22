@@ -1,0 +1,27 @@
+# Task: GoLive Development Checklist
+
+## Phase 1: Core Foundation (Completed)
+- [x] Project Initialization & Environment `[x]`
+- [x] UI Redesign (Tailwind v4 Fix + Modern Styling) `[x]`
+    - [x] Globals CSS & Theme
+    - [x] Navbar (YouTube/Twitch Hybrid)
+    - [x] Home Page (Category Chips, Video Grid)
+    - [x] Watch Page (Player, Chat, Layout)
+    - [x] Auth Pages (Login/Register)
+
+## Phase 2: Content Discovery & Creator Tools (In Progress)
+- [ ] Modernize Sidebar (2026 Design) `[ ]`
+    - [ ] Collapsible state (Icon-only mode)
+    - [ ] Enhanced visual hierarchy & active states
+    - [ ] Grouping (Menu, Library, Subscriptions)
+- [ ] Implement Trending Page `[ ]`
+    - [ ] Algorithm Logic (Views + Engagement * Time Decay)
+    - [ ] UI Badge System (#1 Trending)
+- [ ] Implement Following Page `[ ]`
+    - [ ] Filtered Feed (Subscribed channels only)
+    - [ ] "New from Your Channels" section
+- [ ] Implement Creator Dashboard `[ ]`
+    - [ ] Analytics Overview (Views, Subs, Revenue)
+    - [ ] Recent Uploads Management
+    - [ ] Quick Actions
+- [ ] Final Verification & Sync `[ ]`

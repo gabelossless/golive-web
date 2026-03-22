@@ -1,0 +1,30 @@
+# Phase 6 Implementation Plan — Community & Advanced Studio
+
+## Goals
+1.  **Community Interaction**: Allow creators to post text updates, polls, and images to engage with subscribers (YouTube "Community Tab" style).
+2.  **Advanced Studio**: Expand the Dashboard into a full "Studio" experience with deeper analytics and content management.
+3.  **Playlist Management**: Create a dedicated UI for viewing and managing playlists.
+
+## Proposed Changes
+
+### 1. Community Tab ([app/channel/[username]/community/page.tsx](file:///C:/GoLive/app/channel/[username]/community/page.tsx))
+-   **Feed**: A scrollable list of "Posts".
+-   **Post Types**:
+    -   **Text**: Simple status updates.
+    -   **Poll**: Interactive voting (mocked).
+    -   **Image**: Visual updates.
+-   **Interactions**: Like and Comment on posts.
+
+### 2. Studio Expansion ([app/studio/page.tsx](file:///C:/GoLive/app/studio/page.tsx))
+-   **Content Page**: A data-rich table with filtering (Public/Private, Date range).
+-   **Analytics Page**: Interactive charts (Recharts or mocked SVG) showing "Realtime views", "Audience retention".
+-   **Comments Manager**: A dedicated inbox for replying to comments.
+
+### 3. Playlist UI ([app/playlist/[id]/page.tsx](file:///C:/GoLive/app/playlist/[id]/page.tsx))
+-   **Layout**: Split view (Left: Playlist Info/Cover, Right: Video List).
+-   **Features**: "Play All", "Shuffle", drag-and-drop reordering (visual only).
+
+## Verification
+-   Go to a channel's Community tab and interact with a poll.
+-   Visit the Studio and see the mock analytics graphs.
+-   Open a playlist and see the dedicated view.

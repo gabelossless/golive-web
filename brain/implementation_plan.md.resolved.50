@@ -1,0 +1,49 @@
+# Phase 3: AI Studio Integration
+
+This phase focuses on the "Magic Moment" engine—automatically converting long-form videos into viral Shorts using Gemini 2.5 Flash and server-side video processing.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Gemini API Key**: To enable real AI analysis, I need a `GEMINI_API_KEY` added to [.env.local](file:///C:/GOLive/.env.local). If not provided, I will use a simulated high-fidelity mock.
+
+> [!WARNING]
+> **Resource Intensive**: Video clipping with `ffmpeg` can be CPU intensive. For this build, we will use `ffmpeg-static` to process clips on the server.
+
+## Proposed Changes
+
+### [Backend Components]
+
+#### [NEW] [video-clipping.ts](file:///C:/GOLive/lib/video-clipping.ts)
+A utility wrapper around `fluent-ffmpeg` that handles:
+- Downloading raw video from R2.
+- Trimming based on timestamps.
+- Converting to 9:16 aspect ratio (blur-padding for horizontal videos).
+
+#### [MODIFY] [analyze/route.ts](file:///C:/GOLive/app/api/ai-studio/analyze/route.ts)
+Integrate `@google/genai` to:
+- Pass video description/metadata to Gemini 2.5 Flash.
+- Receive JSON-formatted timestamps for "viral moments".
+
+#### [NEW] [clip/route.ts](file:///C:/GOLive/app/api/ai-studio/clip/route.ts)
+A POST endpoint that:
+- Triggers the clipping engine.
+- Uploads the resulting `.mp4` to the `/shorts` folder in R2.
+- Creates a new entry in the `videos` table with `is_short: true`.
+
+### [Frontend Components]
+
+#### [MODIFY] [page.tsx](file:///C:/GOLive/app/studio/ai-studio/page.tsx)
+- Connect "Clip & Post" buttons to the `/api/ai-studio/clip` route.
+- Add "Blur Padding" toggle for horizontal-to-vertical conversion.
+- Implement real-time progress bars for the clipping process.
+
+## Verification Plan
+
+### Automated Tests
+- `npm run dev` to verify the API responses.
+- Check Supabase for new `is_short` records after clipping.
+
+### Manual Verification
+- Navigate to `/shorts` to verify the clipped video plays with correct snap-scrolling.
+- Verify the video is correctly stored in Cloudflare R2 dashboard.

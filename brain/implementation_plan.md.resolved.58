@@ -1,0 +1,56 @@
+# Phase 11: Premium Ecosystem & Viral UX
+
+Elevating VibeStream with professional-grade upload controls, transcription intelligence, and an immersive "Shorts" discovery engine.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Tier-Based Limits**: Uploading will now be restricted by duration. 
+> - **Free Users**: 60 seconds (Shorts only style).
+> - **Premium Users**: Up to 30 minutes.
+>
+> **Transcription Research**: We will implement a "Request Transcript" button on the video settings, which will use an edge function to process audio via OpenAI Whisper.
+
+## Proposed Changes
+
+### Core: Subscription-Aware Uploads
+#### [MODIFY] [UploadPage.tsx](file:///C:/GOLive/app/upload/page.tsx)
+- Integrate `profile.subscription_tier` check.
+- Dynamically set `DURATION_LIMIT` (60s vs 1800s).
+- Add client-side validation using [loadedmetadata](file:///C:/GOLive/app/upload/page.tsx#19-27) to block uploads exceeding limits.
+- Update UI to show "Premium Limit" status.
+
+---
+
+### UX: Cinematic Video Player
+#### [MODIFY] [VideoPlayer.tsx](file:///C:/GOLive/components/VideoPlayer.tsx)
+- **Cinematic Mode**: Add a toggle to expand the player to a larger "Theater" view.
+- **Improved Scrubber**: Add chapter markers and preview thumbnail support.
+- **Glassmorphic Controls**: Refine the control bar with a more premium, translucent look.
+
+---
+
+### Shorts: Vertical Immersion & Discovery
+#### [MODIFY] [ShortsPage.tsx](file:///C:/GOLive/app/shorts/page.tsx)
+- **Strict Aspect Ratio**: Ensure the player is strictly 9:16 vertical on mobile and centered on desktop.
+- **Discovery Reel**: Add a "Trending Shorts" horizontal section on the [Home Page](file:///C:/GOLive/app/page.tsx).
+- **Auto-Play/Loop logic**: Refine the intersection observer for smoother scrolling.
+
+---
+
+### Intelligence: Transcription Pipeline
+#### [NEW] [transcription.ts](file:///C:/GOLive/lib/transcription.ts)
+- Implement a service to extract audio and send it to OpenAI Whisper.
+- Store transcripts in a new `transcripts` table.
+
+## Verification Plan
+
+### Automated Verification
+- Unit test for duration validation logic.
+- Verify `subscription_tier` mapping in the upload form.
+
+### Manual Verification
+- Attempt to upload a 2-minute video as a Free user (should fail).
+- Verify the "Cinematic Mode" expand/collapse animation.
+- Confirm Shorts appear in full-screen vertical mode on mobile viewports.
+- Click "Share" and verify link persistence.

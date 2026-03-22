@@ -1,0 +1,43 @@
+# Walkthrough — GoLive Phase 2 Expansion 🚀
+
+## Phase 2: Modernization & Discovery
+
+We've successfully modernized the core navigation and added three major new sections to the platform.
+
+### 1. Modern Collapsible Sidebar
+- **New Feature**: Clicking the "Menu" icon now toggles between full width and a sleek "mini mode".
+- **2026 Design**: Added active state glows, proper glassmorphism, and smooth transitions.
+- **Mini Mode**: Shows only icons for navigation and avatars for live channels.
+
+### 2. New Pages Implemented
+
+#### [Trending Page](file:///C:/GoLive/app/trending/page.tsx)
+- **Features**: Rank badges (#1, #2), horizontal "viral" card layout.
+- **Algorithm**: Mock implementation sorting by `Views + Likes - TimeDecay`.
+
+#### [Following Page](file:///C:/GoLive/app/subscriptions/page.tsx)
+- **Features**: Filter chips (All, Today, Live Now) and a focused video grid.
+- **Goal**: Clean space for users to catch up on their favorite content.
+
+#### [Creator Dashboard](file:///C:/GoLive/app/dashboard/page.tsx)
+- **Analytics**: Real-time overview of Views, Subscribers, and Revenue.
+- **Content Management**: A data table to manage uploads (Edit/Delete).
+- **Quick Upload**: Accessible button to drop new content.
+
+## What Changed
+
+| File | Changes |
+|------|---------|
+| [Layout.tsx](file:///C:/GoLive/components/Layout.tsx) | Added sidebar state management & responsive logic |
+| [Sidebar.tsx](file:///C:/GoLive/components/Sidebar.tsx) | implemented `isCollapsed` prop, new styling, mini-mode |
+| [Navbar.tsx](file:///C:/GoLive/components/Navbar.tsx) | Hooked up Menu button to toggle Sidebar |
+| [Trending](file:///C:/GoLive/app/trending/page.tsx) | **NEW** Page with ranking system |
+| [Subscriptions](file:///C:/GoLive/app/subscriptions/page.tsx) | **NEW** Page with filters |
+| [Dashboard](file:///C:/GoLive/app/dashboard/page.tsx) | **NEW** Creator tools & analytics |
+
+## How to Verify
+
+1. **Sidebar**: Click the hamburger menu in the top left. Watch it smoothly collapse/expand.
+2. **Trending**: Click "Trending" in sidebar. See the ranked video list.
+3. **Following**: Click "Following". Try the filter chips.
+4. **Dashboard**: Click "Dashboard" in the sidebar (under Library). Check out the stats.

@@ -1,0 +1,47 @@
+# Phase 46-49: VibeStream UI Migration
+
+## Goal Description
+The user has provided a new set of UI designs in a `vibestream` source folder (React/Vite). The objective is to implement this entirely new UI within our existing GoLive application (Next.js App Router). We must stringently adhere to **UI and styling only**, ensuring that underlying video logic, database connectivity, and backend architectures remain untouched unless requested by structural UI dependencies.
+
+The new theme shifts from "Cinematic Obsidian/Purple" to **VibeStream's "Electric Amber"** (`#FFB800`) with sleek framer-motion animations and a highly distinct black-and-amber aesthetic.
+
+## User Review Required
+> [!IMPORTANT]
+> **VibeStream Migration Approval**
+> This process involves replacing nearly all visual components ([Navbar](file:///C:/GOLive/components/Navbar.tsx#36-179), [Sidebar](file:///C:/GoLive/new%20UI/src/components/Sidebar.tsx#10-166), [Home](file:///C:/GoLive/new%20UI/src/pages/Home.tsx#6-28), [Watch](file:///C:/GoLive/new%20UI/src/pages/Watch.tsx#11-135), [Upload](file:///C:/GoLive/app/upload/page.tsx#100-698), etc.) with the provided React templates. We will need to adapt `react-router-dom` to Next.js App Router (`next/link`, `useRouter`). Please review the proposed changes below. If approved, we will begin execution.
+
+## Proposed Changes
+
+### [Design System] Globals & Dependencies
+#### [MODIFY] [package.json](file:///C:/GOLive/package.json)
+- Install `motion` (framer-motion) to support the new animations used in [Home.tsx](file:///C:/GoLive/new%20UI/src/pages/Home.tsx) and [Watch.tsx](file:///C:/GoLive/new%20UI/src/pages/Watch.tsx).
+#### [MODIFY] [app/globals.css](file:///C:/GOLive/app/globals.css)
+- Replace existing color tokens with VibeStream tokens (`--background: #0a0a0a`, `--primary: #FFB800`, etc.).
+- Add the specific `.glass` and `.scrollbar-hide` utility classes.
+
+### [Components] Shared UI
+#### [MODIFY] [components/Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx)
+- Implement code from [vibestream/src/components/Navbar.tsx](file:///C:/Users/Walt%20&%20Carter/Downloads/vibestream/src/components/Navbar.tsx).
+- Map `<Link to="...">` to `<Link href="...">`.
+#### [MODIFY] [components/Sidebar.tsx](file:///C:/GOLive/components/Sidebar.tsx)
+- Implement code from [vibestream/src/components/Sidebar.tsx](file:///C:/Users/Walt%20&%20Carter/Downloads/vibestream/src/components/Sidebar.tsx) and [MobileNav.tsx](file:///C:/Users/Walt%20&%20Carter/Downloads/vibestream/src/components/MobileNav.tsx).
+#### [MODIFY] [components/VideoCard.tsx](file:///C:/GOLive/components/VideoCard.tsx) & [components/CategoryBar.tsx](file:///C:/GOLive/components/CategoryBar.tsx)
+- Port VibeStream's video card structures with hover animations.
+
+### [Pages] Core Application Views
+#### [MODIFY] [app/HomeClient.tsx](file:///C:/GOLive/app/HomeClient.tsx)
+- Port [vibestream/src/pages/Home.tsx](file:///C:/Users/Walt%20&%20Carter/Downloads/vibestream/src/pages/Home.tsx). Integrate with our Supabase fetch logic.
+#### [MODIFY] [app/watch/[id]/WatchClient.tsx](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/app/watch/%5Bid%5D/WatchClient.tsx)
+- Combine [Watch.tsx](file:///C:/GoLive/new%20UI/src/pages/Watch.tsx), [Chat.tsx](file:///C:/GoLive/new%20UI/src/components/Chat.tsx), and [Comments.tsx](file:///C:/Users/Walt%20&%20Carter/Downloads/vibestream/src/components/Comments.tsx) from VibeStream. Retain our Supabase real-time subscription logic.
+#### [MODIFY] [app/profile/[username]/page.tsx](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/app/profile/%5Busername%5D/page.tsx)
+- Port [Channel.tsx](file:///C:/GoLive/new%20UI/src/pages/Channel.tsx) and [Profile.tsx](file:///C:/Users/Walt%20&%20Carter/Downloads/vibestream/src/pages/Profile.tsx) banner and tab layouts.
+#### [MODIFY] [app/search/page.tsx](file:///C:/GOLive/app/search/page.tsx)
+- Port [Search.tsx](file:///C:/GoLive/new%20UI/src/pages/Search.tsx) filtering UI.
+#### [MODIFY] [app/upload/page.tsx](file:///C:/GoLive/app/upload/page.tsx)
+- Port [Upload.tsx](file:///C:/Users/Walt%20&%20Carter/Downloads/vibestream/src/pages/Upload.tsx) visual form UI. Ensure the `ffmpeg.wasm` transcoding logic remains hooked up correctly behind the new buttons.
+
+## Verification Plan
+### Automated Tests
+- Build verification via `npm run dev`.
+### Manual Verification
+- Deploy UI test subagents (Agents Alpha, Beta, Gamma) to verify layout fidelity, framer-motion animations, and responsive breakpoints on port 3000.

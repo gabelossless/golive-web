@@ -245,6 +245,7 @@ export default function WatchClient({ video: initialVideo, recommendations: init
                             title={video.title}
                             onActiveWatch={handleActiveWatch}
                             isLive={video.is_live}
+                            playbackId={video.playback_id ?? undefined}
                             creator={{
                                 username: video.profiles?.username || 'Creator',
                                 wallet_address: video.profiles?.wallet_address,

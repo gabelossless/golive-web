@@ -1,0 +1,26 @@
+# Task: GoLive "Twitch Lead" Overhaul Checklist
+
+## Phase 25: Design System "Cinematic Obsidian" 🎨
+- [ ] **Color Tokens**: Define new Apple/Netflix monochromatic theme in [globals.css](file:///C:/GoLive/app/globals.css) (Obsidian #050505, Slate, Crimson).
+- [ ] **Typography & Borders**: Implement ultra-precise 0.5px borders and high-contrast typography.
+- [ ] **Global Refresh**: Update [Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx) and global layout with the new theme.
+
+## Phase 26: Homepage & Auth Overhaul 🏠
+- [ ] **Homepage Redesign**: Completely overhaul [HomeClient.tsx](file:///C:/GOLive/app/HomeClient.tsx) for a "Showcase" feel.
+- [ ] **Video Cards**: Update [VideoCard.tsx](file:///C:/GoLive/components/VideoCard.tsx) with high-end hover states and border logic.
+- [ ] **Auth Refresh**: Redesign [login/page.tsx](file:///C:/GOLive/app/login/page.tsx) and [register/page.tsx](file:///C:/GoLive/app/register/page.tsx) (centered, minimal, Apple-style fields).
+- [ ] **Search Box**: Fix the "terrible" search box in [Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx).
+
+## Phase 27: Data Integrity & Simulation 🤖
+- [ ] **Remove Mocks**: Scan and replace all hardcoded Unsplash/Dicebear images with dynamic fallbacks or user data.
+- [ ] **Database Patch**: Update schema for verified status and video durations.
+- [ ] **Agent Review (Simulated)**:
+  - [ ] 5 agents review Auth logic.
+  - [ ] 5 agents review Data fetching.
+  - [ ] 5 agents review UI/UX consistency.
+  - [ ] 5 agents review Performance/Security.
+- [ ] **Stress Test**: Simulate 20-agent interaction flow.
+
+## Phase 28: Final Production & Release 🚀
+- [ ] **Build Check**: Final `npm run build` verification.
+- [ ] **Git Push**: Commit and push final "Production Ready" version.

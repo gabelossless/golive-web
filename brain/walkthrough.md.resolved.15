@@ -1,0 +1,20 @@
+# Walkthrough — GoLive Phase 13: The Final Polish
+
+## Summary
+The application is now feature-complete for the core MVP scope. We've added proper settings management and library features.
+
+---
+
+## Changes Made
+
+### 1. Settings & Identity
+- **Profile Management**: Users can now update their Display Name, Bio, and Avatar URL in `/settings`.
+- **Persistence**: Changes are saved to Supabase and reflect immediately across the app (Profile page, Comments).
+
+### 2. Library Features
+- **Liked Videos**: New page `/liked` shows a grid of all videos the user has thumbs-up'd.
+- **Navigation**: Sidebar cleaned up. "Dashboard" -> "Studio". Removed dead links to non-existent features (Shorts, History) to focus on quality.
+
+## Verification
+- **Build**: Passed.
+- **Manual Test**: Changing bio in Settings updates the Profile page. Clicking "Liked Videos" shows correct content.

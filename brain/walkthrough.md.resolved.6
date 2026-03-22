@@ -1,0 +1,33 @@
+# Walkthrough — GoLive Phase 4: Mobile & Core Pages 📱
+
+## Phase 4: Complete User Experience
+
+We've rounded out the platform by ensuring a native-like experience on mobile and filling in the core library pages.
+
+### 1. Mobile Experience
+-   **Bottom Navigation**: A fixed bottom bar that appears **only on mobile devices**.
+    -   Hidden on desktop (where the Sidebar takes over).
+    -   Quick access to Home, Shorts, Create, Subs, and Profile.
+-   **Responsive Layout**: The main content area now automatically adjusts padding to accommodate the bottom bar on small screens.
+
+### 2. Core Library Pages
+
+#### [History Page](file:///C:/GoLive/app/history/page.tsx)
+-   **List View**: A clean, linear list of recently watched videos with progress bars.
+-   **Controls**: Sidebar with "Clear History" and "Pause History" options.
+
+#### [Liked Videos](file:///C:/GoLive/app/liked/page.tsx)
+-   **Playlist UI**: A YouTube-style "Playlist Sidebar" on the left showing the cover art and "Play All" buttons.
+-   **Grid**: A responsive grid of all liked content.
+
+### 3. User Settings
+
+#### [Settings Page](file:///C:/GoLive/app/settings/page.tsx)
+-   **Sidebar Layout**: Easy navigation between Account, Appearance, and Privacy.
+-   **Account**: Manage display name, handle, and bio.
+-   **Appearance**: Visual theme toggle (Light/Dark/System) with tactile preview cards.
+
+## How to Verify
+1.  **Mobile Check**: Resize your browser window to <768px width. Watch the Sidebar vanish and the **Bottom Nav** appear.
+2.  **Library**: Click "History" or "Liked Videos" in the usage sidebar.
+3.  **Settings**: Click the Settings icon in your Profile page or sidebar to customize your account.

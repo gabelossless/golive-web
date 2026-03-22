@@ -1,0 +1,25 @@
+# Walkthrough — GoLive Phase 7: Supabase Integration ⚡
+
+## Phase 7: Real Backend Power
+
+We have successfully connected GoLive to a real **Supabase** backend. The app now supports user authentication, database persistence, and file storage.
+
+### 1. Authentication
+-   **Sign Up**: Create a real account. This automatically creates a user profile in the database.
+-   **Login**: Securely log in to access protected features like Upload.
+-   **Profile**: Your username and avatar are now pulled from your real profile.
+
+### 2. Video Upload
+-   **Drag & Drop**: Visit `/upload` to see the new drag-and-drop interface.
+-   **Storage**: Videos and Thumbnails are uploaded to Supabase Storage buckets.
+-   **Database**: A new record is created in the `videos` table linking the file to your user.
+
+### 3. Home Feed
+-   **Real Data**: The home page now fetches *actual* videos from the database.
+-   **Loading States**: Added a loading spinner while fetching data.
+-   **Empty State**: Shows a friendly message if no videos exist yet.
+
+## How to Verify
+1.  **Register**: Go to `/register` and create an account.
+2.  **Upload**: Go to `/upload` and upload a small video file (MP4).
+3.  **Watch**: Go to the Home page `/` and see your new video appear!

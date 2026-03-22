@@ -1,0 +1,83 @@
+# VibeStream Pre-Launch: Session Walkthrough
+
+## What Was Built
+
+### Phase 1 — Bug Fixes (3 real bugs killed)
+- **[VideoCard.tsx](file:///C:/GOLive/components/VideoCard.tsx)**: Fixed duplicate [formatViews](file:///C:/GOLive/app/studio/dashboard/page.tsx#18-24) branch and made the verified `✓` badge conditional on `is_verified` flag
+- **[Sidebar.tsx](file:///C:/GOLive/components/Sidebar.tsx)**: Removed `Ninja`, `Valkyrae`, `MrBeast Gaming` fake users and `MrBeast Gaming` fake video thumbnails — replaced with live Supabase queries for real subscriptions and recent videos. Added **Shorts** nav link.
+- **[Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx)**: Avatar button now routes to `/studio/dashboard` instead of `/studio`.
+
+---
+
+### Phase 2 — Creator Dashboard (`/studio/dashboard`)
+Full creator control center with:
+- **Stats bar**: Total Views, Subscribers, Video count (live from Supabase)
+- **Video Manager**: Edit title/visibility (Public/Unlisted/Private), Delete with confirmation
+- **AI Studio CTA card**: Prominent entry point to the clip generator
+- Feedback toasts (no more `alert()` boxes)
+
+---
+
+### Phase 3 — AI Studio (`/studio/ai-studio`) — $0/month
+Apple-style step-by-step wizard:
+1. Select a video from your library
+2. **Gemini 2.5 Flash** (free tier, 250 req/day) returns 2–4 timestamped viral moments with scores
+3. Creator picks a moment, clicks "Clip & Post as Short"
+4. **ffmpeg** (open source) trims + converts to **9:16 reel format** (1080×1920) with blurred background fill for horizontal source videos
+5. Clip uploaded to R2 + saved to DB as `is_short=true`, goes live on `/shorts`
+
+**Cost: $0/month** — free Gemini API + open-source ffmpeg + existing R2 storage
+
+> [!IMPORTANT]
+> Add `GEMINI_API_KEY` to Vercel Environment Variables. Get it free at [aistudio.google.com](https://aistudio.google.com).
+
+---
+
+### Phase 4 — Shorts / Reels (`/shorts`)
+- Full-screen vertical snap-scroll feed
+- **Touch swipe** on mobile, **Arrow key** navigation on desktop
+- Auto-play/pause on scroll, mute toggle
+- Right-side action buttons: Like, Comment, Share, Follow
+- Scroll position indicator dots
+- Only shows videos where `is_short = true`
+
+**SQL Migration**: [setup-shorts.sql](file:///C:/GOLive/setup-shorts.sql) — adds `is_short` column + index ✅ (run manually by user)
+
+---
+
+### Phase 5 — Profile / Channel Overhaul
+- **Removed all external mock images**: no more `picsum.photos`, no more hardcoded Unsplash thumbnails
+- **Dynamic gradient banners**: computed from username hash — no external dependencies
+- **Separate Videos + Shorts tabs**: Shorts use a portrait 9/16 grid; Videos use the standard horizontal grid
+- **About tab**: Shows real stats (subscribers, video count, member since year, bio)
+- **In-channel search**: Filter videos by title within a creator's channel
+- **Smart empty states**: Guide owners to upload or use AI Studio
+- **Owner buttons**: "Dashboard" (→ `/studio/dashboard`) + "Customize" (→ `/studio`)
+
+---
+
+### Phase 6 — PWA / Mobile
+- [public/manifest.json](file:///C:/GOLive/public/manifest.json) added — "Add to Home Screen" works on iOS + Android
+- [app/layout.tsx](file:///C:/GOLive/app/layout.tsx) updated with manifest link + VibeStream branding in meta tags
+
+---
+
+### Studio Settings (`/studio`)
+- Removed `picsum.photos` external mock banner — replaced with CSS gradient
+- `alert()` → inline toast notifications
+- "Creator Dashboard" back-link at top of page
+
+---
+
+## What Still Needs Manual Action
+
+| Step | What | Where |
+|---|---|---|
+| 1 | Add `GEMINI_API_KEY` | Vercel → Project → Environment Variables |
+| 2 | Add `SUPABASE_SERVICE_ROLE_KEY` | Vercel → same (for AI Studio server queries) |
+| 3 | SQL migration | ✅ Done |
+
+## Commits Deployed
+- `feat: Creator Dashboard, AI Studio (Gemini), Shorts feed, PWA, remove mock data`
+- `feat: profile overhaul (real data, shorts tab, about tab), 9:16 reel format for AI clips`
+- `polish: studio settings (remove picsum, inline toast, Dashboard link), navbar → dashboard`

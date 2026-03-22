@@ -1,0 +1,57 @@
+# Phase 39: Mobile Upload & Premium UI Polish
+
+## Problem Statement
+The application currently faces two main issues:
+1. **iPhone Upload Failure**: Mobile users on iPhone report "Fetch error" or failures when uploading videos. This is often due to Safari's handling of `PUT` requests, large file memory limits, or mismatched `Content-Type` headers.
+2. **UI Aesthetic Refresh**: While functional, the UI needs a more "premium" feel inspired by Apple, Twitch, and YouTube—specifically better touch targets, refined typography, and more engaging active states.
+
+## User Review Required
+
+> [!IMPORTANT]
+> The iPhone upload fix involves moving from a basic [fetch](file:///C:/GOLive/components/Sidebar.tsx#48-64) PUT to a more robust `XMLHttpRequest` to better handle progress and avoid Safari memory issues with large files.
+
+## Proposed Changes
+
+### [Core] Upload Logic
+#### [MODIFY] [page.tsx](file:///C:/GOLive/app/upload/page.tsx)
+-   Switch from [fetch(url, { method: 'PUT', ... })](file:///C:/GOLive/components/Sidebar.tsx#48-64) to `XMLHttpRequest`.
+-   Add explicit `Content-Type` matching between the presigned URL request and the actual upload.
+-   Implement better error reporting for specific HTTP status codes (403, 413, etc.).
+-   Ensure file selection handles iPhone metadata (sometimes Safari gives generic filenames).
+
+---
+
+### [UI] Component Refinement (Apple/Twitch/YouTube Style)
+#### [MODIFY] [globals.css](file:///C:/GOLive/app/globals.css)
+-   **Typography**: Increase default line-heights and letter-spacing for headers.
+-   **Buttons**: Add a subtle "glass-shine" effect on hover/active.
+-   **Cards**: Soften shadows and add a very thin border highlight to give depth.
+-   **Touch Targets**: Global increase of `min-height` for interactive elements on mobile.
+
+#### [MODIFY] [Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx)
+-   Refine the search bar appearance on mobile.
+-   Add a subtle blur behind the logo and search when scrolling.
+
+#### [MODIFY] [BottomNav.tsx](file:///C:/GOLive/components/BottomNav.tsx)
+-   Improve the "Floating" Create button animation.
+-   Align labels and icons for a more "native app" feel.
+
+#### [MODIFY] [VideoCard.tsx](file:///C:/GOLive/components/VideoCard.tsx)
+-   Increase padding on mobile to avoid "cramped" look.
+-   Refine the views/timestamp font size for better legibility.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+-   `npm run build` to ensure no regressions.
+-   Browser agent test:
+    -   Sign in on a mobile viewport (iPhone simulation).
+    -   Perform a small video upload.
+    -   Check for 200 OK responses from R2.
+
+### Manual Verification
+-   Directly test on an actual iPhone if available.
+-   Verify that buttons have clear active states when tapped.
+-   Check that the layout doesn't "jump" during the upload progress.

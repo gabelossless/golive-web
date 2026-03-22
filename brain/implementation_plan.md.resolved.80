@@ -1,0 +1,230 @@
+# Production Hardening & Platform Quality Audit
+
+> **Analogy**: Floors 1-2 must be senior expert-level before building the skyscraper. Every foundational page must be bug-free, performant, and premium UX before adding new features.
+
+**Budget constraint**: No backend service changes. Staying on Supabase + Vercel + Cloudflare R2.
+
+---
+
+## Critical Bugs & Fixes (Must do before anything else)
+
+### 1. `useCallback` in JSX (React Rules Violation)
+**File**: [app/watch/[id]/WatchClient.tsx](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/app/watch/%5Bid%5D/WatchClient.tsx) line ~190  
+Calling `useCallback()` directly inside JSX is illegal in React — hooks cannot be called conditionally or inside render. This will cause a runtime crash.  
+**Fix**: Hoist the callback to the component body.
+
+### 2. Missing `import React` / `useCallback` at component level
+`useCallback` is imported from `'react'` but used in JSX — this is a React Rules of Hooks violation.
+
+### 3. `Pause` icon not imported in VideoPlayer
+[VideoPlayer.tsx](file:///C:/GOLive/components/VideoPlayer.tsx) imports `Play, Pause` — need to double-check `Pause` is in the lucide-react import.
+
+---
+
+## Proposed Changes by Page
+
+---
+
+### Core / Layout
+#### [MODIFY] [WatchClient.tsx](file:///C:/GOLive/app/watch/[id]/WatchClient.tsx)
+- **Critical Bug Fix**: Hoist `onActiveWatch` to `useCallback` at the component level (not in JSX).
+- **UX**: Add `useCallback` import from `react` at top level (not duplicate).
+
+#### [MODIFY] [VideoPlayer.tsx](file:///C:/GOLive/components/VideoPlayer.tsx)
+- **Inline style lint**: Move progress bar and ambient canvas dynamic styles to CSS variables / global.css to satisfy lint. Keep CSS vars in the style prop is acceptable workaround.
+- **Bug**: Add `onPlay`/`onPause` event listeners to the `<video>` element to sync `isPlaying` state with native browser controls (e.g., media keys, Picture-in-Picture).
+
+#### [MODIFY] [Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx)
+- **Performance**: Ensure auth state is not double-fetched. Use context only.
+- **UX**: Ensure search input routes correctly to `/search?q=`.
+
+#### [MODIFY] [Sidebar.tsx](file:///C:/GOLive/components/Sidebar.tsx)
+- **Bug**: Verify Shorts/Following/History links exist and route correctly.
+
+---
+
+### Page-by-Page Audit Plan
+
+| Page | Audit Focus |
+|---|---|
+| `/` (Home) | Verify lazy-loading works, fallback empty state |
+| `/watch/[id]` | Fix hooks bug, test playback, sharing, likes, views |
+| `/shorts` | Scroll snapping, swipe, audio, subscribe button |
+| `/trending` | Verify sort order, empty state |
+| `/search` | Test query routing, empty results state |
+| `/login` | Error states, redirect after login |
+| `/register` | Form validation, error messages |
+| `/profile/[username]` | Videos/Shorts tabs, follow count, empty state |
+| `/studio/dashboard` | Video list, delete, edit, upload redirect |
+| `/studio/settings` | Form save, channel branding |
+| `/studio/ai-studio` | AI clip analysis E2E flow |
+| `/upload` | Shorts detection, tags autocomplete, upload success |
+| `/premium` | Toggle visibility, accurate pricing |
+| `/admin/*` | Route guard, protected access |
+| `/subscriptions` | Following tab populated after subscribing |
+| `/liked` | Shows liked videos |
+| `/history` | View history persisted |
+| `/settings` | User preferences save |
+
+---
+
+### Performance (Scalability for 100k-1M users on $100 budget)
+- **Image optimization**: Ensure all `<img>` tags use Next.js `<Image>` component with `loading="lazy"`.
+- **Component code splitting**: Verify heavy pages use `dynamic()` imports.
+- **Supabase query limits**: Ensure every query has a `.limit()` clause to avoid full-table scans.
+- **RLS Policies**: Verify Row Level Security is enabled on all tables.
+- **Error boundaries**: Ensure `error.tsx` catches runtime errors gracefully.
+
+---
+
+## Verification Plan
+
+### Browser Agent Tests (automated)
+1. Test every major page route for visual errors, broken layouts, or console errors.
+2. Test login → upload → watch → like → share flow.
+3. Test Shorts vertical scroll on mobile viewport.
+4. Verify `/admin` redirects unauthenticated users.
+
+### Manual Verification
+- User to check Supabase dashboard for RLS policies on `videos`, `likes`, `subscriptions`, `comments`.
+---
+
+## Phase 25: Search & Discovery Intelligence
+
+The goal is to move from "Basic Search" to "Discovery Intelligence," allowing users to find specific content with high precision.
+
+### Proposed Changes
+
+#### [MODIFY] [search/page.tsx](file:///C:/GOLive/app/search/page.tsx)
+- **Filters UI**: Add a "Sliders" icon that opens a horizontal or vertical drawer with the following options:
+    - **Upload Date**: Last hour, Today, This week, This month, This year.
+    - **Duration**: Short (< 4m), Medium (4-20m), Long (> 20m).
+    - **Features**: Live, 4K, Subtitles, Creative Commons.
+    - **Sort By**: Relevance, Upload date, View count, Rating.
+
+#### [MODIFY] [Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx)
+- **Autocomplete**: Integrate the `tags` system to suggest terms as the user types.
+- **UX**: Show a "Searching for..." ghost text or recent searches history.
+
+#### [MODIFY] [WatchClient.tsx](file:///C:/GOLive/app/watch/[id]/WatchClient.tsx)
+- **Recommendations**: Replace random shuffling with a "Category + Tags" proximity check. If a video is "Gaming" and has "Minecraft" tags, prioritize other "Minecraft" videos in the sidebar.
+
+### Verification Plan
+
+- [ ] Search for "test" and filter by "Today" — verify the query string correctly appends `?d=today`.
+- [ ] Verify the Recommendation engine doesn't crash if a video has no tags.
+- [ ] Test Autocomplete speed in the Navbar.
+---
+
+## Phase 27: Bot Ecosystem Expansion & Admin Management
+
+This phase focuses on populating the platform with a high-fidelity bot workforce and providing admin tools for their management.
+
+#### [NEW] [create-bots/route.ts](file:///C:/GOLive/app/api/admin/create-bots/route.ts)
+- POST endpoint that uses `supabase-js` service role to bulk create `Auth` users and `Profiles`.
+- Generates 50 unique bot identities with randomized usernames and personas.
+
+#### [NEW] [bots/page.tsx](file:///C:/GOLive/app/# Phase 30: System Audit & Hardening
+
+This phase addresses the critical technical gaps identified during our platform audit, specifically focusing on SEO discoverability, UI performance, and user experience during content creation.
+
+## User Review Required
+
+> [!WARNING]
+> Implementing Adaptive Bitrate Streaming (HLS / `.m3u8`) requires a significant re-architecture of the `ffmpeg` video processor ([lib/video-processor.ts](file:///C:/GOLive/lib/video-processor.ts)) and the Cloudflare R2 upload pipeline (`app/api/upload/multipart/route.ts`). Instead of uploading a single `.mp4`, we would need to generate and upload an index file and dozens of [.ts](file:///C:/GOLive/next-env.d.ts) segments.
+> **Decision Needed:** Should we proceed with the complex HLS video re-architecture now, or prioritize the high-impact front-end fixes (SEO Metadata, Lazy Loading, Background Uploads) to ensure immediate virality and performance?
+
+## Proposed Changes
+
+---
+
+### SEO & Metadata Infrastructure
+
+To ensure VibeStream links (Watch and Profile pages) unfurl correctly with dynamic thumbnails and titles on platforms like Twitter, Discord, and iMessage:
+
+#### [MODIFY] [app/watch/[id]/page.tsx](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/app/watch/%5Bid%5D/page.tsx)
+- **Addition**: Export a Next.js [generateMetadata({ params })](file:///C:/GOLive/app/watch/%5Bid%5D/page.tsx#13-60) function.
+- **Logic**: Fetch the specific video by ID server-side before rendering. Map the `video.title`, `video.description`, and `video.thumbnail_url` to Open Graph (`og:title`, `og:image`, `og:description`) and Twitter Card meta tags.
+
+#### [MODIFY] [app/profile/[username]/page.tsx](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/app/profile/%5Busername%5D/page.tsx)
+- **Addition**: Export [generateMetadata({ params })](file:///C:/GOLive/app/watch/%5Bid%5D/page.tsx#13-60).
+- **Logic**: Fetch the specific user profile. Map their `display_name`, `bio`, and `avatar_url` to accurate social sharing cards.
+
+---
+
+### UI Performance (Lazy Loading)
+
+To aggressively reduce First Contentful Paint (FCP) and prevent massive initial payloads when rendering the `HomeClient` feed or `Trending` grids:
+
+#### [MODIFY] [components/VideoCard.tsx](file:///C:/GOLive/components/VideoCard.tsx)
+- **Implementation**: Integrate `react-intersection-observer` (or the native Intersection Observer API).
+### SEO Metadata
+#### [MODIFY] [app/watch/[id]/page.tsx](file:///C:/GOLive/app/watch/[id]/page.tsx)
+- Export Next.js [generateMetadata](file:///C:/GOLive/app/watch/%5Bid%5D/page.tsx#13-60) function.
+- Fetch video details by ID and populate Open Graph (`og:title`, `og:image`, `og:video`) and Twitter Card metadata.
+
+#### [MODIFY] [app/profile/[username]/page.tsx](file:///C:/GOLive/app/profile/[username]/page.tsx)
+- Export [generateMetadata](file:///C:/GOLive/app/watch/%5Bid%5D/page.tsx#13-60) function.
+- Fetch profile data and populate OG tags with the creator's avatar and bio.
+
+### Performance (Lazy Loading)
+#### [MODIFY] [components/VideoCard.tsx](file:///C:/GOLive/components/VideoCard.tsx)
+- Implement a custom `useIntersectionObserver` hook (or use `react-intersection-observer` if installed, otherwise vanilla `IntersectionObserver`).
+- Only load the `img src` for the thumbnail when the card is within 100px of the viewport.
+- Maintain a beautiful skeleton state while the thumbnail is out of view or loading.
+
+### UX Optimization (Background Uploads)
+
+Currently, users must wait on the `/upload` page while their video processes. We will implement "fire and forget" uploads.
+
+#### [NEW] [components/UploadProvider.tsx](file:///C:/GOLive/components/UploadProvider.tsx)
+- A React Context that wraps the application.
+- Houses the multi-part R2 upload logic and `/api/process` call previously found in [upload/page.tsx](file:///C:/GOLive/app/upload/page.tsx).
+- Maps internal upload progress to a globally visible Toast locked to the bottom margin of the viewport.
+
+#### [MODIFY] [app/layout.tsx](file:///C:/GOLive/app/layout.tsx)
+- Wrap children with `<UploadProvider>`.
+
+#### [MODIFY] [app/upload/page.tsx](file:///C:/GOLive/app/upload/page.tsx)
+- Strip the inline upload logic.
+- Consume [startUpload](file:///C:/GOLive/components/UploadProvider.tsx#45-193) from [UploadProvider](file:///C:/GOLive/components/UploadProvider.tsx#33-243).
+- Upon form submission, instantly redirect the user to `/studio/dashboard` while the UploadProvider handles the rest in the background.
+
+---
+
+---
+
+## Phase 32: Multi-Chain Revenue Sharing (75/25 Split)
+
+This phase transitions from simple P2P tips to a production-grade, non-custodial payment system with platform revenue sharing.
+
+### 1. Multi-Chain Infrastructure
+- **Solana Integration**: Add `@solana/web3.js` for native SOL and USDC (SPL) payments.
+- **Base (EVM) Integration**: Leverage existing `viem` setup on the Base network for low-fee ETH/USDC payments.
+- **Wallet Recovery**: Support both MetaMask/Rabby (EVM) and Phantom/Solflare (Solana).
+
+### 2. Smart Contract Splitting (Non-Custodial)
+To remain a "technology provider" and not a "money transmitter," all payments will be split atomically on-chain.
+- **EVM (Base)**: Use a lightweight "Splitter" contract or a multi-output transaction (Batcher).
+- **Split Logic**: 75% → Creator Wallet, 25% → VibeStream Platform Wallet.
+- **Tokens**: Support USDC on both Base (ERC20) and Solana (SPL).
+
+### 3. UI/UX Expansion
+- **Tip Modal**: Redesign the "Tip" button to open a modal where users select:
+    - **Chain**: Solana or Base.
+    - **Asset**: Native (SOL/ETH) or USDC.
+    - **Amount**: Preset vibes ($1, $5, $20) or custom.
+- **Settings**: Add a "Revenue" tab in the Studio for creators to see their payout history (on-chain).
+
+### Proposed Changes
+#### [MODIFY] [TipButton.tsx](file:///C:/GOLive/components/TipButton.tsx)
+- Rebuild as a multi-chain payment modal.
+- Integrate Solana wallet detection.
+#### [MODIFY] [studio/settings/page.tsx](file:///C:/GOLive/app/studio/settings/page.tsx)
+- Add "Wallet (Solana)" and "Wallet (Base)" fields.
+- Add "Platform Fee Acknowledgment" (75/25 split).
+
+### Verification Plan
+1. **Solana Test**: Send 0.01 SOL on Devnet and verify the split to two addresses.
+2. **Base Test**: Send 0.001 ETH on Base Sepolia and verify the 75/25 split.
+3. **USDC Test**: Perform token transfers on both chains.

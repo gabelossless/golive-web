@@ -1,0 +1,57 @@
+# Phases 4-6: Scale, PWA & Premium
+
+This plan covers the final stretch: the engagement "Hype" engine, mobile optimization (PWA), and a new Premium revenue model.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Premium Logic**: $10/mo will be tracked via a new `subscription_tier` column in the `profiles` table. Verified badges will be displayed next to usernames for these users.
+
+> [!NOTE]
+> **Storage Resilience**: We will prioritize Cloudflare R2 for all users, but implement a fallback to Supabase Storage for Premium users if R2 latency is high (as requested).
+
+## Proposed Changes
+
+### [Phase 4: Shorts & Hype Engine]
+
+#### [MODIFY] [WatchClient.tsx](file:///C:/GOLive/app/watch/[id]/WatchClient.tsx)
+- Implement "Hype" (Upvote) animation and database persistence.
+- Add "Global Vibe" score leaderboard.
+
+#### [MODIFY] [VideoCard.tsx](file:///C:/GOLive/components/VideoCard.tsx)
+- Add "Trending" badge for high-velocity videos.
+- Add "Verified" badge for Premium creators.
+
+### [Phase 5: Mobile PWA & Push]
+
+#### [NEW] [manifest.json](file:///C:/GOLive/public/manifest.json)
+Standard PWA manifest for "Add to Home Screen" support.
+
+#### [NEW] [sw.ts](file:///C:/GOLive/public/sw.ts)
+Service worker for basic caching and offline support.
+
+### [Phase 6: Revenue, Verification & Settings]
+
+#### [NEW] [SettingsPage](file:///C:/GOLive/app/studio/settings/page.tsx)
+- Implementation of a "Creator Settings" dashboard.
+- Ability to update `@username` (with uniqueness check).
+- Ability to update "Display Name" and "Channel Name".
+- Modify bio and social links.
+
+#### [MODIFY] [Subscription Logic]
+- Create `/api/premium/subscribe` endpoint.
+- Update `profiles` table to include `subscription_tier` and `is_verified`.
+
+## Bug Fix: AI Clipping Core
+
+- **FFmpeg Path**: I will switch to a "bundled binary" approach or use a more resilient path resolution that handles Next.js Turbopack virtualization (fixing the `ENOENT` error).
+
+## Verification Plan
+
+### Automated Tests
+- Test `/shorts` on mobile viewport (already verified working once, but will re-check after Hype engine updates).
+- Verify `is_verified` flag correctly renders the badge.
+
+### Manual Verification
+- User to test the "Clip & Post" flow once fixed.
+- Verify "Verified" badge appears on Creator Dashboard.

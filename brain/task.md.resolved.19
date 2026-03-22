@@ -1,0 +1,17 @@
+# Task: GoLive Development Checklist
+
+## Phase 1-4: Core, Mobile, & Refinement (Completed)
+- [x] UI Redesign & Tailwind v4 Fix `[x]`
+- [x] Modern Sidebar & Discovery Pages `[x]`
+- [x] Search Bar, Comments, Channel Hub `[x]`
+- [x] Mobile Nav, History, Settings `[x]`
+
+## Phase 5: Shorts & Notifications (Completed)
+- [x] Immersive Shorts Experience `[x]`
+    - [x] Create [app/shorts/page.tsx](file:///C:/GoLive/app/shorts/page.tsx) (Snap scroll layout)
+    - [x] Build `ShortsPlayer` component (Overlays + Actions)
+    - [x] Update Mobile Nav link
+- [x] Notification System `[x]`
+    - [x] Create `NotificationDropdown` component
+    - [x] Wire up to Navbar Bell icon
+- [x] Final Verification & Sync `[x]`

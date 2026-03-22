@@ -1,0 +1,42 @@
+# Walkthrough — GoLive Phase 9: UI & Discovery Polish
+
+## Summary
+Major UI overhaul across four key pages plus supporting infrastructure.
+
+---
+
+## Changes Made
+
+### 1. Home Page ([page.tsx](file:///C:/GoLive/app/page.tsx))
+- **Hero Banner**: Top-viewed video displayed as a cinematic banner with gradient overlay
+- **Skeleton Loaders**: 8 shimmer placeholders while data loads
+- **Category Chips**: Icons, blur backdrop, and shadow on active state
+- **Section Headers**: "Recommended" / category name with trending link
+- **Empty State**: Illustrated CTA with Upload button
+
+### 2. VideoCard ([VideoCard.tsx](file:///C:/GoLive/components/VideoCard.tsx))
+- **Animated Entrance**: `fade-in` + `slide-in-from-bottom` on mount
+- **Gradient Hover**: Bottom-to-top dark overlay on thumbnail hover
+- **Progress Bar Shimmer**: Purple bar expands on hover
+- **Avatar Ring**: Glows primary on hover
+- **Formatted Stats**: "1.2K views · 2h ago" via [formatViews](file:///C:/GoLive/lib/utils.ts#5-16) + [timeAgo](file:///C:/GoLive/lib/utils.ts#17-40)
+
+### 3. Trending Page ([page.tsx](file:///C:/GoLive/app/trending/page.tsx))
+- **Real Data**: Fetches from Supabase `videos` table, sorted by `view_count` descending
+- **Time-Range Tabs**: Today / This Week / This Month with active pill styling
+- **Rank System**: Gold/Silver/Bronze trophies for top 3, gradient row backgrounds
+- **Loading/Empty States**: Spinner and illustrated empty state
+
+### 4. Upload Page ([page.tsx](file:///C:/GoLive/app/upload/page.tsx))
+- **Native File Inputs**: Removed `react-dropzone` dependency for reliability
+- **Thumbnail Preview**: Live image preview when a thumbnail is selected
+- **Progress Bar**: Animated gradient bar with step labels ("Uploading video...", "Publishing...")
+- **Success State**: Animated confirmation with "Go Home" / "Upload Another" actions
+- **Character Counters**: Title (100) and Description (5000) limits
+
+### 5. Utilities ([utils.ts](file:///C:/GoLive/lib/utils.ts))
+- [formatViews(count)](file:///C:/GoLive/lib/utils.ts#5-16) → "1.2K", "3.4M"
+- [timeAgo(dateString)](file:///C:/GoLive/lib/utils.ts#17-40) → "2h ago", "3d ago"
+
+### 6. Skeleton Component ([VideoCardSkeleton.tsx](file:///C:/GoLive/components/VideoCardSkeleton.tsx))
+- Pulsing placeholder matching VideoCard layout

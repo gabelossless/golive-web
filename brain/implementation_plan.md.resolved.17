@@ -1,0 +1,37 @@
+# Twitch/Apple Inspired Auth Redesign & Fixes
+
+Based on the audit, the Next.js codebase for Google OAuth is actually 100% correct. If Google login is failing, it is because **Supabase** (the backend, likely what you meant by Firebase) or Google Cloud Console is not configured correctly. We will also aggressively redesign the login and signup forms to match the high-end Apple/Twitch aesthetic.
+
+## User Review Required
+
+> [!CAUTION]
+> **Google OAuth Configuration Needed**
+> The code `supabase.auth.signInWithOAuth({ provider: 'google' })` is correct. If it fails, you MUST check the following in your Supabase Dashboard:
+> 1. Go to **Authentication -> Providers -> Google**.
+> 2. Ensure it is **Enabled**.
+> 3. Verify the **Client ID** and **Client Secret** match your Google Cloud Console exactly.
+> 4. In Google Cloud Console, ensure your **Authorized Redirect URIs** include `https://<your-project>.supabase.co/auth/v1/callback`.
+> 5. In Supabase **Authentication -> URL Configuration**, ensure your Site URL is set, and Redirect URLs include `http://localhost:3000/**` (for local dev) and your Vercel URL (e.g., `https://golive-web.vercel.app/**`).
+
+## Proposed Changes
+
+### [Auth UI Overhaul]
+
+#### [MODIFY] [login/page.tsx](file:///C:/GOLive/app/login/page.tsx)
+-   **Aesthetic Shift**: Move from generic glassmorphism to a crisp, high-contrast **Apple/Twitch hybrid**. Deep solid dark backgrounds (`#0e0e10`), flawless crisp borders, and zero messy glowing blobs.
+-   **Typography**: Force clean geometric sans-serif (Inter) with tight tracking for headers and perfect anti-aliasing.
+-   **Inputs**: Remove Lucide icons from inside the inputs. Use ultra-clean forms with floating labels, thick focus rings (Apple style padding with Twitch purple rings 💍).
+-   **Google Button**: Create a premium pill-shaped standard Google SSO button.
+
+#### [MODIFY] [register/page.tsx](file:///C:/GOLive/app/register/page.tsx)
+-   **Consistency**: Apply the exact same structural redesign to the registration page.
+-   **Layout**: Ensure the card styling feels grounded and substantial, not overly "floaty". 
+
+## Verification Plan
+
+### Automated Tests
+-   `npm run build` to verify syntax.
+
+### Manual Verification
+-   Visually inspect the `/login` and `/register` pages to ensure they meet the aggressive quality bar required for an Apple/Twitch aesthetic.
+-   **User Action:** User must test Google Login manually after verifying Supabase Dashboard settings.

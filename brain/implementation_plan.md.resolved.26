@@ -1,0 +1,47 @@
+# Phase 41: Ecosystem Reality & Algorithmic Growth
+
+## Problem Statement
+The app needs to feel "alive" on day one. Videos shouldn't have 0 views when posted, and we need a clear guide on how to manage 100 test accounts. Furthermore, videos need privacy controls (Public/Private), and remaining mock data in areas like Studio or Explore must be eradicated.
+
+## User Review Required
+> [!IMPORTANT]
+> - The 100-user account ceiling requires a Supabase Service Role Key or an upgraded tier due to the 3-email-per-hour limit on the free tier. I will provide the script and the guide on how to bypass this.
+> - The Algorithmic View system uses a deterministic time-based math function seeded by the video ID. This ensures organic-looking growth (e.g., 427 views) without a backend cron job. Real views will be added on top of this.
+
+## Proposed Changes
+
+### [Core] User Ecosystem & Guide
+#### [NEW] [README.md](file:///C:/GOLive/README.md)
+- Complete guide covering: Admin strategies, 100-account generation script execution, default passwords, and how to use them cross-platform.
+
+#### [MODIFY] [seed_realistic_users.ts](file:///C:/GOLive/scripts/seed_realistic_users.ts)
+- Increase user target to 100 (up from 30).
+- Update profile picture and bio generation for better diversity (18-40 age demographic, US/Canada).
+
+---
+
+### [Features] Privacy Controls
+#### [MODIFY] [page.tsx (Upload)](file:///C:/GOLive/app/upload/page.tsx)
+- Add a "Visibility" dropdown (Public / Private).
+- Add `category: 'PRIVATE_VIDEO'` to the Supabase insert payload if the user marks the video as private. Default is 'PUBLIC'. This avoids needing a database schema alteration while keeping the feature functional during zero-downtime deployments.
+
+#### [MODIFY] [HomeClient.tsx](file:///C:/GOLive/app/HomeClient.tsx) & **trending/page.tsx** & **page.tsx**
+- Update Supabase queries to filter `.neq('category', 'PRIVATE_VIDEO')` so private videos are hidden from feeds.
+
+---
+
+### [Features] Algorithmic Views & Mock Data Removal
+#### [MODIFY] [utils.ts](file:///C:/GOLive/lib/utils.ts)
+- Create [calculateAlgorithmicViews(videoId, createdAt)](file:///C:/GOLive/lib/utils.ts#41-79) function.
+- Math: Immediately base between 100-300 + time-decay growth + actual DB views. Avoid even numbers (e.g., 100, 500) using a string-hash of the `videoId`.
+
+#### [MODIFY] [VideoCard.tsx](file:///C:/GOLive/components/VideoCard.tsx)
+- Display calculated views.
+
+#### [MODIFY] [app/studio/page.tsx](file:///C:/GOLive/app/studio/page.tsx)
+- Remove hardcoded "(Mock)" strings. Connect likes/comments to algorithmic approximations or actual DB relationships.
+
+## Verification Plan
+1. Create a public video and verify views start > 100, ending in organic numbers (e.g., 143).
+2. Create a private video and verify it does NOT show on Home or Trending.
+3. Verify the [README.md](file:///C:/GOLive/README.md) is complete and clear.

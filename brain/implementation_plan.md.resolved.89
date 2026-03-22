@@ -1,0 +1,59 @@
+# Phase 37: Advanced Analytics & Backend Audit
+
+Transform VibeStream's analytics from a basic view counter to a professional-grade tracking engine with session integrity and granular video-level stats.
+
+## Proposed Changes
+
+### [Component] Backend (Supabase/SQL)
+
+#### [NEW] `scripts/phase-37-analytics.sql`(file:///C:/GOLive/scripts/phase-37-analytics.sql)
+- **Table: `video_daily_stats`**: Stores `video_id`, [date](file:///C:/GOLive/app/upload/page.tsx#159-162), `views`, `likes`, `hypes`, `unique_viewers`, `avg_watch_time`.
+- **Table: `video_views_log`**: Logs raw view events with `ip_hash` and `session_id` for deduplication.
+- **RPC: `track_video_view`**: Securely increments views based on a 6-hour IP/Session cooldown.
+- **RPC: `get_video_analytics_v2`**: High-performance aggregate fetcher for studio charts.
+
+#### [MODIFY] [scripts/daily-stats.sql](file:///C:/GOLive/scripts/daily-stats.sql)(file:///C:/GOLive/scripts/daily-stats.sql)
+- Harmonize with the new `video_daily_stats` system.
+
+---
+
+### [Component] API Layer
+
+#### [MODIFY] [route.ts](file:///C:/GOLive/app/api/studio/analytics/route.ts)
+- Update to pull data from `video_daily_stats` and `video_views_log`.
+- Add support for date range filtering and per-video resolution.
+
+#### [NEW] [video-stats-route.ts](file:///C:/GOLive/app/api/studio/analytics/video/[id]/route.ts)
+- Fetch detailed analytics for a single video.
+
+---
+
+### [Component] Frontend (Creator Studio)
+
+#### [MODIFY] [DashboardClient.tsx](file:///C:/GOLive/app/studio/dashboard/DashboardClient.tsx)
+- Enhance the **Analytics & Revenue** tab with:
+  - "Top Content" list with view velocity indicators.
+  - "Audience Retention" placeholder or basic stats.
+  - Multi-series charts (Views vs Hypes).
+
+#### [NEW] [VideoAnalytics.tsx](file:///C:/GOLive/app/studio/video/[id]/analytics/page.tsx)
+- Dedicated deep-dive analytics page for individual videos.
+
+---
+
+### [Component] Security Audit
+
+#### [AUDIT] All RPCs
+- Run a security sweep on `SECURITY DEFINER` functions.
+- Ensure `auth.uid()` checks are present on all state-mutating functions.
+- Verify CSRF protection via Supabase's built-in session handling.
+
+## Verification Plan
+
+### Automated Tests
+- RPC Test: Call `track_video_view` multiple times with same IP/Session and verify it only increments once per cooldown.
+- API Test: Verify `/api/studio/analytics` returns consistent data across the new schema.
+
+### Manual Verification
+- Simulate 100+ views using the "Boost" tool and check `video_daily_stats` propagation.
+- Verify charts in Creator Studio populate correctly after 24h of data (simulated).

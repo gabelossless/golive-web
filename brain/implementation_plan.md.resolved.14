@@ -1,0 +1,28 @@
+# Phase 15: Critical UX & Player Optimization
+
+## Goal Description
+Optimize the video playback experience for all resolutions (Mobile to 4K). Implement a "Theater Mode" that mimics YouTube's ability to expand the player, utilizing the full screen width on large displays ($0 overhead, pure CSS/State).
+
+## Proposed Changes
+
+### Watch Page
+#### [MODIFY] [app/watch/[id]/page.tsx](file:///C:/GoLive/app/watch/[id]/page.tsx)
+- Add `isTheater` state.
+- Implement container width logic:
+  - Default: `max-w-[1280px]` (Standard)
+  - Theater: `w-full` (4K/Ultrawide optimization)
+- Add "Cinematic" button to toggle mode.
+- Improve mobile layout (sticky header or standardized padding).
+
+### Live Page
+#### [MODIFY] [app/live/[id]/page.tsx](file:///C:/GoLive/app/live/[id]/page.tsx)
+- Ensure the chat sidebar collapses gracefully on iPad/Tablet.
+- Verify 4K scaling for the video container (currently uses `flex-1`, which is good).
+
+## "Premium Plugin" Research
+- **Vidstack**: excellent free open-source player.
+- **Decision**: To avoid risk of breaking the build with new dependencies, we will first build the **Layout Infrastructure** (Theater Mode) which is the prerequisite for any premium player. The current native player is robust enough for Phase 15, and we can swap the "engine" later if needed.
+
+## Verification
+- **4K Monitor**: Turn on Theater Mode, verify video spans width.
+- **Mobile**: Verify no horizontal scroll, video is centered.

@@ -1,0 +1,28 @@
+# Phase 13: Feature Completion - Settings & Library
+
+## Goal Description
+Connect the Settings page to real user data to allow profile customization. Fix broken sidebar navigation links and implement the "Liked Videos" library page.
+
+## Proposed Changes
+
+### Settings Page
+#### [MODIFY] [app/settings/page.tsx](file:///C:/GoLive/app/settings/page.tsx)
+- Fetch current user profile from `profiles` table.
+- Populate inputs with real data.
+- Implement `updateProfile` function to save changes to Supabase.
+- Add Avatar upload (or robust URL input for now).
+
+### Navigation
+#### [MODIFY] [components/Sidebar.tsx](file:///C:/GoLive/components/Sidebar.tsx)
+- Change `/dashboard` link to `/studio`.
+- Update other placeholder links if necessary.
+
+### New Pages
+#### [NEW] [app/liked/page.tsx](file:///C:/GoLive/app/liked/page.tsx)
+- Fetch videos liked by the current user.
+- Render as a video grid.
+
+## Verification
+- **Settings**: Change bio/name, save, reload to verify persistence. Check Profile page to see changes.
+- **Sidebar**: Click "Dashboard", veriy it goes to Studio.
+- **Liked**: Like a video, go to `/liked`, verify it appears.

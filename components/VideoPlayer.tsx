@@ -5,6 +5,7 @@ import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Settings } from 'luc
 import { motion, AnimatePresence } from 'framer-motion';
 import Hls, { HlsConfig } from 'hls.js';
 import TipButton from './TipButton';
+import { getDecentralizedUrl, getLivepeerPlaybackUrl } from '@/lib/cdn';
 
 interface VideoPlayerProps {
     src: string;
@@ -17,6 +18,7 @@ interface VideoPlayerProps {
         solana_wallet_address?: string;
     };
     isLive?: boolean;
+    playbackId?: string;
 }
 
 function cn(...classes: (string | undefined | null | false)[]) {
@@ -31,7 +33,7 @@ function formatTime(time: number): string {
 }
 
 export default function VideoPlayer(props: VideoPlayerProps) {
-    const { src, poster, title, onActiveWatch, creator, isLive } = props;
+    const { src, poster, title, onActiveWatch, creator, isLive, playbackId } = props;
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
@@ -66,6 +68,10 @@ export default function VideoPlayer(props: VideoPlayerProps) {
         autoStartLoad: true
     }), []);
 
+    const finalSrc = useMemo(() => {
+        return playbackId ? getLivepeerPlaybackUrl(playbackId) : getDecentralizedUrl(src);
+    }, [src, playbackId]);
+
     // Cleanup HLS instance
     const destroyHls = useCallback(() => {
         if (hlsRef.current) {
@@ -85,8 +91,8 @@ export default function VideoPlayer(props: VideoPlayerProps) {
         setError(null);
         hasTriggeredWatch.current = false;
         
-        const isHls = src.includes('.m3u8');
-
+        const isHls = src.includes('.m3u8') || !!playbackId;
+        
         if (isHls && Hls.isSupported()) {
             destroyHls();
             const hls = new Hls(hlsConfig);
@@ -111,14 +117,14 @@ export default function VideoPlayer(props: VideoPlayerProps) {
                 }
             });
 
-            hls.loadSource(src);
+            hls.loadSource(finalSrc);
             hls.attachMedia(video);
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             // Native Safari HLS
-            video.src = src;
+            video.src = finalSrc;
         } else {
             // Standard MP4 Fallback
-            video.src = src;
+            video.src = finalSrc;
         }
 
         return () => destroyHls();
@@ -290,7 +296,7 @@ export default function VideoPlayer(props: VideoPlayerProps) {
 
             <video
                 ref={videoRef}
-                poster={poster}
+                poster={getDecentralizedUrl(poster)}
                 className="relative w-full h-full object-contain cursor-pointer z-10"
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={() => {
@@ -316,7 +322,7 @@ export default function VideoPlayer(props: VideoPlayerProps) {
                 }}
                 onError={() => {
                     if (hlsRef.current) return; // Ignore native errors if HLS.js is handling it
-                    const isMov = src?.toLowerCase().endsWith('.mov');
+                    const isMov = finalSrc?.toLowerCase().endsWith('.mov');
                     if (isMov) {
                         setError('This video is in .MOV format, which might not be supported by your browser. Try using Safari or a different device.');
                     } else {

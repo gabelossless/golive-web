@@ -1,0 +1,32 @@
+
+# Mobile UI Optimization & Shorts Tab Implementation
+
+Refining the mobile experience for VibeStream and integrating a dedicated Shorts tab for quick discovery, mirroring industry leaders.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Navigation Change**: I am adding a "Shorts" tab to the mobile bottom navigation. To keep the UI clean, I will consolidate "Saved" into the profile/you tab, following YouTube's "Home, Shorts, (+), Subscriptions, You" layout.
+
+## Proposed Changes
+
+### Navigation Components
+#### [MODIFY] [MobileNav.tsx](file:///C:/GOLive/components/MobileNav.tsx)
+- **Shorts Tab**: Add "Shorts" with a central focus.
+- **Label Polish**: Refine text sizes and spacing for better readability on small screens.
+- **YouTube Layout**: Reorder to `Home, Shorts, (+), Following, You`.
+
+#### [DELETE] [BottomNav.tsx](file:///C:/GOLive/components/BottomNav.tsx) [NEW]
+- Remove redundant navigation component to clean up the codebase.
+
+### Header Optimization
+#### [MODIFY] [Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx)
+- Hide "VIBESTREAM" text on very small screens (under 360px) to prevent layout shifting.
+- Optimize spacing between icons for fat-finger friendliness on mobile.
+
+## Verification Plan
+
+### Automated/Subagent Tests
+- **Mobile Viewport Test**: Verify bottom nav layout on 375px and 430px viewports.
+- **Shorts Navigation**: Click "Shorts" on mobile and verify it loads the feed correctly.
+- **Responsiveness**: Verify the header doesn't wrap or break on small screens.

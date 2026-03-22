@@ -1,0 +1,27 @@
+# Walkthrough — GoLive Phase 10: Community & Creator Studio
+
+## Summary
+Added social engagement features and creator tools.
+
+---
+
+## Changes Made
+
+### 1. Community Tab ([CommunityTab.tsx](file:///C:/GoLive/components/CommunityTab.tsx))
+- **Real Feed**: Fetches posts from Supabase `posts` table.
+- **Create Post**: Channel owners can post text updates.
+- **Delete Post**: Owners can delete their own posts.
+- **Empty State**: Friendly message when no posts exist.
+
+### 2. Studio Dashboard ([page.tsx](file:///C:/GoLive/app/studio/page.tsx))
+- **Video Management**: List all uploaded videos with thumbnail, stats, and date.
+- **Delete Action**: Permantently delete videos from the platform.
+- **Analytics Cards**: Quick view of Total Videos and Total Views.
+- **Auth Protected**: Redirects to login if not authenticated.
+
+### 3. Database Schema ([setup-community.sql](file:///C:/GoLive/setup-community.sql))
+- New `posts` table with RLS policies for secure social features.
+
+## Verification
+- **Build**: Passed successfully.
+- **Manual Test**: Studio loads user videos correctly; Delete removal works instantly via optimistic update.

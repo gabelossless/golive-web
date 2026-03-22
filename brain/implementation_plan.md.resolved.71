@@ -1,0 +1,89 @@
+# Production Hardening & Platform Quality Audit
+
+> **Analogy**: Floors 1-2 must be senior expert-level before building the skyscraper. Every foundational page must be bug-free, performant, and premium UX before adding new features.
+
+**Budget constraint**: No backend service changes. Staying on Supabase + Vercel + Cloudflare R2.
+
+---
+
+## Critical Bugs & Fixes (Must do before anything else)
+
+### 1. `useCallback` in JSX (React Rules Violation)
+**File**: [app/watch/[id]/WatchClient.tsx](file:///c:/Users/Walt%20&%20Carter/.gemini/antigravity/playground/sonic-zenith/app/watch/%5Bid%5D/WatchClient.tsx) line ~190  
+Calling `useCallback()` directly inside JSX is illegal in React — hooks cannot be called conditionally or inside render. This will cause a runtime crash.  
+**Fix**: Hoist the callback to the component body.
+
+### 2. Missing `import React` / `useCallback` at component level
+`useCallback` is imported from `'react'` but used in JSX — this is a React Rules of Hooks violation.
+
+### 3. `Pause` icon not imported in VideoPlayer
+[VideoPlayer.tsx](file:///C:/GOLive/components/VideoPlayer.tsx) imports `Play, Pause` — need to double-check `Pause` is in the lucide-react import.
+
+---
+
+## Proposed Changes by Page
+
+---
+
+### Core / Layout
+#### [MODIFY] [WatchClient.tsx](file:///C:/GOLive/app/watch/[id]/WatchClient.tsx)
+- **Critical Bug Fix**: Hoist `onActiveWatch` to `useCallback` at the component level (not in JSX).
+- **UX**: Add `useCallback` import from `react` at top level (not duplicate).
+
+#### [MODIFY] [VideoPlayer.tsx](file:///C:/GOLive/components/VideoPlayer.tsx)
+- **Inline style lint**: Move progress bar and ambient canvas dynamic styles to CSS variables / global.css to satisfy lint. Keep CSS vars in the style prop is acceptable workaround.
+- **Bug**: Add `onPlay`/`onPause` event listeners to the `<video>` element to sync `isPlaying` state with native browser controls (e.g., media keys, Picture-in-Picture).
+
+#### [MODIFY] [Navbar.tsx](file:///C:/GOLive/components/Navbar.tsx)
+- **Performance**: Ensure auth state is not double-fetched. Use context only.
+- **UX**: Ensure search input routes correctly to `/search?q=`.
+
+#### [MODIFY] [Sidebar.tsx](file:///C:/GOLive/components/Sidebar.tsx)
+- **Bug**: Verify Shorts/Following/History links exist and route correctly.
+
+---
+
+### Page-by-Page Audit Plan
+
+| Page | Audit Focus |
+|---|---|
+| `/` (Home) | Verify lazy-loading works, fallback empty state |
+| `/watch/[id]` | Fix hooks bug, test playback, sharing, likes, views |
+| `/shorts` | Scroll snapping, swipe, audio, subscribe button |
+| `/trending` | Verify sort order, empty state |
+| `/search` | Test query routing, empty results state |
+| `/login` | Error states, redirect after login |
+| `/register` | Form validation, error messages |
+| `/profile/[username]` | Videos/Shorts tabs, follow count, empty state |
+| `/studio/dashboard` | Video list, delete, edit, upload redirect |
+| `/studio/settings` | Form save, channel branding |
+| `/studio/ai-studio` | AI clip analysis E2E flow |
+| `/upload` | Shorts detection, tags autocomplete, upload success |
+| `/premium` | Toggle visibility, accurate pricing |
+| `/admin/*` | Route guard, protected access |
+| `/subscriptions` | Following tab populated after subscribing |
+| `/liked` | Shows liked videos |
+| `/history` | View history persisted |
+| `/settings` | User preferences save |
+
+---
+
+### Performance (Scalability for 100k-1M users on $100 budget)
+- **Image optimization**: Ensure all `<img>` tags use Next.js `<Image>` component with `loading="lazy"`.
+- **Component code splitting**: Verify heavy pages use `dynamic()` imports.
+- **Supabase query limits**: Ensure every query has a `.limit()` clause to avoid full-table scans.
+- **RLS Policies**: Verify Row Level Security is enabled on all tables.
+- **Error boundaries**: Ensure [error.tsx](file:///C:/GOLive/app/error.tsx) catches runtime errors gracefully.
+
+---
+
+## Verification Plan
+
+### Browser Agent Tests (automated)
+1. Test every major page route for visual errors, broken layouts, or console errors.
+2. Test login → upload → watch → like → share flow.
+3. Test Shorts vertical scroll on mobile viewport.
+4. Verify `/admin` redirects unauthenticated users.
+
+### Manual Verification
+- User to check Supabase dashboard for RLS policies on `videos`, `likes`, `subscriptions`, `comments`.
