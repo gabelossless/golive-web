@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Hls, { HlsConfig } from 'hls.js';
+import * as Player from '@livepeer/react/player';
 import TipButton from './TipButton';
 import { getDecentralizedUrl, getLivepeerPlaybackUrl } from '@/lib/cdn';
 
@@ -265,20 +266,107 @@ export default function VideoPlayer(props: VideoPlayerProps) {
         window.dispatchEvent(new CustomEvent('theaterModeToggle', { detail: { enabled: !isTheaterMode } }));
     };
 
-    // If this is a Livepeer stream, render an embedded iframe player
+    // If this is a Livepeer stream, use the official Livepeer React Player SDK
     if (isLivepeerEmbed) {
         return (
             <div
                 ref={containerRef}
-                className={`relative bg-black overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)] w-full rounded-[48px] aspect-video`}
+                className={cn(
+                    "relative bg-black shadow-[0_0_100px_rgba(0,0,0,0.8)] group transition-all duration-700 mx-auto aspect-video overflow-hidden",
+                    isTheaterMode ? "w-[125%] -mx-[12.5%] rounded-none lg:rounded-[60px]" : "w-full rounded-[48px]"
+                )}
             >
-                <iframe
-                    src={finalSrc}
-                    className="w-full h-full"
-                    allowFullScreen
-                    allow="autoplay; encrypted-media; picture-in-picture"
-                    title={title || 'Livepeer Stream'}
-                />
+                <Player.Root playbackId={playbackId} src={null} autoPlay={false}>
+                    <Player.Container className="w-full h-full bg-black">
+                        <Player.Video 
+                            title={title || 'Livepeer Video'}
+                            poster={poster}
+                            className="w-full h-full object-contain"
+                        />
+
+                        {/* Controls overlay */}
+                        <Player.Controls className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="px-10 pb-10 pt-20 w-full flex flex-col">
+                                <Player.Seek className="w-full relative flex items-center h-4 group/seek mb-6 cursor-pointer touch-none">
+                                    <Player.Track className="relative h-1.5 w-full bg-white/20 rounded-full overflow-hidden">
+                                        <Player.SeekBuffer className="absolute h-full bg-white/40" />
+                                        <Player.Range className="absolute h-full bg-[#FFB800]" />
+                                    </Player.Track>
+                                    <Player.Thumb className="block w-4 h-4 bg-white rounded-full opacity-0 group-hover/seek:opacity-100 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FFB800]" />
+                                </Player.Seek>
+                                
+                                <div className="flex items-center justify-between text-white w-full">
+                                    <div className="flex items-center gap-4">
+                                        <Player.PlayPauseTrigger className="hover:text-[#FFB800] transition-colors flex items-center justify-center -ml-1">
+                                            <Player.PlayingIndicator matcher={false}>
+                                                <Play size={24} fill="currentColor" />
+                                            </Player.PlayingIndicator>
+                                            <Player.PlayingIndicator matcher={true}>
+                                                <Pause size={24} fill="currentColor" />
+                                            </Player.PlayingIndicator>
+                                        </Player.PlayPauseTrigger>
+
+                                        <div className="flex items-center gap-2 group/volume relative mb-0">
+                                            <Player.MuteTrigger className="hover:text-[#9147ff] transition-colors flex items-center justify-center">
+                                                <Player.VolumeIndicator matcher={false}>
+                                                    <VolumeX size={22} />
+                                                </Player.VolumeIndicator>
+                                                <Player.VolumeIndicator matcher={true}>
+                                                    <Volume2 size={22} />
+                                                </Player.VolumeIndicator>
+                                            </Player.MuteTrigger>
+                                            <Player.Volume className="w-0 opacity-0 group-hover/volume:w-20 group-hover/volume:opacity-100 transition-all duration-300 h-1 cursor-pointer flex items-center touch-none">
+                                                <Player.Track className="relative h-1 w-full bg-white/20 rounded-full overflow-hidden">
+                                                    <Player.Range className="absolute h-full bg-[#FFB800]" />
+                                                </Player.Track>
+                                                <Player.Thumb className="block w-3 h-3 bg-white rounded-full shadow focus:outline-none" />
+                                            </Player.Volume>
+                                        </div>
+
+                                        <div className="text-sm font-medium">
+                                            <Player.Time />
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-4">
+                                        {(creator?.wallet_address || creator?.solana_wallet_address) && (
+                                            <TipButton creator={creator} />
+                                        )}
+                                        
+                                        <Player.FullscreenTrigger className="hover:text-[#FFB800] transition-colors">
+                                            <Player.FullscreenIndicator matcher={false}>
+                                                <Maximize size={20} />
+                                            </Player.FullscreenIndicator>
+                                            <Player.FullscreenIndicator matcher={true}>
+                                                <Minimize size={20} />
+                                            </Player.FullscreenIndicator>
+                                        </Player.FullscreenTrigger>
+                                    </div>
+                                </div>
+                            </div>
+                        </Player.Controls>
+
+                        <Player.LoadingIndicator className="absolute inset-0 flex items-center justify-center bg-black/50 z-10 w-full h-full pointer-events-none">
+                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FFB800]"></div>
+                        </Player.LoadingIndicator>
+                        
+                        <Player.ErrorIndicator matcher="all" className="absolute inset-0 flex items-center justify-center bg-black/80 z-20 text-white flex-col p-4 text-center w-full h-full pointer-events-none">
+                            <div className="text-red-500 mb-2">
+                                <Settings size={32} />
+                            </div>
+                            <h3 className="text-lg font-bold">Processing Video...</h3>
+                            <p className="text-sm text-gray-400">This asset might still be processing on Livepeer. Please refresh in a moment.</p>
+                        </Player.ErrorIndicator>
+                    </Player.Container>
+                </Player.Root>
+                
+                {/* Live Badge Overlay */}
+                {isLive && (
+                    <div className="absolute top-4 left-4 z-20 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold animate-pulse flex items-center gap-1 shadow-lg pointer-events-none">
+                        <span className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+                        LIVE
+                    </div>
+                )}
             </div>
         );
     }
