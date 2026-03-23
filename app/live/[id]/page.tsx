@@ -7,7 +7,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { Send, User, Share2, MoreVertical, Radio, MessageSquare, DollarSign, Lock, Heart, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { getGhostAvatar } from '@/lib/image-utils';
-import { Room, connect, RemoteVideoTrack, RemoteAudioTrack, TrackEvent } from 'livekit-client';
+import { Room, RemoteVideoTrack, RemoteAudioTrack, RoomEvent } from 'livekit-client';
 
 export default function LiveWatchPage() {
     const { id } = useParams();
@@ -33,9 +33,9 @@ export default function LiveWatchPage() {
         if (!id) return;
         initializeView();
         
-        // Chat Subscription
+        // Subscription
         const channel = supabase
-            .channel(`live_chat:${id}`)
+            .channel(`live_status:${id}`)
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
@@ -43,6 +43,22 @@ export default function LiveWatchPage() {
                 filter: `video_id=eq.${id}`
             }, (payload) => {
                 fetchMessageAuthor(payload.new);
+            })
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'videos',
+                filter: `id=eq.${id}`
+            }, (payload) => {
+                // If pipeline changed to LIVEPEER_HLS, we hot swap the player
+                if (payload.new.pipeline === 'LIVEPEER_HLS' && payload.old.pipeline !== 'LIVEPEER_HLS') {
+                    console.log("🔥 Stream Upgraded to HLS 🔥");
+                    setVideo((prev: any) => ({...prev, ...payload.new}));
+                    if (roomRef.current) {
+                        roomRef.current.disconnect(); 
+                        roomRef.current = null;
+                    }
+                }
             })
             .subscribe();
 
@@ -108,11 +124,12 @@ export default function LiveWatchPage() {
              const { token } = await tokenRes.json();
              
              if (token) {
-                 const room = await connect(process.env.NEXT_PUBLIC_LIVEKIT_URL || '', token, { autoSubscribe: true });
+                 const room = new Room();
+                 await room.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL || '', token, { autoSubscribe: true });
                  roomRef.current = room;
 
                  // Attach tracks when they subscribe
-                 room.on(TrackEvent.TrackSubscribed, (track, publication, participant) => {
+                 room.on(RoomEvent.TrackSubscribed, (track: any, publication: any, participant: any) => {
                      if (track.kind === 'video' && videoRef.current) {
                          (track as RemoteVideoTrack).attach(videoRef.current);
                      }
@@ -340,7 +357,7 @@ export default function LiveWatchPage() {
                 >
                     {chatMessages.map((msg) => (
                         <div key={msg.id} className="flex items-start gap-3 animate-in fade-in slide-in-from-left-2 duration-300">
-                            <img src={msg.profiles?.avatar_url || getGhostAvatar()} className="w-6 h-6 rounded-full shrink-0 opacity-80" />
+                            <img src={msg.profiles?.avatar_url || getGhostAvatar()} alt="avatar" className="w-6 h-6 rounded-full shrink-0 opacity-80" />
                             <div className="break-words leading-tight flex-1">
                                 <span className={`font-bold mr-2 text-sm ${msg.content.includes('💎') ? 'text-emerald-400' : 'text-zinc-300'}`}>
                                     {msg.profiles?.username}

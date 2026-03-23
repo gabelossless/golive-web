@@ -8,7 +8,7 @@ import { Radio, Loader2, StopCircle, Settings, AlertCircle, Lock, DollarSign } f
 import { motion, AnimatePresence } from 'framer-motion';
 
 // We import livekit-client dynamically or directly
-import { Room, connect, createLocalTracks, LocalTrack } from 'livekit-client';
+import { Room, createLocalTracks, LocalTrack } from 'livekit-client';
 
 export default function GoLivePage() {
     const { user } = useAuth();
@@ -61,16 +61,36 @@ export default function GoLivePage() {
         };
     }, []);
 
-    // Heartbeat mechanism to keep stream alive
+    // Heartbeat mechanism to keep stream alive & check for scale-up
     useEffect(() => {
         let interval: NodeJS.Timeout;
         if (isBroadcasting && activeVideoId) {
-            interval = setInterval(() => {
-                fetch('/api/live/heartbeat', {
-                    method: 'POST',
-                    body: JSON.stringify({ videoId: activeVideoId, viewerCount: 0 }) // Normally you'd get viewers from LiveKit or Livepeer stats
-                }).catch(console.error);
-            }, 15000);
+            interval = setInterval(async () => {
+                try {
+                    // Normally you'd get viewers from LiveKit or Livepeer stats, just mocking scale up possibility
+                    const res = await fetch('/api/live/heartbeat', {
+                        method: 'POST',
+                        body: JSON.stringify({ videoId: activeVideoId, viewerCount: Math.floor(Math.random() * 60) }) // Math.random for demoing scale up
+                    });
+                    const data = await res.json();
+                    
+                    if (data.switch_pipeline && data.stream_key) {
+                        console.log("🔥 HOT SWAPPING TO LIVEPEER HLS 🔥");
+                        // Disconnect old
+                        if (roomRef.current) {
+                            roomRef.current.disconnect();
+                            roomRef.current = null;
+                        }
+                        
+                        // Start WHIP
+                        await startWHIPStream(data.stream_key);
+                        setPipeline('LIVEPEER_HLS');
+                    }
+
+                } catch (err) {
+                    console.error("Heartbeat error:", err);
+                }
+            }, 10000);
         }
         return () => clearInterval(interval);
     }, [isBroadcasting, activeVideoId]);
@@ -136,7 +156,8 @@ export default function GoLivePage() {
         const livekitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL;
         if (!livekitUrl) throw new Error("NEXT_PUBLIC_LIVEKIT_URL is not configured.");
         
-        const room = await connect(livekitUrl, token);
+        const room = new Room();
+        await room.connect(livekitUrl, token);
         roomRef.current = room;
 
         // Publish local tracks
@@ -297,6 +318,7 @@ export default function GoLivePage() {
                                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">Stream Title</label>
                                 <input 
                                     type="text" 
+                                    title="Stream Title"
                                     value={title}
                                     onChange={e => setTitle(e.target.value)}
                                     placeholder="Enter a compelling title..."
@@ -308,6 +330,7 @@ export default function GoLivePage() {
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">Category</label>
                                 <select 
+                                    title="Category"
                                     value={category}
                                     onChange={e => setCategory(e.target.value)}
                                     className="w-full bg-[#111] border border-white/10 rounded-[20px] px-6 py-4 text-sm font-bold focus:border-[#FFB800] focus:ring-1 focus:ring-[#FFB800]/50 outline-none transition-all appearance-none"
@@ -352,6 +375,7 @@ export default function GoLivePage() {
                                             <div className="relative">
                                                 <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
                                                 <input 
+                                                    title="Price"
                                                     type="number"
                                                     min="1.00"
                                                     step="0.50"

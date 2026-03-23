@@ -69,8 +69,11 @@ export default function VideoPlayer(props: VideoPlayerProps) {
         autoStartLoad: true
     }), []);
 
+    const isLivepeerEmbed = !!playbackId;
+
     const finalSrc = useMemo(() => {
-        return playbackId ? getLivepeerPlaybackUrl(playbackId) : getDecentralizedUrl(src);
+        if (playbackId) return `https://lvpr.tv?v=${playbackId}`;
+        return getDecentralizedUrl(src);
     }, [src, playbackId]);
 
     // Cleanup HLS instance
@@ -83,16 +86,17 @@ export default function VideoPlayer(props: VideoPlayerProps) {
         }
     }, []);
 
-    // Initialize HLS or native playback
+    // Initialize HLS or native playback (only for non-Livepeer sources)
     useEffect(() => {
         const video = videoRef.current;
-        if (!video || !src) return;
+        if (!video || isLivepeerEmbed) return;
+        if (!src && !finalSrc) return;
 
         // Reset state for new source
         setError(null);
         hasTriggeredWatch.current = false;
         
-        const isHls = src.includes('.m3u8') || !!playbackId;
+        const isHls = src.includes('.m3u8') || finalSrc.includes('.m3u8');
         
         if (isHls && Hls.isSupported()) {
             destroyHls();
@@ -129,7 +133,7 @@ export default function VideoPlayer(props: VideoPlayerProps) {
         }
 
         return () => destroyHls();
-    }, [src, hlsConfig, destroyHls]);
+    }, [src, finalSrc, isLivepeerEmbed, hlsConfig, destroyHls]);
 
     // Strict view counting logic
     useEffect(() => {
@@ -260,6 +264,24 @@ export default function VideoPlayer(props: VideoPlayerProps) {
         setIsTheaterMode(!isTheaterMode);
         window.dispatchEvent(new CustomEvent('theaterModeToggle', { detail: { enabled: !isTheaterMode } }));
     };
+
+    // If this is a Livepeer stream, render an embedded iframe player
+    if (isLivepeerEmbed) {
+        return (
+            <div
+                ref={containerRef}
+                className={`relative bg-black overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)] w-full rounded-[48px] aspect-video`}
+            >
+                <iframe
+                    src={finalSrc}
+                    className="w-full h-full"
+                    allowFullScreen
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    title={title || 'Livepeer Stream'}
+                />
+            </div>
+        );
+    }
 
     return (
         <div

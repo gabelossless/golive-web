@@ -31,17 +31,8 @@ export function getDecentralizedUrl(originalUrl: string | null | undefined): str
         return originalUrl.replace('ipfs://', PRIMARY_DECENTRALIZED_GATEWAY);
     }
 
-    // 3. For standard R2/Supabase URLs, we can front them with our Edge Acceleration layer.
-    // For this implementation, we'll assume we've configured a Saturn L1 node to cache our bucket.
-    // We add a query parameter that our decentralized proxy can use to pull and cache.
-    if (originalUrl.includes('r2.cloudflarestorage.com') || originalUrl.includes('supabase.co')) {
-        // In a full implementation, you'd prepend your decentralized gateway domain.
-        // For now, we'll append a 'v-edge' flag to simulate the edge-routing logic.
-        const url = new URL(originalUrl);
-        url.searchParams.set('v-edge', 'true');
-        return url.toString();
-    }
-
+    // 3. Standard R2/Supabase/CF URLs — return as-is to avoid breaking presigned URLs
+    // (Adding query params to presigned URLs invalidates their signature)
     return originalUrl;
 }
 
@@ -49,7 +40,8 @@ export function getDecentralizedUrl(originalUrl: string | null | undefined): str
  * Generates a Livepeer Playback URL from a Playback ID.
  */
 export function getLivepeerPlaybackUrl(playbackId: string): string {
-    return `https://livepeercdn.com/hls/${playbackId}/index.m3u8`;
+    // livepeercdn.studio is the correct modern CDN domain
+    return `https://lvpr.tv?v=${playbackId}`;
 }
 
 /**
