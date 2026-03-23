@@ -331,6 +331,7 @@ export default function GoLivePage() {
                                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">Category</label>
                                 <select 
                                     title="Category"
+                                    aria-label="Category"
                                     value={category}
                                     onChange={e => setCategory(e.target.value)}
                                     className="w-full bg-[#111] border border-white/10 rounded-[20px] px-6 py-4 text-sm font-bold focus:border-[#FFB800] focus:ring-1 focus:ring-[#FFB800]/50 outline-none transition-all appearance-none"

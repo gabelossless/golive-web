@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
-import { Camera, Save, User as UserIcon, Mail, Bell, Shield, Globe, LayoutDashboard, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Camera, Save, User as UserIcon, Mail, Bell, Shield, Globe, LayoutDashboard, TrendingUp, CheckCircle2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { getGhostAvatar, compressImage, uploadToR2 } from '@/lib/image-utils';
 
@@ -164,10 +164,16 @@ export default function StudioPage() {
 
             <div className="flex items-center justify-between mb-8">
                 <h1 className="text-3xl font-black tracking-tight">Settings</h1>
-                <Link href="/studio/dashboard"
-                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm font-bold transition-colors">
-                    <LayoutDashboard size={15} /> Creator Dashboard
-                </Link>
+                <div className="flex items-center gap-2">
+                    <Link href="/studio/analytics"
+                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-[#FFB800]/10 border border-white/10 hover:border-[#FFB800]/30 rounded-full text-sm font-bold transition-colors text-[#FFB800]">
+                        <TrendingUp size={15} /> Analytics
+                    </Link>
+                    <Link href="/studio/dashboard"
+                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm font-bold transition-colors">
+                        <LayoutDashboard size={15} /> Creator Dashboard
+                    </Link>
+                </div>
             </div>
 
             <div className="flex flex-col md:flex-row gap-8">
