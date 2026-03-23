@@ -138,10 +138,12 @@ export default function VideoCard({ video }: VideoCardProps) {
                         {formatDuration(video.duration)}
                     </div>
                 )}
+                {isLive && (
                     <div className="absolute top-3 left-3 live-badge flex items-center gap-2 border border-black/20 shadow-[0_4px_10px_rgba(255,184,0,0.4)]">
                         <span className="w-1.5 h-1.5 bg-black rounded-full animate-pulse" />
                         Live
                     </div>
+                )}
                 {video.hype_count && video.hype_count > 0 && (
                     <div className="absolute top-2 right-2 bg-gradient-to-r from-[#FFB800] to-orange-500 text-black px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-tighter shadow-lg flex items-center gap-1 z-10">
                         <Flame size={10} fill="currentColor" />

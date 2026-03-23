@@ -52,6 +52,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Unauthorized. Invalid authentication token.' }, { status: 401, headers: corsHeaders });
     }
 
+    // Fetch user profile for role/tier checks
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, subscription_tier')
+        .eq('id', user.id)
+        .single();
+
+    const isAdmin = profile?.role === 'admin';
+    const isPremium = profile?.subscription_tier === 'premium';
+    const hasElevatedLimits = isAdmin || isPremium;
+
     if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME) {
         return NextResponse.json({ error: 'Storage not configured.' }, { status: 500, headers: corsHeaders });
     }
@@ -84,13 +95,17 @@ export async function POST(request: Request) {
             const chunkSize = 5 * 1024 * 1024;
             const totalParts = Math.ceil((fileSize || 0) / chunkSize) || 1;
 
-            // SAFETY: Limit to 10GB for standard users (2000 parts)
-            if (totalParts > 2000) {
-                return NextResponse.json({ error: 'File too large for standard upload. Upgrade to Business for 50GB+ moves.' }, { status: 413, headers: corsHeaders });
+            // SAFETY: Limit to 10GB for standard, 50GB (10,000 parts) for Premium/Admin
+            const partLimit = hasElevatedLimits ? 10000 : 2000;
+            if (totalParts > partLimit) {
+                const limitMsg = hasElevatedLimits 
+                    ? 'File too large even for Premium (Max 50GB).' 
+                    : 'File too large for standard upload (Max 10GB). Upgrade to Premium for 50GB support.';
+                return NextResponse.json({ error: limitMsg }, { status: 413, headers: corsHeaders });
             }
             
-            // SECURITY: Ensure folder is restricted to the user's namespace if provided
-            if (folder && !folder.includes(user.id)) {
+            // SECURITY: Ensure folder is restricted to the user's namespace if provided (Admins can bypass)
+            if (folder && !folder.includes(user.id) && !isAdmin) {
                 return NextResponse.json({ error: 'Invalid storage namespace.' }, { status: 403, headers: corsHeaders });
             }
             
